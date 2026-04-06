@@ -8,11 +8,11 @@
 // Optional overrides:
 //   AIRTABLE_BASE_ID      — default: appcKC14Om93O40QC
 //   CAMPAIGN_RECORD_ID    — default: recrv0pJcLVXBhfPj
-
+ 
 const BASE_ID     = process.env.AIRTABLE_BASE_ID    || 'appcKC14Om93O40QC';
 const CAMPAIGN_ID = process.env.CAMPAIGN_RECORD_ID  || 'recrv0pJcLVXBhfPj';
 const AT_BASE     = `https://api.airtable.com/v0/${BASE_ID}`;
-
+ 
 // ── Table IDs ────────────────────────────────────────────────────────────────
 const TABLES = {
   campaigns:    'tblUKz2hOxJmDUWhk',
@@ -20,7 +20,7 @@ const TABLES = {
   offers:       'tblmH1uMjxYG1y8X6',
   timelines:    'tblq7dwxv0yUdzPou',
 };
-
+ 
 // ── Field IDs (Airtable always returns fields keyed by NAME, but IDs control
 //    which fields are included in the response) ────────────────────────────────
 const CAMPAIGN_FIELDS = [
@@ -36,7 +36,7 @@ const CAMPAIGN_FIELDS = [
   'fldLpvnXZssyb0EQ8', // Offers (linked)
   'fldnENF0Iizlzoedr', // 📅 Timelines (linked)
 ];
-
+ 
 const DELIVERABLE_FIELDS = [
   'fldrNfr3G8KgviLkR', // Deliverable Code
   'fldjPPOdxTy6Hw8EO', // Talent (linked)
@@ -49,7 +49,7 @@ const DELIVERABLE_FIELDS = [
   'fldTm8YrIhRvRCQUr', // Comments
   'fldqqQzTtUl6k5crI', // Shares
 ];
-
+ 
 const OFFER_FIELDS = [
   'fldB426sihwzSFIjO', // Record ID (formula)
   'fldrjJQqkKpdXFDyM', // Name (from Talent) — lookup
@@ -66,9 +66,9 @@ const OFFER_FIELDS = [
   'fldWRvRqw9E1leW0g', // US Audience — lookup
   'fldmqzhGoXj8iuuDa', // Offer amount
 ];
-
+ 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
+ 
 async function atGet(path, fieldIds, token) {
   const url = new URL(`${AT_BASE}/${path}`);
   if (fieldIds && fieldIds.length) {
@@ -83,7 +83,7 @@ async function atGet(path, fieldIds, token) {
   }
   return res.json();
 }
-
+ 
 async function atGetByIds(tableId, ids, fieldIds, token) {
   if (!ids || ids.length === 0) return { records: [] };
   const formula = ids.length === 1
@@ -101,14 +101,14 @@ async function atGetByIds(tableId, ids, fieldIds, token) {
   }
   return res.json();
 }
-
+ 
 // Get first value from a multipleLookupValues array
 function firstLookup(val) {
   if (!val) return null;
   if (Array.isArray(val)) return val[0] ?? null;
   return val;
 }
-
+ 
 // Extract headshot URL — Headshot is a lookup of attachment fields
 function extractHeadshot(field) {
   if (!field || !Array.isArray(field) || field.length === 0) return null;
@@ -120,22 +120,30 @@ function extractHeadshot(field) {
   if (Array.isArray(first) && first[0] && first[0].url) return first[0].url;
   return null;
 }
-
+ 
 // ── Handler ───────────────────────────────────────────────────────────────────
-
+ 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
-
+ 
   const token = process.env.AIRTABLE_TOKEN;
   if (!token) {
     return res.status(500).json({
       error: 'AIRTABLE_TOKEN is not configured. Set it in your Vercel environment variables.',
     });
   }
-
+ 
+  // Temporary diagnostic — remove after confirming token is correct
+  if (req.query.debug === '1') {
+    return res.status(200).json({
+      tokenPrefix: token.substring(0, 10) + '...',
+      tokenLength: token.length,
+    });
+  }
+ 
   try {
     // 1. Fetch campaign record
     const campRecord = await atGet(
@@ -144,19 +152,19 @@ module.exports = async function handler(req, res) {
       token
     );
     const cf = campRecord.fields;
-
+ 
     // Extract linked record IDs
     const deliverableIds = (cf['Deliverables'] || []).map(r => r.id);
     const offerIds       = (cf['Offers']       || []).map(r => r.id);
     const timelineIds    = (cf['📅 Timelines'] || []).map(r => r.id);
-
+ 
     // 2. Fetch related records in parallel
     const [delivsData, offersData, timelinesData] = await Promise.all([
       atGetByIds(TABLES.deliverables, deliverableIds, DELIVERABLE_FIELDS, token),
       atGetByIds(TABLES.offers,       offerIds,       OFFER_FIELDS,       token),
       atGetByIds(TABLES.timelines,    timelineIds,    [],                 token),
     ]);
-
+ 
     // 3. Shape campaign
     const campaign = {
       name:            cf['Campaign']                  || 'Snap – Lionsgate Michael',
@@ -168,7 +176,7 @@ module.exports = async function handler(req, res) {
       briefGuidelines: cf['Brief Creative Guidelines'] || null,
       briefCTA:        cf['Brief CTA']                 || null,
     };
-
+ 
     // 4. Shape deliverables (sorted by code)
     const deliverables = (delivsData.records || [])
       .map(r => {
@@ -189,7 +197,7 @@ module.exports = async function handler(req, res) {
         };
       })
       .sort((a, b) => a.code.localeCompare(b.code));
-
+ 
     // 5. Shape offers
     const offers = (offersData.records || []).map(r => {
       const f = r.fields;
@@ -210,7 +218,7 @@ module.exports = async function handler(req, res) {
         offer:          f['Offer'] ?? null,
       };
     });
-
+ 
     // 6. Shape timelines (sorted by date)
     const timelines = (timelinesData.records || [])
       .map(r => ({
@@ -221,11 +229,11 @@ module.exports = async function handler(req, res) {
         phase:  r.fields['Phase']?.name    || null,
       }))
       .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-
+ 
     // 60-second CDN cache, 5-minute stale-while-revalidate
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
     return res.status(200).json({ campaign, deliverables, offers, timelines });
-
+ 
   } catch (err) {
     console.error('[api/campaign]', err.message);
     return res.status(500).json({ error: err.message });
