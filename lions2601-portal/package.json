@@ -1,0 +1,14 @@
+{
+  "name": "lions2601-portal",
+  "version": "1.0.0",
+  "description": "ZATV Campaign Portal – Lionsgate Michael (Snap)",
+  "engines": {
+    "node": "18.x"
+  },
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "devDependencies": {
+    "vercel": "^37.0.0"
+  }
+}

@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lionsgate – Michael | ZATV Campaign Portal</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f7;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+
+    /* ── LOADING OVERLAY ─────────────────────────────────────────────────── */
+    .loading-overlay {
+      position: fixed; inset: 0;
+      background: rgba(10,10,10,0.88);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      transition: opacity 0.3s ease;
+    }
+    .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+    .loading-spinner {
+      width: 44px; height: 44px;
+      border: 3px solid rgba(255,255,255,0.15);
+      border-top-color: #b39ddb;
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+    .loading-text { color: rgba(255,255,255,0.6); font-size: 14px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .load-error {
+      text-align: center; color: #fff; max-width: 360px; padding: 0 24px;
+    }
+    .load-error p { margin-bottom: 8px; }
+    .load-error .err-msg { font-size: 13px; color: rgba(255,255,255,0.55); margin-bottom: 20px; word-break: break-all; }
+    .load-error button {
+      padding: 9px 22px; border-radius: 8px;
+      background: #7b2d8b; color: #fff;
+      border: none; cursor: pointer; font-size: 14px; font-weight: 600;
+    }
+
+    /* ── TOP NAV ─────────────────────────────────────────────────────────── */
+    .topbar {
+      background: #0a0a0a;
+      padding: 0 32px; height: 56px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .zatv-logo svg { height: 26px; width: auto; display: block; }
+    .topbar-divider { width: 1px; height: 20px; background: #333; }
+    .topbar-brand { font-size: 16px; font-weight: 600; color: #fff; }
+
+    /* ── HERO ────────────────────────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+      padding: 44px 32px 40px; color: #fff;
+    }
+    .hero-inner {
+      max-width: 960px; margin: 0 auto;
+      display: flex; align-items: center; gap: 28px;
+    }
+    .hero-logo-wrap {
+      flex-shrink: 0; width: 80px; height: 80px;
+      background: #fff; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+    }
+    .hero-logo-wrap img { width: 100%; height: 100%; object-fit: contain; padding: 8px; }
+    .hero-logo-fallback {
+      width: 100%; height: 100%; display: flex;
+      align-items: center; justify-content: center;
+      background: #1a1a2e; color: #fff; font-size: 10px;
+      font-weight: 800; letter-spacing: 0.05em; text-align: center; border-radius: 14px;
+    }
+    .hero-text { flex: 1; }
+    .hero-title { font-size: 28px; font-weight: 700; line-height: 1.2; margin-bottom: 14px; }
+    .hero-meta {
+      display: flex; align-items: center; gap: 20px;
+      flex-wrap: wrap; font-size: 14px; color: rgba(255,255,255,0.6);
+    }
+    .hero-meta-item { display: flex; align-items: center; gap: 6px; }
+
+    /* ── MAIN ────────────────────────────────────────────────────────────── */
+    .main { max-width: 960px; margin: 0 auto; padding: 32px 32px 64px; }
+
+    /* ── STAT CARDS ──────────────────────────────────────────────────────── */
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+    .stat-card {
+      background: #fff; border-radius: 12px; padding: 20px 22px;
+      border: 1px solid #e8e8e8; border-left: 3px solid #7b2d8b;
+    }
+    .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 8px; }
+    .stat-value { font-size: 28px; font-weight: 700; color: #1a1a1a; line-height: 1; }
+    .stat-value .stat-denom { font-size: 16px; color: #ccc; font-weight: 400; }
+    .stat-value .stat-unit  { font-size: 14px; color: #bbb; font-weight: 400; margin-left: 4px; }
+
+    /* ── PROGRESS ────────────────────────────────────────────────────────── */
+    .progress-card {
+      background: #fff; border-radius: 12px; padding: 24px;
+      border: 1px solid #e8e8e8; margin-bottom: 32px;
+    }
+    .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .progress-title { font-size: 14px; font-weight: 600; }
+    .progress-pct   { font-size: 14px; font-weight: 700; }
+    .progress-bar-bg { height: 10px; background: #f0f0f0; border-radius: 10px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; border-radius: 10px; transition: width 0.6s ease; }
+    .progress-legend { display: flex; gap: 20px; margin-top: 12px; }
+    .progress-legend-item { font-size: 12px; color: #888; display: flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* ── SECTION TITLE ───────────────────────────────────────────────────── */
+    .section-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+
+    /* ── DELIVERABLES TABLE ──────────────────────────────────────────────── */
+    .deliverables-card {
+      background: #fff; border-radius: 12px; border: 1px solid #e8e8e8;
+      overflow: hidden; margin-bottom: 32px;
+    }
+    .deliverables-card-header { padding: 18px 24px; border-bottom: 1px solid #f0f0f0; }
+    .deliverables-card-header span { font-size: 14px; font-weight: 600; }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { background: #fafafa; }
+    th {
+      text-align: left; font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.07em; color: #999;
+      padding: 10px 20px; border-bottom: 1px solid #f0f0f0;
+    }
+    td {
+      padding: 14px 20px; font-size: 13px; color: #333;
+      border-bottom: 1px solid #f7f7f7; vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafafa; }
+    .post-label  { font-size: 11px; color: #bbb; display: block; margin-bottom: 3px; }
+    .creator-name { font-weight: 700; color: #1a1a1a; font-size: 14px; }
+
+    /* ── PILLS ───────────────────────────────────────────────────────────── */
+    .pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 600; white-space: nowrap;
+    }
+    .pill-live     { background: #e8f8ed; color: #1a7a3a; }
+    .pill-dev      { background: #fff8e0; color: #92600a; }
+    .pill-complete { background: #e8f8ed; color: #1a7a3a; }
+    .platform-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 8px;
+      font-size: 12px; font-weight: 600; background: #f5f5f7; color: #444;
+    }
+    .no-link  { font-size: 12px; color: #ccc; }
+    .post-link {
+      display: inline-flex; align-items: center; gap: 5px;
+      color: #6b2d8b; font-size: 12px; font-weight: 500;
+      text-decoration: none; padding: 3px 9px; border-radius: 6px;
+      background: #f5eeff; border: 1px solid #e0ccff;
+    }
+    .post-link:hover { background: #ede0ff; }
+
+    /* ── TALENT GRID (overview) ──────────────────────────────────────────── */
+    .talent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .talent-card {
+      background: #fff; border-radius: 12px; border: 1px solid #e8e8e8;
+      padding: 20px; display: flex; align-items: flex-start; gap: 16px;
+    }
+    .talent-headshot { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: #f0f0f0; }
+    .talent-headshot-fallback {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: linear-gradient(135deg, #7b2d8b, #b39ddb);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 20px; font-weight: 700; flex-shrink: 0;
+    }
+    .talent-info { flex: 1; min-width: 0; }
+    .talent-name { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
+    .talent-platform { font-size: 12px; color: #888; margin-bottom: 10px; }
+    .talent-links { display: flex; gap: 6px; flex-wrap: wrap; }
+    .talent-link {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;
+      text-decoration: none; border: 1px solid #e8e8e8; color: #444; background: #fafafa;
+      transition: background 0.15s;
+    }
+    .talent-link:hover { background: #f0f0f0; }
+    .talent-link.snap    { background: #FFFC00; border-color: #e6e300; color: #333; }
+    .talent-link.insta   { background: linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); border-color:transparent; color:#fff; }
+    .talent-link.tiktok  { background: #010101; border-color: #333; color: #fff; }
+    .talent-link.youtube { background: #FF0000; border-color: #cc0000; color: #fff; }
+    .talent-link svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+    /* ── CAMPAIGN DETAILS ────────────────────────────────────────────────── */
+    .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
+    .detail-card { background: #fff; border-radius: 12px; padding: 20px 24px; border: 1px solid #e8e8e8; }
+    .detail-card-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #aaa; margin-bottom: 12px; }
+    .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #f5f5f7; font-size: 13px; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row-label { color: #888; }
+    .detail-row-value { font-weight: 600; }
+
+    /* ── TABS ────────────────────────────────────────────────────────────── */
+    .tab-bar {
+      background: #fff; border-bottom: 1px solid #e8e8e8; padding: 0 32px;
+      display: flex; gap: 0; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .tab-bar-inner { max-width: 960px; margin: 0 auto; width: 100%; display: flex; }
+    .tab {
+      padding: 14px 20px; font-size: 13px; font-weight: 600; color: #999;
+      cursor: pointer; border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s; white-space: nowrap; user-select: none;
+    }
+    .tab:hover { color: #555; }
+    .tab.active { color: #7b2d8b; border-bottom-color: #7b2d8b; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── CREATIVE TAB ────────────────────────────────────────────────────── */
+    .creative-main { max-width: 960px; margin: 0 auto; padding: 32px 32px 64px; }
+    .brief-card { background: #fff; border-radius: 12px; border: 1px solid #e8e8e8; margin-bottom: 20px; overflow: hidden; }
+    .brief-card-header { padding: 16px 24px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 10px; }
+    .brief-card-icon  { font-size: 18px; }
+    .brief-card-title { font-size: 15px; font-weight: 700; color: #1a1a1a; }
+    .brief-card-body  { padding: 20px 24px; font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; }
+    .brief-empty { color: #bbb; font-style: italic; font-size: 13px; }
+
+    /* ── TALENT OFFER CARDS ──────────────────────────────────────────────── */
+    .talent-main { max-width: 960px; margin: 0 auto; padding: 32px 32px 64px; }
+    .talent-offer-card {
+      background: #fff; border-radius: 14px; border: 1px solid #e8e8e8;
+      margin-bottom: 20px; overflow: hidden; position: relative;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .talent-offer-card[draggable="true"] { cursor: grab; }
+    .talent-offer-card[draggable="true"]:active { cursor: grabbing; }
+    .talent-offer-card.dragging { opacity: 0.4; transform: scale(0.98); box-shadow: 0 8px 24px rgba(123,45,139,0.15); }
+    .talent-offer-card.drag-over { border-top: 3px solid #7b2d8b; margin-top: -3px; }
+    .talent-offer-card.passed { opacity: 0.6; }
+    .rank-badge {
+      position: absolute; top: 12px; left: 12px;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: #7b2d8b; color: #fff;
+      font-size: 13px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 5; box-shadow: 0 2px 6px rgba(123,45,139,0.3);
+    }
+    .drag-handle { position: absolute; top: 14px; right: 14px; font-size: 16px; color: #ccc; cursor: grab; z-index: 5; user-select: none; }
+    .drag-handle:hover { color: #7b2d8b; }
+    .rank-dropdown-wrap { margin-top: -4px; margin-bottom: 4px; }
+    .rank-dropdown {
+      background: #7b2d8b; color: #fff; border: none; border-radius: 6px;
+      padding: 4px 10px; font-size: 12px; font-weight: 600; cursor: pointer;
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='white'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 8px center; padding-right: 24px;
+    }
+    .rank-dropdown:hover { background-color: #6a2577; }
+    .talent-offer-inner { display: grid; grid-template-columns: 120px 1fr; gap: 0; }
+    .talent-offer-photo { width: 120px; height: 160px; object-fit: cover; object-position: top; display: block; flex-shrink: 0; }
+    .talent-offer-photo-fallback {
+      width: 120px; height: 160px;
+      background: linear-gradient(135deg, #7b2d8b, #b39ddb);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 28px; font-weight: 700;
+    }
+    .talent-offer-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; }
+    .talent-offer-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .talent-offer-name { font-size: 18px; font-weight: 700; color: #1a1a1a; }
+    .talent-offer-bio  { font-size: 13px; color: #555; line-height: 1.6; }
+    .talent-offer-bio.empty { color: #ccc; font-style: italic; }
+    .follower-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+    .follower-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
+      text-decoration: none; border: 1px solid transparent; transition: opacity 0.15s;
+    }
+    .follower-btn:hover { opacity: 0.8; }
+    .follower-btn.snap    { background: #FFFC00; border-color: #e6e300; color: #333; }
+    .follower-btn.insta   { background: #fce4ec; border-color: #f48fb1; color: #880e4f; }
+    .follower-btn.tiktok  { background: #f0f0f0; border-color: #ccc; color: #1a1a1a; }
+    .follower-btn.youtube { background: #ffebee; border-color: #ef9a9a; color: #b71c1c; }
+    .talent-offer-meta { display: flex; align-items: center; gap: 16px; font-size: 12px; color: #888; }
+    .us-pct-label { font-weight: 600; color: #1a1a1a; }
+    .feedback-wrap { background: #fffdf0; border: 1px solid #f0e68c; border-radius: 10px; padding: 12px 14px; }
+    .feedback-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #a07000; margin-bottom: 6px; }
+    .feedback-input {
+      width: 100%; font-size: 13px; color: #555;
+      border: none; background: transparent; outline: none;
+      resize: none; font-family: inherit; line-height: 1.5; min-height: 36px;
+    }
+    .feedback-input:empty:before { content: attr(data-placeholder); color: #ccc; font-style: italic; pointer-events: none; }
+    .feedback-save-hint { font-size: 10px; color: #ccc; margin-top: 4px; text-align: right; }
+    .talent-section { margin-bottom: 44px; }
+    .talent-section-heading {
+      font-size: 12px; font-weight: 800; letter-spacing: 1.4px;
+      text-transform: uppercase; color: #5a5a72;
+      padding-bottom: 12px; border-bottom: 2px solid #e2e2ea; margin-bottom: 24px;
+    }
+    .talent-section-empty { font-size: 13px; color: #bbb; font-style: italic; padding: 4px 0 8px; }
+
+    /* Badge dropdown */
+    .badge-select-wrap { position: relative; display: inline-block; }
+    .badge-select {
+      appearance: none; -webkit-appearance: none; cursor: pointer; font-family: inherit;
+      font-size: 13px; font-weight: 600; padding: 7px 34px 7px 13px; border-radius: 8px; outline: none;
+      border: 1.5px solid rgba(0,0,0,0.12); transition: box-shadow 0.15s, border-color 0.15s;
+    }
+    .badge-select:hover { border-color: rgba(0,0,0,0.25); }
+    .badge-select:focus { box-shadow: 0 0 0 3px rgba(123,45,139,0.18); border-color: #7b2d8b; }
+    .badge-select.approved     { background:#d1fae5; color:#065f46; border-color:#6ee7b7; }
+    .badge-select.pending      { background:#fef9c3; color:#854d0e; border-color:#fde68a; }
+    .badge-select.not-approved { background:#fee2e2; color:#991b1b; border-color:#fca5a5; }
+    .badge-select-wrap::after {
+      content:''; position:absolute; right:11px; top:50%; transform:translateY(-50%);
+      pointer-events:none; border-left:5px solid transparent; border-right:5px solid transparent; border-top:6px solid rgba(0,0,0,0.4);
+    }
+
+    /* ── TIMELINE TAB ────────────────────────────────────────────────────── */
+    .timeline-wrap { max-width: 640px; margin: 0 auto; padding: 32px 32px 64px; }
+    .tl-campaign-bar { background: linear-gradient(135deg,#1a1a2e,#16213e); border-radius: 14px; padding: 20px 24px; margin-bottom: 36px; }
+    .tl-campaign-label { display: flex; align-items: center; gap: 16px; }
+    .tl-campaign-icon  { font-size: 28px; }
+    .tl-campaign-name  { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    .tl-campaign-dates { font-size: 13px; color: rgba(255,255,255,0.55); }
+    .tl-list { position: relative; }
+    .tl-item { display: grid; grid-template-columns: 18px 2px 1fr; gap: 0 16px; margin-bottom: 0; }
+    .tl-item-last .tl-connector { display: none; }
+    .tl-dot { width: 18px; height: 18px; border-radius: 50%; margin-top: 2px; flex-shrink: 0; }
+    .tl-dot-done     { background: #34c759; }
+    .tl-dot-active   { background: #f5a623; box-shadow: 0 0 0 4px rgba(245,166,35,0.2); }
+    .tl-dot-upcoming { background: #fff; border: 2px solid #d1d5db; }
+    .tl-connector    { width: 2px; background: #e5e7eb; margin: 20px auto 0; height: 48px; }
+    .tl-content      { padding-bottom: 32px; }
+    .tl-date  { font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #9ca3af; margin-bottom: 4px; }
+    .tl-title { font-size: 15px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
+    .tl-desc  { font-size: 13px; color: #6b7280; line-height: 1.5; }
+    .tl-note  { font-size: 11px; color: #bbb; margin-top: 8px; font-style: italic; }
+    .coming-soon { padding: 80px 32px; text-align: center; }
+    .coming-soon-icon  { font-size: 48px; margin-bottom: 16px; }
+    .coming-soon-title { font-size: 20px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px; }
+    .coming-soon-sub   { font-size: 14px; color: #aaa; }
+
+    /* ── METRICS STAT ROW ────────────────────────────────────────────────── */
+    .stats-row-metrics { grid-template-columns: 1fr 1fr; margin-top: -8px; }
+    .stat-card-metric  { border-left: 3px solid #7b2d8b; }
+    .stat-value-metric { font-size: 32px; color: #7b2d8b; }
+    .stat-sub { font-size: 11px; color: #bbb; margin-top: 6px; }
+
+    /* ── APPROVALS PANEL ─────────────────────────────────────────────────── */
+    .approvals-main   { max-width: 960px; margin: 0 auto; padding: 32px 32px 64px; }
+    .approval-talent-block { margin-bottom: 48px; }
+    .approval-talent-header {
+      display: flex; align-items: center; gap: 20px;
+      padding-bottom: 14px; border-bottom: 2px solid #e2e2ea; margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .approval-talent-name { font-size: 17px; font-weight: 800; color: #1a1a2e; flex: 1; min-width: 140px; }
+    .approval-social-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .approval-table {
+      width: 100%; border-collapse: collapse; background: #fff;
+      border-radius: 14px; overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06); border: 1px solid #ebebf0;
+    }
+    .approval-table thead th {
+      background: #f8f8fb; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.9px; color: #7b7b92;
+      padding: 12px 16px; text-align: left; border-bottom: 1px solid #ebebf0;
+    }
+    .approval-table tbody tr { border-bottom: 1px solid #f2f2f7; }
+    .approval-table tbody tr:last-child { border-bottom: none; }
+    .approval-table td { padding: 14px 16px; vertical-align: top; }
+    .upload-cell { display: flex; flex-direction: column; gap: 8px; }
+    .upload-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: #f3f4f6; border: 1.5px dashed #d1d5db;
+      color: #374151; font-size: 12px; font-weight: 600;
+      padding: 8px 14px; border-radius: 8px; cursor: pointer;
+      transition: background 0.15s, border-color 0.15s; font-family: inherit;
+    }
+    .upload-btn:hover { background: #ede9ff; border-color: #7b2d8b; color: #7b2d8b; }
+    .upload-filename { font-size: 12px; color: #6b7280; word-break: break-all; }
+    .upload-filename.has-file { color: #065f46; font-weight: 600; }
+    input[type="file"].hidden-file { display: none; }
+    .upload-date { font-size: 13px; color: #9ca3af; white-space: nowrap; }
+    .upload-date.has-date { color: #1a1a2e; font-weight: 600; }
+    .draft-select {
+      appearance: none; -webkit-appearance: none; font-family: inherit;
+      font-size: 13px; font-weight: 600; padding: 7px 30px 7px 12px;
+      border-radius: 8px; cursor: pointer; outline: none; border: 1.5px solid #e5e7eb;
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%236b7280' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 8px center;
+      color: #374151; transition: border-color 0.15s;
+    }
+    .draft-select:focus { border-color: #7b2d8b; box-shadow: 0 0 0 3px rgba(123,45,139,0.12); }
+    .draft-select.final { background-color: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+    .notes-input {
+      font-family: inherit; font-size: 13px; color: #374151;
+      border: 1.5px solid #e5e7eb; border-radius: 8px;
+      padding: 8px 12px; min-height: 60px; width: 100%; resize: vertical; outline: none; line-height: 1.5;
+      transition: border-color 0.15s;
+    }
+    .notes-input:focus { border-color: #7b2d8b; box-shadow: 0 0 0 3px rgba(123,45,139,0.12); }
+
+    /* ── REPORTING TAB ───────────────────────────────────────────────────── */
+    .reporting-main { max-width: 960px; margin: 0 auto; padding: 32px 32px 64px; }
+    .reporting-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .reporting-header-left h2 { font-size: 20px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
+    .reporting-header-left p  { font-size: 13px; color: #999; }
+    .reporting-buttons { display: flex; gap: 10px; align-items: center; }
+    .btn-refresh, .btn-update {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; border: none; transition: all 0.15s;
+    }
+    .btn-refresh { background: #fff; border: 1px solid #e0e0e0; color: #555; }
+    .btn-refresh:hover { background: #f5f5f5; }
+    .btn-update  { background: #7b2d8b; color: #fff; }
+    .btn-update:hover { background: #6a2578; }
+    .last-updated { font-size: 11px; color: #bbb; }
+    .reporting-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+    .rpt-stat-card { background: #fff; border-radius: 12px; padding: 18px 20px; border: 1px solid #e8e8e8; }
+    .rpt-stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 6px; }
+    .rpt-stat-value { font-size: 24px; font-weight: 700; color: #1a1a1a; }
+    .rpt-stat-sub   { font-size: 11px; color: #bbb; margin-top: 4px; }
+    .rpt-deliverable-card { background: #fff; border-radius: 14px; border: 1px solid #e8e8e8; margin-bottom: 16px; overflow: hidden; }
+    .rpt-del-header { padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f0f0f0; }
+    .rpt-del-header-left { display: flex; align-items: center; gap: 14px; }
+    .rpt-del-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, #7b2d8b, #b39ddb);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 16px; font-weight: 700; flex-shrink: 0;
+    }
+    .rpt-del-name { font-size: 15px; font-weight: 700; color: #1a1a1a; }
+    .rpt-del-code { font-size: 12px; color: #999; margin-top: 2px; }
+    .rpt-del-body { padding: 20px 24px; }
+    .rpt-metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .rpt-metric { text-align: center; }
+    .rpt-metric-value { font-size: 22px; font-weight: 700; color: #1a1a1a; }
+    .rpt-metric-value.empty { color: #ddd; font-size: 18px; }
+    .rpt-metric-label { font-size: 11px; color: #999; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+    .rpt-del-footer { padding: 12px 24px; border-top: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; background: #fafafa; }
+    .rpt-del-footer-left { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #888; }
+    .rpt-post-link {
+      display: inline-flex; align-items: center; gap: 5px;
+      color: #7b2d8b; font-size: 12px; font-weight: 600; text-decoration: none;
+      padding: 4px 10px; border-radius: 6px; background: #f5eeff; border: 1px solid #e0ccff;
+    }
+    .rpt-post-link:hover { background: #ede0ff; }
+    .rpt-no-link { font-size: 12px; color: #ccc; font-style: italic; }
+
+    /* Update modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+    .modal-overlay.visible { display: flex; }
+    .modal-box { background: #fff; border-radius: 16px; padding: 32px; max-width: 480px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .modal-title { font-size: 18px; font-weight: 700; color: #1a1a1a; margin-bottom: 12px; }
+    .modal-body  { font-size: 14px; color: #555; line-height: 1.6; margin-bottom: 16px; }
+    .modal-info  { background: #f5eeff; border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; }
+    .modal-info p { font-size: 13px; color: #6b2d8b; margin-bottom: 4px; }
+    .modal-info p:last-child { margin-bottom: 0; }
+    .modal-info strong { font-weight: 700; }
+    .modal-prompt { font-size: 13px; color: #888; margin-bottom: 20px; }
+    .modal-prompt code { background: #f0f0f0; padding: 3px 8px; border-radius: 4px; font-size: 12px; color: #7b2d8b; font-weight: 600; }
+    .modal-close { padding: 8px 20px; border-radius: 8px; border: 1px solid #e0e0e0; background: #fff; font-size: 13px; font-weight: 600; color: #555; cursor: pointer; }
+    .modal-close:hover { background: #f5f5f5; }
+
+    /* ── FOOTER ──────────────────────────────────────────────────────────── */
+    .footer { text-align: center; padding: 24px; font-size: 12px; color: #bbb; border-top: 1px solid #eee; }
+
+    /* ── RESPONSIVE ──────────────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .hero { padding: 28px 20px; }
+      .hero-inner { flex-direction: column; align-items: flex-start; gap: 16px; }
+      .hero-title { font-size: 22px; }
+      .main { padding: 20px 20px 48px; }
+      .details-grid { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .talent-grid { grid-template-columns: 1fr; }
+      .reporting-stats { grid-template-columns: repeat(2, 1fr); }
+      .rpt-metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .reporting-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .talent-offer-inner { grid-template-columns: 90px 1fr; }
+      .talent-offer-photo, .talent-offer-photo-fallback { width: 90px; height: 120px; }
+      .timeline-wrap { padding: 20px 20px 48px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── LOADING OVERLAY ──────────────────────────────────────────────────────── -->
+<div id="loading-overlay" class="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Loading campaign data…</div>
+</div>
+
+<!-- ── TOP BAR ──────────────────────────────────────────────────────────────── -->
+<nav class="topbar">
+  <div class="zatv-logo">
+    <svg viewBox="0 0 130 48" xmlns="http://www.w3.org/2000/svg">
+      <text x="0"  y="42" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-weight="900" font-size="50" fill="#7b2d8b">ZA</text>
+      <text x="66" y="42" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-weight="900" font-size="50" fill="#b39ddb">TV</text>
+    </svg>
+  </div>
+  <div class="topbar-divider"></div>
+  <div class="topbar-brand" id="topbar-brand">Lionsgate</div>
+</nav>
+
+<!-- ── HERO ─────────────────────────────────────────────────────────────────── -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-logo-wrap" id="hero-logo-wrap">
+      <div class="hero-logo-fallback">LIONS<br>GATE</div>
+    </div>
+    <div class="hero-text">
+      <h1 class="hero-title" id="hero-title">Loading…</h1>
+      <div class="hero-meta" id="hero-meta"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TAB BAR ──────────────────────────────────────────────────────────────── -->
+<div class="tab-bar">
+  <div class="tab-bar-inner">
+    <div class="tab active" onclick="switchTab('overview',this)">📊 Overview</div>
+    <div class="tab" onclick="switchTab('creative',this)">🎨 Creative</div>
+    <div class="tab" onclick="switchTab('talent',this)">⭐️ Talent</div>
+    <div class="tab" onclick="switchTab('timeline',this)">📅 Timeline</div>
+    <div class="tab" onclick="switchTab('approvals',this)">✅ Approvals</div>
+    <div class="tab" onclick="switchTab('reporting',this)">📈 Reporting</div>
+  </div>
+</div>
+
+<!-- ── OVERVIEW PANEL ───────────────────────────────────────────────────────── -->
+<div class="tab-panel active" id="panel-overview">
+  <div class="main">
+    <div class="stats-row" id="stats-row-main"></div>
+    <div class="stats-row stats-row-metrics" id="stats-row-metrics"></div>
+    <div class="progress-card" id="progress-card"></div>
+    <div class="section-title">Deliverables</div>
+    <div class="deliverables-card">
+      <div class="deliverables-card-header"><span id="deliverables-header-count">Deliverables</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Creator</th><th>Platform</th><th>Status</th>
+            <th>Air Date</th><th>Views</th><th>Post Link</th>
+          </tr>
+        </thead>
+        <tbody id="deliverables-tbody"></tbody>
+      </table>
+    </div>
+    <div class="section-title">Talent</div>
+    <div class="talent-grid" id="talent-grid-overview"></div>
+  </div>
+</div>
+
+<!-- ── CREATIVE PANEL ───────────────────────────────────────────────────────── -->
+<div class="tab-panel" id="panel-creative">
+  <div class="creative-main" id="creative-main"></div>
+</div>
+
+<!-- ── TALENT PANEL ─────────────────────────────────────────────────────────── -->
+<div class="tab-panel" id="panel-talent">
+  <div class="talent-main">
+    <div class="talent-section" id="section-approved">
+      <div class="talent-section-heading">Approved</div>
+      <div id="approved-cards"></div>
+    </div>
+    <div class="talent-section" id="section-pending">
+      <div class="talent-section-heading">Pending</div>
+      <div id="pending-cards"></div>
+    </div>
+    <div class="talent-section" id="section-not-approved">
+      <div class="talent-section-heading">Not Approved</div>
+      <div id="not-approved-cards"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TIMELINE PANEL ───────────────────────────────────────────────────────── -->
+<div class="tab-panel" id="panel-timeline">
+  <div class="timeline-wrap" id="timeline-wrap"></div>
+</div>
+
+<!-- ── APPROVALS PANEL ──────────────────────────────────────────────────────── -->
+<div class="tab-panel" id="panel-approvals">
+  <div class="approvals-main" id="approvals-main"></div>
+</div>
+
+<!-- ── REPORTING PANEL ──────────────────────────────────────────────────────── -->
+<div class="tab-panel" id="panel-reporting">
+  <div class="reporting-main" id="reporting-main"></div>
+  <div class="modal-overlay" id="update-modal">
+    <div class="modal-box">
+      <div class="modal-title">📊 Update Engagement Stats</div>
+      <div class="modal-body">
+        This will use Claude in Chrome to visit each post link, read the publicly visible engagement metrics, and update your Airtable records.
+      </div>
+      <div class="modal-info">
+        <p><strong>Posts ready to scrape:</strong></p>
+        <p>👻 Snapchat: <span id="modal-snap-count">0</span> posts with links</p>
+      </div>
+      <div class="modal-prompt">
+        To run this, ask Claude: <code>"Update the engagement stats for the Lionsgate campaign"</code>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('update-modal').classList.remove('visible')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── FOOTER ────────────────────────────────────────────────────────────────── -->
+<div class="footer" id="footer">
+  ZATV Partner Portal · Confidential · This page is intended only for Lionsgate
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!--  JAVASCRIPT                                                                -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+// ── INLINE SVG ICONS ──────────────────────────────────────────────────────────
+const SVG = {
+  insta: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:13px;height:13px;flex-shrink:0"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" fill="currentColor"/></svg>`,
+  tiktok: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:13px;height:13px;flex-shrink:0"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.16 8.16 0 004.77 1.52V6.75a4.85 4.85 0 01-1-.06z" fill="currentColor"/></svg>`,
+  youtube: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:13px;height:13px;flex-shrink:0"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" fill="currentColor"/></svg>`,
+};
+
+// ── UTILITY FUNCTIONS ─────────────────────────────────────────────────────────
+function fmtNum(n) {
+  if (n == null || n === '') return '—';
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000)    return (n / 1000).toFixed(1) + 'K';
+  return Number(n).toLocaleString();
+}
+
+function fmtDate(d) {
+  if (!d) return 'TBD';
+  // Airtable date strings are YYYY-MM-DD; parse as local to avoid TZ shift
+  const [y, m, day] = d.split('-').map(Number);
+  return new Date(y, m - 1, day).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function fmtCurrency(n) {
+  if (n == null) return '—';
+  return '$' + Number(n).toLocaleString();
+}
+
+function initials(name) {
+  return (name || '??').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+}
+
+function platformPill(type) {
+  const t = (type || '').toLowerCase();
+  if (t.includes('snap')) return '<span class="platform-pill">👻 Snapchat</span>';
+  if (t.includes('tiktok') || t.includes('tik tok')) return '<span class="platform-pill">♪ TikTok</span>';
+  if (t.includes('instagram') || t.includes('insta')) return '<span class="platform-pill">📸 Instagram</span>';
+  if (t.includes('youtube')) return '<span class="platform-pill">▶ YouTube</span>';
+  return `<span class="platform-pill">${type}</span>`;
+}
+
+function statusPill(status) {
+  const s = status || '';
+  if (s.includes('Live'))        return `<span class="pill pill-live">${s}</span>`;
+  if (s.includes('Complete'))    return `<span class="pill pill-complete">${s}</span>`;
+  return `<span class="pill pill-dev">${s || '📝 Development'}</span>`;
+}
+
+function isCompleted(d) {
+  const s = d.status || '';
+  return s.includes('Live') || s.includes('Complete');
+}
+
+// ── SECTION CLASSIFICATION ─────────────────────────────────────────────────────
+function offerSection(offer) {
+  const s = offer.status || '';
+  if (s.includes('Accepted')) return 'approved';
+  if (s.includes('Pass'))     return 'not-approved';
+  return 'pending';
+}
+
+// ── LOAD CAMPAIGN ─────────────────────────────────────────────────────────────
+async function loadCampaign() {
+  showLoading(true);
+  try {
+    const resp = await fetch('/api/campaign');
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    renderAll(data);
+    showLoading(false);
+  } catch (err) {
+    const overlay = document.getElementById('loading-overlay');
+    overlay.innerHTML = `<div class="load-error">
+      <p style="font-size:18px;font-weight:700;margin-bottom:8px;">Failed to load campaign</p>
+      <p class="err-msg">${err.message}</p>
+      <button onclick="loadCampaign()">Retry</button>
+    </div>`;
+  }
+}
+
+function showLoading(on) {
+  const el = document.getElementById('loading-overlay');
+  if (on) el.classList.remove('hidden');
+  else    el.classList.add('hidden');
+}
+
+// ── RENDER ALL ────────────────────────────────────────────────────────────────
+function renderAll(data) {
+  const { campaign, deliverables, offers, timelines } = data;
+  renderHero(campaign);
+  renderOverviewStats(campaign, deliverables, offers);
+  renderProgressBar(deliverables);
+  renderDeliverablesTable(deliverables);
+  renderOverviewTalentGrid(offers);
+  renderCreative(campaign);
+  renderTalentTab(offers);
+  renderTimeline(campaign, timelines);
+  renderApprovals(offers, deliverables);
+  renderReporting(deliverables);
+  // Restore saved states
+  restoreFeedback(offers);
+  restoreApprovalState();
+  initDragAndDrop();
+}
+
+// ── HERO ──────────────────────────────────────────────────────────────────────
+function renderHero(campaign) {
+  document.getElementById('hero-title').textContent = campaign.name;
+  const dates = [campaign.startDate, campaign.endDate].filter(Boolean).map(fmtDate).join(' – ');
+  document.getElementById('hero-meta').innerHTML =
+    dates ? `<div class="hero-meta-item">📅 ${dates}</div>` : '';
+}
+
+// ── OVERVIEW STATS ────────────────────────────────────────────────────────────
+function renderOverviewStats(campaign, deliverables, offers) {
+  const total     = deliverables.length;
+  const completed = deliverables.filter(isCompleted).length;
+  const accepted  = offers.filter(o => offerSection(o) === 'approved').length;
+
+  document.getElementById('stats-row-main').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Campaign Budget</div>
+      <div class="stat-value">${fmtCurrency(campaign.budget)}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Completed Deliverables</div>
+      <div class="stat-value">${completed} <span class="stat-denom">/ ${total}</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Talent</div>
+      <div class="stat-value">${accepted} <span class="stat-unit">Creators</span></div>
+    </div>`;
+
+  // Compute totals from deliverable metrics
+  let totalViews = 0, totalEng = 0, hasMetrics = false;
+  deliverables.forEach(d => {
+    if (d.views != null)    { totalViews += d.views; hasMetrics = true; }
+    if (d.likes != null)    { totalEng += d.likes; hasMetrics = true; }
+    if (d.comments != null) { totalEng += d.comments; hasMetrics = true; }
+    if (d.shares != null)   { totalEng += d.shares; hasMetrics = true; }
+  });
+
+  document.getElementById('stats-row-metrics').innerHTML = `
+    <div class="stat-card stat-card-metric">
+      <div class="stat-label">Campaign Views</div>
+      <div class="stat-value stat-value-metric">${hasMetrics ? fmtNum(totalViews) : '—'}</div>
+      <div class="stat-sub">Across all posts</div>
+    </div>
+    <div class="stat-card stat-card-metric">
+      <div class="stat-label">Campaign Engagements</div>
+      <div class="stat-value stat-value-metric">${hasMetrics ? fmtNum(totalEng) : '—'}</div>
+      <div class="stat-sub">Likes, comments &amp; shares</div>
+    </div>`;
+}
+
+// ── PROGRESS BAR ─────────────────────────────────────────────────────────────
+function renderProgressBar(deliverables) {
+  const total     = deliverables.length;
+  const completed = deliverables.filter(isCompleted).length;
+  const pct       = total ? Math.round((completed / total) * 100) : 0;
+
+  let fillBg, labelColor, dotStyle;
+  if (pct === 0) {
+    fillBg = '#ffb3c1'; labelColor = '#c0392b';
+    dotStyle = 'background:#ffb3c1;border:1px solid #ff6b8a';
+  } else if (pct === 100) {
+    fillBg = 'linear-gradient(90deg,#34c759,#30d158)'; labelColor = '#1a7a3a';
+    dotStyle = 'background:#34c759;border:none';
+  } else {
+    fillBg = 'linear-gradient(90deg,#f5a623,#f7c948)'; labelColor = '#92600a';
+    dotStyle = 'background:#f5a623;border:none';
+  }
+  const fillWidth = pct === 0 ? '4px' : pct + '%';
+
+  document.getElementById('progress-card').innerHTML = `
+    <div class="progress-header">
+      <span class="progress-title">Campaign Progress</span>
+      <span class="progress-pct" style="color:${labelColor}">${pct}% Complete</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" style="width:${fillWidth};background:${fillBg}"></div>
+    </div>
+    <div class="progress-legend">
+      <div class="progress-legend-item">
+        <span class="legend-dot" style="${dotStyle}"></span>
+        ${completed} Completed
+      </div>
+      <div class="progress-legend-item">
+        <span class="legend-dot" style="background:#e0e0e0;border:1px solid #ccc"></span>
+        ${total - completed} Remaining
+      </div>
+    </div>`;
+}
+
+// ── DELIVERABLES TABLE ────────────────────────────────────────────────────────
+function renderDeliverablesTable(deliverables) {
+  document.getElementById('deliverables-header-count').textContent =
+    `${deliverables.length} Deliverable${deliverables.length !== 1 ? 's' : ''}`;
+
+  const rows = deliverables.map((d, i) => {
+    const postLinkHtml = d.postLink
+      ? `<a class="post-link" href="${d.postLink}" target="_blank">↗ View Post</a>`
+      : `<span class="no-link">Not yet live</span>`;
+    return `<tr>
+      <td>
+        <span class="post-label">Post ${i + 1}</span>
+        <span class="creator-name">${d.talent}</span>
+      </td>
+      <td>${platformPill(d.type)}</td>
+      <td>${statusPill(d.status)}</td>
+      <td style="color:${d.airDate ? '#1a1a1a' : '#ccc'};font-size:12px">${fmtDate(d.airDate)}</td>
+      <td style="color:${d.views != null ? '#1a1a1a' : '#ccc'};font-size:12px">${fmtNum(d.views)}</td>
+      <td>${postLinkHtml}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('deliverables-tbody').innerHTML = rows || '<tr><td colspan="6" style="color:#bbb;font-style:italic;text-align:center">No deliverables found</td></tr>';
+}
+
+// ── OVERVIEW TALENT GRID ──────────────────────────────────────────────────────
+function renderOverviewTalentGrid(offers) {
+  const accepted = offers.filter(o => offerSection(o) === 'approved');
+  const cards = accepted.map(offer => {
+    const img = offer.headshotUrl
+      ? `<img class="talent-headshot" src="${offer.headshotUrl}" alt="${offer.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+      : '';
+    const fallback = `<div class="talent-headshot-fallback" style="${offer.headshotUrl ? 'display:none' : ''}">${initials(offer.name)}</div>`;
+    const links = socialLinks(offer, 'talent-link');
+    return `<div class="talent-card">
+      ${img}${fallback}
+      <div class="talent-info">
+        <div class="talent-name">${offer.name}</div>
+        <div class="talent-platform">👻 Snapchat Creator</div>
+        <div class="talent-links">${links}</div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('talent-grid-overview').innerHTML = cards;
+}
+
+// ── SOCIAL LINKS HTML HELPER ──────────────────────────────────────────────────
+function socialLinks(offer, cls) {
+  let out = '';
+  if (offer.snapchatUrl)  out += `<a class="${cls} snap"   href="${offer.snapchatUrl}"  target="_blank">👻 Snapchat</a>`;
+  if (offer.instagramUrl) out += `<a class="${cls} insta"  href="${offer.instagramUrl}" target="_blank">${SVG.insta} Instagram</a>`;
+  if (offer.tiktokUrl)    out += `<a class="${cls} tiktok" href="${offer.tiktokUrl}"    target="_blank">${SVG.tiktok} TikTok</a>`;
+  if (offer.youtubeUrl)   out += `<a class="${cls} youtube"href="${offer.youtubeUrl}"   target="_blank">${SVG.youtube} YouTube</a>`;
+  return out;
+}
+
+// ── CREATIVE TAB ──────────────────────────────────────────────────────────────
+function renderCreative(campaign) {
+  const sections = [
+    { icon: '📖', title: 'Background',   val: campaign.briefBackground  },
+    { icon: '🎨', title: 'Guidelines',   val: campaign.briefGuidelines  },
+    { icon: '📣', title: 'Call-To-Action', val: campaign.briefCTA       },
+  ];
+  document.getElementById('creative-main').innerHTML = sections.map(s => `
+    <div class="brief-card">
+      <div class="brief-card-header">
+        <span class="brief-card-icon">${s.icon}</span>
+        <span class="brief-card-title">${s.title}</span>
+      </div>
+      <div class="brief-card-body">
+        ${s.val ? s.val : `<span class="brief-empty">No ${s.title.toLowerCase()} has been added to this campaign yet.</span>`}
+      </div>
+    </div>`).join('');
+}
+
+// ── TALENT TAB ────────────────────────────────────────────────────────────────
+function renderTalentTab(offers) {
+  const sections = {
+    'approved':     document.getElementById('approved-cards'),
+    'pending':      document.getElementById('pending-cards'),
+    'not-approved': document.getElementById('not-approved-cards'),
+  };
+  Object.values(sections).forEach(el => { el.innerHTML = ''; });
+
+  offers.forEach(offer => {
+    const section = offerSection(offer);
+    const card    = buildOfferCard(offer, section);
+    sections[section].insertAdjacentHTML('beforeend', card);
+  });
+
+  // Empty state messages
+  const labels = {
+    'approved':     'No approved talent.',
+    'pending':      'No talent pending review.',
+    'not-approved': 'No talent marked as not approved.',
+  };
+  Object.entries(sections).forEach(([key, el]) => {
+    if (!el.querySelector('.talent-offer-card')) {
+      el.innerHTML = `<div class="talent-section-empty">${labels[key]}</div>`;
+    }
+  });
+}
+
+function approvalClass(offer) {
+  const a = (offer.brandApproval || '').toLowerCase();
+  if (a.includes('approved') && !a.includes('not')) return 'approved';
+  if (a.includes('not'))                              return 'not-approved';
+  return 'pending';
+}
+
+function buildOfferCard(offer, section) {
+  const draggable  = section === 'approved' ? 'draggable="true"' : '';
+  const passed     = section === 'not-approved' ? 'passed' : '';
+  const imgHtml    = offer.headshotUrl
+    ? `<img class="talent-offer-photo" src="${offer.headshotUrl}" alt="${offer.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+    : '';
+  const fallback   = `<div class="talent-offer-photo-fallback" style="${offer.headshotUrl ? 'display:none' : ''}">${initials(offer.name)}</div>`;
+  const rankBadge  = section === 'approved' ? '<div class="rank-badge"></div>' : '';
+  const dragHandle = section === 'approved' ? '<div class="drag-handle">⠿</div>' : '';
+  const rankDropdown = section === 'approved' ? `<div class="rank-dropdown-wrap"><select class="rank-dropdown" onchange="changeRankByDropdown(this)"></select></div>` : '';
+
+  const badgeCls   = approvalClass(offer);
+  const badgeSel   = ['approved','pending','not-approved'].map(v => {
+    const label = v === 'approved' ? '✓ Approved' : v === 'pending' ? '● Pending' : '✗ Not Approved';
+    return `<option value="${v}" ${badgeCls === v ? 'selected' : ''}>${label}</option>`;
+  }).join('');
+
+  const bio = offer.biography
+    ? `<div class="talent-offer-bio">${offer.biography}</div>`
+    : `<div class="talent-offer-bio empty">No biography on file.</div>`;
+
+  const social = socialButtons(offer);
+  const us = offer.usAudience || '—';
+
+  const savedFeedback = localStorage.getItem('feedback_' + offer.id) || offer.brandFeedback || '';
+
+  return `<div class="talent-offer-card ${passed}" ${draggable} data-offer-id="${offer.id}">
+    ${rankBadge}${dragHandle}
+    <div class="talent-offer-inner">
+      ${imgHtml}${fallback}
+      <div class="talent-offer-body">
+        <div class="talent-offer-top">
+          <div class="talent-offer-name">${offer.name}</div>
+          <div class="badge-select-wrap">
+            <select class="badge-select ${badgeCls}" onchange="syncBadge(this)">${badgeSel}</select>
+          </div>
+        </div>
+        ${rankDropdown}
+        ${bio}
+        <div class="follower-buttons">${social}</div>
+        <div class="talent-offer-meta">
+          <span>🇺🇸 US Audience: <span class="us-pct-label">${us}</span></span>
+        </div>
+        <div class="feedback-wrap">
+          <div class="feedback-label">💬 Brand Feedback</div>
+          <div class="feedback-input" contenteditable="true"
+               data-placeholder="Add your feedback here…"
+               data-offer="${offer.id}"
+               oninput="markUnsaved(this)">${savedFeedback}</div>
+          <div class="feedback-save-hint" id="hint-${offer.id}"></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function socialButtons(offer) {
+  let out = '';
+  if (offer.snapchatUrl)  out += `<a class="follower-btn snap"    href="${offer.snapchatUrl}"  target="_blank">👻 Snapchat</a>`;
+  if (offer.instagramUrl) out += `<a class="follower-btn insta"   href="${offer.instagramUrl}" target="_blank">📸 Instagram</a>`;
+  if (offer.tiktokUrl)    out += `<a class="follower-btn tiktok"  href="${offer.tiktokUrl}"    target="_blank">♪ TikTok</a>`;
+  if (offer.youtubeUrl)   out += `<a class="follower-btn youtube" href="${offer.youtubeUrl}"   target="_blank">▶ YouTube</a>`;
+  return out;
+}
+
+// ── TIMELINE TAB ──────────────────────────────────────────────────────────────
+function renderTimeline(campaign, timelines) {
+  const campaignBar = `
+    <div class="tl-campaign-bar">
+      <div class="tl-campaign-label">
+        <span class="tl-campaign-icon">🎬</span>
+        <div>
+          <div class="tl-campaign-name">${campaign.name}</div>
+          <div class="tl-campaign-dates">${[campaign.startDate,campaign.endDate].filter(Boolean).map(fmtDate).join(' – ')}</div>
+        </div>
+      </div>
+    </div>`;
+
+  let listHtml;
+  if (!timelines || timelines.length === 0) {
+    listHtml = `<div class="tl-list">
+      <div class="coming-soon">
+        <div class="coming-soon-icon">📅</div>
+        <div class="coming-soon-title">No Timeline Data Yet</div>
+        <div class="coming-soon-sub">Timeline milestones will appear here once they're added to Airtable.</div>
+      </div>
+    </div>
+    <div class="tl-note">Dates pulled from Airtable · Timelines table</div>`;
+  } else {
+    const today = new Date().toISOString().slice(0, 10);
+    const items = timelines.map((tl, i) => {
+      const isLast   = i === timelines.length - 1;
+      const isDone   = tl.status === 'Complete' || (tl.date && tl.date < today);
+      const isActive = !isDone && (tl.date === today);
+      const dotClass = isDone ? 'tl-dot-done' : isActive ? 'tl-dot-active' : 'tl-dot-upcoming';
+      return `<div class="tl-item ${isLast ? 'tl-item-last' : ''}">
+        <div class="tl-dot ${dotClass}"></div>
+        <div class="tl-connector"></div>
+        <div class="tl-content">
+          <div class="tl-date">${fmtDate(tl.date)}${tl.phase ? ' · ' + tl.phase : ''}</div>
+          <div class="tl-title">${tl.task}</div>
+          ${tl.status ? `<div class="tl-desc">${tl.status}</div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+    listHtml = `<div class="tl-list">${items}</div><div class="tl-note">Dates pulled from Airtable · Timelines table</div>`;
+  }
+
+  document.getElementById('timeline-wrap').innerHTML = campaignBar + listHtml;
+}
+
+// ── APPROVALS TAB ─────────────────────────────────────────────────────────────
+function renderApprovals(offers, deliverables) {
+  const accepted = offers.filter(o => offerSection(o) === 'approved');
+  const blocks   = accepted.map(offer => {
+    const talentDeliverables = deliverables.filter(d => d.talent === offer.name);
+    const key = offer.name.replace(/[^a-z0-9]/gi, '').toLowerCase();
+
+    const socialRow = socialButtons(offer).replace(/follower-btn/g, 'follower-btn');
+
+    const rows = talentDeliverables.map((d, i) => {
+      const rowKey = `${key}-${i + 1}`;
+      const savedName = localStorage.getItem('upload-name-' + rowKey);
+      const savedDate = localStorage.getItem('upload-date-' + rowKey);
+      const savedDraft = localStorage.getItem('draft-draft-' + rowKey);
+      const savedNotes = localStorage.getItem('notes-' + rowKey);
+      const nameClass = savedName ? ' has-file' : '';
+      const dateClass = savedDate ? ' has-date' : '';
+      const draftFinal = savedDraft === '3' ? ' final' : '';
+      return `<tr>
+        <td>
+          <div class="upload-cell">
+            <input type="file" class="hidden-file" id="file-${rowKey}" accept="image/*,video/*,.mp4,.mov" onchange="handleUpload(this,'${rowKey}')">
+            <button class="upload-btn" onclick="document.getElementById('file-${rowKey}').click()">⬆ Upload Draft</button>
+            <div class="upload-filename${nameClass}" id="name-${rowKey}">${savedName || 'No file selected'}</div>
+          </div>
+        </td>
+        <td><div class="upload-date${dateClass}" id="date-${rowKey}">${savedDate || '—'}</div></td>
+        <td>
+          <select class="draft-select${draftFinal}" id="draft-${rowKey}" onchange="syncDraftStyle(this)">
+            <option value="">Draft 1</option>
+            <option value="">Draft 2</option>
+            <option value="">Draft 3</option>
+            <option value="final">Final Post</option>
+          </select>
+        </td>
+        <td>
+          <div class="notes-input" contenteditable="true"
+               data-placeholder="Add feedback or notes…"
+               data-key="notes-${rowKey}"
+               oninput="saveNotes(this)">${savedNotes || ''}</div>
+        </td>
+      </tr>`;
+    });
+
+    const tableHtml = rows.length
+      ? `<table class="approval-table">
+          <thead><tr>
+            <th style="width:240px">Post</th>
+            <th style="width:130px">Date</th>
+            <th style="width:150px">Draft</th>
+            <th>Notes</th>
+          </tr></thead>
+          <tbody>${rows.join('')}</tbody>
+        </table>`
+      : `<div style="color:#bbb;font-style:italic;font-size:13px">No deliverables linked yet.</div>`;
+
+    return `<div class="approval-talent-block">
+      <div class="approval-talent-header">
+        <div class="approval-talent-name">${offer.name}</div>
+        <div class="approval-social-row">${socialRow}</div>
+      </div>
+      ${tableHtml}
+    </div>`;
+  }).join('');
+
+  document.getElementById('approvals-main').innerHTML = blocks || '<div style="color:#bbb;font-style:italic;padding:40px 0">No approved talent yet.</div>';
+
+  // Restore saved draft select states
+  accepted.forEach(offer => {
+    const key = offer.name.replace(/[^a-z0-9]/gi, '').toLowerCase();
+    const delivCount = deliverables.filter(d => d.talent === offer.name).length;
+    for (let i = 1; i <= delivCount; i++) {
+      const rowKey  = `${key}-${i}`;
+      const selEl   = document.getElementById('draft-' + rowKey);
+      const savedIdx = localStorage.getItem('draft-draft-' + rowKey);
+      if (selEl && savedIdx !== null) {
+        selEl.selectedIndex = parseInt(savedIdx);
+        syncDraftStyle(selEl);
+      }
+    }
+  });
+}
+
+// ── REPORTING TAB ─────────────────────────────────────────────────────────────
+function renderReporting(deliverables) {
+  let totalViews = 0, totalLikes = 0, totalComments = 0, totalShares = 0;
+  let hasMetrics = false, postsLive = 0;
+
+  deliverables.forEach(d => {
+    if (isCompleted(d)) postsLive++;
+    if (d.views != null)    { totalViews    += d.views;    hasMetrics = true; }
+    if (d.likes != null)    { totalLikes    += d.likes;    hasMetrics = true; }
+    if (d.comments != null) { totalComments += d.comments; hasMetrics = true; }
+    if (d.shares != null)   { totalShares   += d.shares;   hasMetrics = true; }
+  });
+
+  const totalEng = totalLikes + totalComments + totalShares;
+  const snapLinksCount = deliverables.filter(d => d.postLink && (d.type || '').toLowerCase().includes('snap')).length;
+
+  const summaryCards = `
+    <div class="reporting-stats">
+      <div class="rpt-stat-card">
+        <div class="rpt-stat-label">Deliverables</div>
+        <div class="rpt-stat-value">${deliverables.length}</div>
+      </div>
+      <div class="rpt-stat-card">
+        <div class="rpt-stat-label">Total Views</div>
+        <div class="rpt-stat-value">${hasMetrics ? fmtNum(totalViews) : '—'}</div>
+        <div class="rpt-stat-sub">${hasMetrics ? 'Across all posts' : 'Awaiting post links'}</div>
+      </div>
+      <div class="rpt-stat-card">
+        <div class="rpt-stat-label">Total Engagement</div>
+        <div class="rpt-stat-value">${hasMetrics ? fmtNum(totalEng) : '—'}</div>
+        <div class="rpt-stat-sub">Likes + comments + shares</div>
+      </div>
+      <div class="rpt-stat-card">
+        <div class="rpt-stat-label">Posts Live</div>
+        <div class="rpt-stat-value">${postsLive}<span style="font-size:14px;color:#ccc;font-weight:400;margin-left:4px">/ ${deliverables.length}</span></div>
+      </div>
+    </div>`;
+
+  const delCards = deliverables.map(d => {
+    const metrics = ['views','likes','comments','shares'].map(m => {
+      const val = d[m];
+      const isEmpty = val == null;
+      return `<div class="rpt-metric">
+        <div class="rpt-metric-value${isEmpty ? ' empty' : ''}">${fmtNum(val)}</div>
+        <div class="rpt-metric-label">${m.charAt(0).toUpperCase() + m.slice(1)}</div>
+      </div>`;
+    }).join('');
+
+    const linkHtml = d.postLink
+      ? `<a class="rpt-post-link" href="${d.postLink}" target="_blank">↗ View Post</a>`
+      : `<span class="rpt-no-link">No post link yet</span>`;
+
+    return `<div class="rpt-deliverable-card">
+      <div class="rpt-del-header">
+        <div class="rpt-del-header-left">
+          <div class="rpt-del-avatar">${initials(d.talent)}</div>
+          <div>
+            <div class="rpt-del-name">${d.talent}</div>
+            <div class="rpt-del-code">${d.code} · ${d.type || '👻 Snap Video'}</div>
+          </div>
+        </div>
+        ${statusPill(d.status)}
+      </div>
+      <div class="rpt-del-body"><div class="rpt-metrics-grid">${metrics}</div></div>
+      <div class="rpt-del-footer">
+        <div class="rpt-del-footer-left">${platformPill(d.type)}${linkHtml}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const lastUpdated = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString();
+  const header = `
+    <div class="reporting-header">
+      <div class="reporting-header-left">
+        <h2>Campaign Report</h2>
+        <p>Snap – Lionsgate Michael · ${deliverables.length} deliverables · <span class="last-updated">Last updated: ${lastUpdated}</span></p>
+      </div>
+      <div class="reporting-buttons">
+        <button class="btn-refresh" onclick="refreshReporting()">⟳ Refresh Data</button>
+        <button class="btn-update"  onclick="document.getElementById('update-modal').classList.add('visible')">📊 Update Stats</button>
+      </div>
+    </div>`;
+
+  document.getElementById('reporting-main').innerHTML = header + summaryCards + delCards;
+  const snapCountEl = document.getElementById('modal-snap-count');
+  if (snapCountEl) snapCountEl.textContent = snapLinksCount;
+}
+
+function refreshReporting() {
+  const btn = document.querySelector('.btn-refresh');
+  if (btn) { btn.textContent = '⟳ Refreshing…'; btn.style.opacity = '0.6'; }
+  loadCampaign();
+}
+
+// ── FEEDBACK & LOCAL STATE ────────────────────────────────────────────────────
+function restoreFeedback() {
+  // Feedback is pre-populated in buildOfferCard() from localStorage or Airtable
+}
+
+function restoreApprovalState() {
+  // Badge states are pre-set in buildOfferCard() from offer.brandApproval
+}
+
+function markUnsaved(el) {
+  const id   = el.dataset.offer;
+  const hint = document.getElementById('hint-' + id);
+  if (hint) hint.textContent = 'Unsaved changes';
+  clearTimeout(el._saveTimer);
+  el._saveTimer = setTimeout(() => {
+    localStorage.setItem('feedback_' + id, el.innerText);
+    if (hint) hint.textContent = 'Saved locally ✓';
+  }, 1000);
+}
+
+// ── BADGE DROPDOWN ────────────────────────────────────────────────────────────
+function syncBadge(sel) {
+  sel.className = 'badge-select ' + sel.value;
+  const card = sel.closest('.talent-offer-card');
+  if (!card) return;
+  const targetMap = {
+    'approved':     'approved-cards',
+    'pending':      'pending-cards',
+    'not-approved': 'not-approved-cards',
+  };
+  const targetContainer = document.getElementById(targetMap[sel.value]);
+  if (!targetContainer) return;
+  if (sel.value === 'not-approved') card.classList.add('passed');
+  else card.classList.remove('passed');
+  card.style.transition = 'opacity 0.25s ease';
+  card.style.opacity = '0';
+  setTimeout(() => {
+    if (sel.value === 'approved') {
+      card.setAttribute('draggable', 'true');
+      if (!card.querySelector('.rank-badge'))    { const b = document.createElement('div'); b.className='rank-badge'; card.insertBefore(b, card.firstChild); }
+      if (!card.querySelector('.drag-handle'))   { const h = document.createElement('div'); h.className='drag-handle'; h.textContent='⠿'; card.insertBefore(h, card.children[1]); }
+      if (!card.querySelector('.rank-dropdown-wrap')) {
+        const wrap = document.createElement('div'); wrap.className='rank-dropdown-wrap';
+        const dd = document.createElement('select'); dd.className='rank-dropdown'; dd.setAttribute('onchange','changeRankByDropdown(this)');
+        wrap.appendChild(dd);
+        const top = card.querySelector('.talent-offer-top');
+        if (top && top.nextSibling) top.parentNode.insertBefore(wrap, top.nextSibling);
+      }
+    } else {
+      card.removeAttribute('draggable');
+      ['rank-badge','drag-handle','rank-dropdown-wrap'].forEach(cls => {
+        const el = card.querySelector('.' + cls);
+        if (el) el.style.display = 'none';
+      });
+    }
+    targetContainer.appendChild(card);
+    card.style.opacity = '1';
+    initDragAndDrop();
+    updateSectionEmptyStates();
+  }, 260);
+}
+
+function updateSectionEmptyStates() {
+  [['approved-cards','No approved talent.'],['pending-cards','No talent pending review.'],['not-approved-cards','No talent marked as not approved.']].forEach(([id, msg]) => {
+    const container = document.getElementById(id);
+    if (!container) return;
+    const cards = container.querySelectorAll('.talent-offer-card');
+    let emptyEl = container.querySelector('.talent-section-empty');
+    if (cards.length === 0) {
+      if (!emptyEl) { emptyEl = document.createElement('div'); emptyEl.className='talent-section-empty'; container.appendChild(emptyEl); }
+      emptyEl.textContent = msg; emptyEl.style.display = '';
+    } else if (emptyEl) {
+      emptyEl.style.display = 'none';
+    }
+  });
+}
+
+// ── DRAG & DROP RANKING ───────────────────────────────────────────────────────
+var draggedCard = null;
+
+function initDragAndDrop() {
+  var section = document.getElementById('approved-cards');
+  if (!section) return;
+  var cards = section.querySelectorAll('.talent-offer-card[draggable]');
+  cards.forEach(function(card) {
+    // Remove existing listeners by cloning
+    var clone = card.cloneNode(true);
+    card.parentNode.replaceChild(clone, card);
+  });
+  section.querySelectorAll('.talent-offer-card[draggable]').forEach(function(card) {
+    card.addEventListener('dragstart', function(e) { draggedCard = card; card.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
+    card.addEventListener('dragend',   function()  { card.classList.remove('dragging'); section.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over')); draggedCard=null; updateRankBadges(); updateRankDropdowns(); saveRanking(); });
+    card.addEventListener('dragover',  function(e) { e.preventDefault(); e.dataTransfer.dropEffect='move'; if (card!==draggedCard&&draggedCard) card.classList.add('drag-over'); });
+    card.addEventListener('dragleave', function()  { card.classList.remove('drag-over'); });
+    card.addEventListener('drop',      function(e) {
+      e.preventDefault(); card.classList.remove('drag-over');
+      if (draggedCard && draggedCard!==card) {
+        var all = Array.from(section.querySelectorAll('.talent-offer-card'));
+        if (all.indexOf(draggedCard) < all.indexOf(card)) section.insertBefore(draggedCard, card.nextSibling);
+        else section.insertBefore(draggedCard, card);
+      }
+    });
+  });
+  updateRankBadges();
+  updateRankDropdowns();
+  restoreRanking();
+}
+
+function updateRankBadges() {
+  var section = document.getElementById('approved-cards');
+  if (!section) return;
+  var rank = 1;
+  section.querySelectorAll('.talent-offer-card').forEach(function(card) {
+    var b = card.querySelector('.rank-badge');
+    if (b) { b.textContent = rank; rank++; }
+  });
+}
+
+function saveRanking() {
+  var section = document.getElementById('approved-cards');
+  if (!section) return;
+  var names = [];
+  section.querySelectorAll('.talent-offer-name').forEach(el => names.push(el.textContent));
+  localStorage.setItem('talent-ranking-lions2601', JSON.stringify(names));
+}
+
+function restoreRanking() {
+  var saved = localStorage.getItem('talent-ranking-lions2601');
+  if (!saved) return;
+  try {
+    var names  = JSON.parse(saved);
+    var section = document.getElementById('approved-cards');
+    if (!section) return;
+    var cards  = Array.from(section.querySelectorAll('.talent-offer-card'));
+    names.forEach(function(name) {
+      var c = cards.find(c => { var el = c.querySelector('.talent-offer-name'); return el && el.textContent === name; });
+      if (c) section.appendChild(c);
+    });
+    updateRankBadges();
+    updateRankDropdowns();
+  } catch(e) {}
+}
+
+function changeRankByDropdown(sel) {
+  var card    = sel.closest('.talent-offer-card');
+  var section = document.getElementById('approved-cards');
+  if (!card || !section) return;
+  var target  = parseInt(sel.value) - 1;
+  var cards   = Array.from(section.querySelectorAll('.talent-offer-card'));
+  if (cards.indexOf(card) === target) return;
+  card.remove();
+  var updated = Array.from(section.querySelectorAll('.talent-offer-card'));
+  if (target >= updated.length) section.appendChild(card);
+  else section.insertBefore(card, updated[target]);
+  updateRankBadges();
+  updateRankDropdowns();
+  saveRanking();
+}
+
+function updateRankDropdowns() {
+  var section = document.getElementById('approved-cards');
+  if (!section) return;
+  var cards = section.querySelectorAll('.talent-offer-card');
+  var total = cards.length;
+  cards.forEach(function(card, idx) {
+    var dd = card.querySelector('.rank-dropdown');
+    if (!dd) return;
+    if (dd.options.length !== total) {
+      dd.innerHTML = '';
+      for (var i = 1; i <= total; i++) {
+        var opt = document.createElement('option');
+        opt.value = i; opt.textContent = '#' + i + ' Ranking'; dd.appendChild(opt);
+      }
+    }
+    dd.value = idx + 1;
+  });
+}
+
+// ── APPROVALS UPLOAD & DRAFT ──────────────────────────────────────────────────
+function handleUpload(input, key) {
+  const file = input.files[0];
+  if (!file) return;
+  const nameEl = document.getElementById('name-' + key);
+  const dateEl = document.getElementById('date-' + key);
+  nameEl.textContent = file.name; nameEl.classList.add('has-file');
+  const fmt = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  dateEl.textContent = fmt; dateEl.classList.add('has-date');
+  localStorage.setItem('upload-name-' + key, file.name);
+  localStorage.setItem('upload-date-' + key, fmt);
+}
+
+function syncDraftStyle(sel) {
+  sel.className = 'draft-select' + (sel.value === 'final' ? ' final' : '');
+  localStorage.setItem('draft-' + sel.id, sel.selectedIndex);
+}
+
+function saveNotes(el) {
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { localStorage.setItem(el.dataset.key, el.innerText); }, 800);
+}
+
+// ── TAB SWITCHING ─────────────────────────────────────────────────────────────
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', loadCampaign);
+</script>
+
+</body>
+</html>
