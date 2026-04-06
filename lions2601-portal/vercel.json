@@ -1,8 +1,3 @@
 {
-  "version": 2,
-  "functions": {
-    "api/campaign.js": {
-      "runtime": "nodejs24.x"
-    }
-  }
+  "version": 2
 }
