@@ -686,7 +686,9 @@ function offerSection(offer) {
 async function loadCampaign() {
   showLoading(true);
   try {
-    const resp = await fetch('/api/campaign');
+    const campaignId = new URLSearchParams(window.location.search).get('campaign');
+    if (!campaignId) throw new Error('No campaign ID in URL. Add ?campaign=recXXXXXXXX to the URL.');
+    const resp = await fetch(`/api/campaign?campaign=${encodeURIComponent(campaignId)}`);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
     const data = await resp.json();
     if (data.error) throw new Error(data.error);
