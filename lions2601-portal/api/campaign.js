@@ -9,8 +9,7 @@
 //   AIRTABLE_BASE_ID      — default: appcKC14Om93O40QC
 //   CAMPAIGN_RECORD_ID    — default: recrv0pJcLVXBhfPj
 
-const BASE_ID     = process.env.AIRTABLE_BASE_ID    || 'appcKC14Om93O40QC';
-const CAMPAIGN_ID = process.env.CAMPAIGN_RECORD_ID  || 'recrv0pJcLVXBhfPj';
+const BASE_ID     = process.env.AIRTABLE_BASE_ID || 'appcKC14Om93O40QC';
 const AT_BASE     = `https://api.airtable.com/v0/${BASE_ID}`;
 
 // ── Table IDs ────────────────────────────────────────────────────────────────
@@ -136,11 +135,10 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  // Temporary diagnostic — remove after confirming token is correct
-  if (req.query.debug === '1') {
-    return res.status(200).json({
-      tokenPrefix: token.substring(0, 10) + '...',
-      tokenLength: token.length,
+  const campaignId = req.query.campaign;
+  if (!campaignId) {
+    return res.status(400).json({
+      error: 'Missing required query parameter: campaign (e.g. /api/campaign?campaign=recXXXXXXXX)',
     });
   }
 
@@ -148,7 +146,7 @@ module.exports = async function handler(req, res) {
     // 1. Fetch campaign record (single-record endpoint doesn't support fields[],
     //    so we fetch all fields and pick what we need)
     const campRecord = await atGet(
-      `${TABLES.campaigns}/${CAMPAIGN_ID}`,
+      `${TABLES.campaigns}/${campaignId}`,
       [],
       token
     );
