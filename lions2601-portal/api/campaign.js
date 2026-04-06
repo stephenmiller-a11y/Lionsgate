@@ -152,10 +152,15 @@ module.exports = async function handler(req, res) {
     );
     const cf = campRecord.fields;
 
-    // Extract linked record IDs
-    const deliverableIds = (cf['Deliverables'] || []).map(r => r.id);
-    const offerIds       = (cf['Offers']       || []).map(r => r.id);
-    const timelineIds    = (cf['📅 Timelines'] || []).map(r => r.id);
+    // Temporary: expose raw field keys to help verify names
+    if (req.query.debug === 'fields') {
+      return res.status(200).json({ fieldKeys: Object.keys(cf), sample: cf });
+    }
+
+    // Airtable returns linked record fields as plain string arrays of IDs
+    const deliverableIds = cf['Deliverables'] || [];
+    const offerIds       = cf['Offers']       || [];
+    const timelineIds    = cf['📅 Timelines'] || [];
 
     // 2. Fetch related records in parallel
     const [delivsData, offersData, timelinesData] = await Promise.all([
