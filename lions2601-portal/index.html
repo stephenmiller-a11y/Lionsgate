@@ -593,22 +593,6 @@
 <!-- ── REPORTING PANEL ──────────────────────────────────────────────────────── -->
 <div class="tab-panel" id="panel-reporting">
   <div class="reporting-main" id="reporting-main"></div>
-  <div class="modal-overlay" id="update-modal">
-    <div class="modal-box">
-      <div class="modal-title">📊 Update Engagement Stats</div>
-      <div class="modal-body">
-        This will use Claude in Chrome to visit each post link, read the publicly visible engagement metrics, and update your Airtable records.
-      </div>
-      <div class="modal-info">
-        <p><strong>Posts ready to scrape:</strong></p>
-        <p>👻 Snapchat: <span id="modal-snap-count">0</span> posts with links</p>
-      </div>
-      <div class="modal-prompt">
-        To run this, ask Claude: <code id="modal-prompt-text">"Update the engagement stats for this campaign"</code>
-      </div>
-      <button class="modal-close" onclick="document.getElementById('update-modal').classList.remove('visible')">Close</button>
-    </div>
-  </div>
 </div>
 
 <!-- ── FOOTER ────────────────────────────────────────────────────────────────── -->
@@ -710,9 +694,13 @@ function showLoading(on) {
   else    el.classList.add('hidden');
 }
 
+// ── GLOBAL STATE ─────────────────────────────────────────────────────────────
+var _deliverables = []; // cached for updateStats()
+
 // ── RENDER ALL ────────────────────────────────────────────────────────────────
 function renderAll(data) {
   const { campaign, deliverables, offers, timelines } = data;
+  _deliverables = deliverables; // cache for updateStats()
   // Update brand-specific elements
   const brand = campaign.brandName || campaign.name;
   document.title = `${brand} | ZATV Campaign Portal`;
@@ -1225,19 +1213,85 @@ function renderReporting(campaign, deliverables) {
       </div>
       <div class="reporting-buttons">
         <button class="btn-refresh" onclick="refreshReporting()">⟳ Refresh Data</button>
-        <button class="btn-update"  onclick="document.getElementById('update-modal').classList.add('visible')">📊 Update Stats</button>
+        <button class="btn-update" id="btn-update-stats" onclick="updateStats()">📊 Update Stats</button>
       </div>
     </div>`;
 
   document.getElementById('reporting-main').innerHTML = header + summaryCards + delCards;
-  const snapCountEl = document.getElementById('modal-snap-count');
-  if (snapCountEl) snapCountEl.textContent = snapLinksCount;
 }
 
 function refreshReporting() {
   const btn = document.querySelector('.btn-refresh');
   if (btn) { btn.textContent = '⟳ Refreshing…'; btn.style.opacity = '0.6'; }
   loadCampaign();
+}
+
+// ── UPDATE STATS (YouTube Data API v3) ────────────────────────────────────────
+async function updateStats() {
+  const btn = document.getElementById('btn-update-stats');
+  if (!btn) return;
+
+  // Only pass deliverables that have a post link
+  const toUpdate = _deliverables.filter(d => d.postLink);
+  if (toUpdate.length === 0) {
+    showStatsToast('No post links found on any deliverables. Add YouTube URLs to the Post Link field in Airtable first.', 'warn');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Fetching stats…';
+
+  try {
+    const resp = await fetch('/api/stats', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deliverables: toUpdate.map(d => ({ id: d.id, postLink: d.postLink, type: d.type })) }),
+    });
+    const result = await resp.json();
+
+    if (!resp.ok) {
+      throw new Error(result.error || `HTTP ${resp.status}`);
+    }
+
+    if (result.updated > 0) {
+      showStatsToast(`✓ ${result.message}`, 'success');
+      // Re-fetch campaign data so the reporting table shows fresh numbers
+      loadCampaign();
+    } else {
+      showStatsToast(result.message || 'No stats were updated.', 'warn');
+    }
+  } catch (err) {
+    showStatsToast(`Update failed: ${err.message}`, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📊 Update Stats';
+  }
+}
+
+function showStatsToast(message, type) {
+  var existing = document.getElementById('stats-toast');
+  if (existing) existing.remove();
+
+  var colors = {
+    success: { bg: '#d1fae5', border: '#6ee7b7', color: '#065f46' },
+    warn:    { bg: '#fef9c3', border: '#fde68a', color: '#854d0e' },
+    error:   { bg: '#fee2e2', border: '#fca5a5', color: '#991b1b' },
+  };
+  var c = colors[type] || colors.warn;
+
+  var toast = document.createElement('div');
+  toast.id = 'stats-toast';
+  toast.style.cssText = `
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+    background: ${c.bg}; border: 1.5px solid ${c.border}; color: ${c.color};
+    padding: 12px 22px; border-radius: 10px; font-size: 13px; font-weight: 600;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.12); z-index: 9999; max-width: 480px;
+    text-align: center; white-space: pre-line;
+  `;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+
+  setTimeout(() => { if (toast.parentNode) toast.remove(); }, 6000);
 }
 
 // ── FEEDBACK & LOCAL STATE ────────────────────────────────────────────────────
