@@ -1,16 +1,15 @@
 // api/campaign.js
-// Vercel serverless function — fetches Lionsgate Michael campaign data from Airtable
+// Vercel serverless function — fetches campaign data from Airtable
 // Keeps AIRTABLE_TOKEN server-side; never exposed to the browser.
 //
 // Required environment variable (set in Vercel dashboard or .env.local):
 //   AIRTABLE_TOKEN  — your Airtable Personal Access Token
 //
 // Optional overrides:
-//   AIRTABLE_BASE_ID      — default: appcKC14Om93O40QC
-//   CAMPAIGN_RECORD_ID    — default: recrv0pJcLVXBhfPj
+//   AIRTABLE_BASE_ID  — default: appcKC14Om93O40QC
 
-const BASE_ID     = process.env.AIRTABLE_BASE_ID || 'appcKC14Om93O40QC';
-const AT_BASE     = `https://api.airtable.com/v0/${BASE_ID}`;
+const BASE_ID = process.env.AIRTABLE_BASE_ID || 'appcKC14Om93O40QC';
+const AT_BASE = `https://api.airtable.com/v0/${BASE_ID}`;
 
 // ── Table IDs ────────────────────────────────────────────────────────────────
 const TABLES = {
@@ -20,27 +19,13 @@ const TABLES = {
   timelines:    'tblq7dwxv0yUdzPou',
 };
 
-// ── Field IDs (Airtable always returns fields keyed by NAME, but IDs control
-//    which fields are included in the response) ────────────────────────────────
-const CAMPAIGN_FIELDS = [
-  'fldlzyQ0W6jrbve1a', // Campaign (formula name)
-  'fld5K1hvHduNHOWB3', // Budget
-  'fldKK0fGNDjJl1kwg', // Start Date
-  'fld5sHcNArzzzeRU9', // End Date
-  'fldapLz7u5adkEBwY', // Status
-  'fldPPqqDgpDcmrgvh', // Brief Background
-  'fldBaDzAw0sUF5nzt', // Brief Creative Guidelines
-  'fldizWsdOaIYHGf4J', // Brief CTA
-  'fldEN5rkjgf7nZMrZ', // Deliverables (linked)
-  'fldLpvnXZssyb0EQ8', // Offers (linked)
-  'fldnENF0Iizlzoedr', // 📅 Timelines (linked)
-];
-
+// ── Field IDs ─────────────────────────────────────────────────────────────────
+// Deliverables table — accessed by field ID (returnFieldsByFieldId=true)
 const DELIVERABLE_FIELDS = [
   'fldrNfr3G8KgviLkR', // Deliverable Code
-  'fldjPPOdxTy6Hw8EO', // Talent (linked)
-  'fldDjtURDzrqQqT8O', // Type
-  'fld9R7BcRAKciybge', // Status
+  'fldDiP9NLIgCSUPkA', // Talent Name (formula — resolves to talent's name)
+  'fldDjtURDzrqQqT8O', // Type (singleSelect)
+  'fld9R7BcRAKciybge', // Status (singleSelect)
   'fldgonVo2oC1R483t', // Air Date
   'fldoSvBFD45ZdpYHJ', // Post Link
   'fldliR0ZyX2OzMkvs', // Views
@@ -49,30 +34,29 @@ const DELIVERABLE_FIELDS = [
   'fldqqQzTtUl6k5crI', // Shares
 ];
 
+// Offers table — accessed by field ID (returnFieldsByFieldId=true)
 const OFFER_FIELDS = [
-  'fldB426sihwzSFIjO', // Record ID (formula)
-  'fldrjJQqkKpdXFDyM', // Name (from Talent) — lookup
-  'fldj9RNXpglllTMBE', // Status
+  'fldrjJQqkKpdXFDyM', // Name (from Talent) — multipleLookupValues
+  'fldj9RNXpglllTMBE', // Status (singleSelect)
   'fld2jDj78o2PYGukg', // Brand Feedback
-  'fldoZlmO1OIJc6fI7', // Brand Approval
+  'fldoZlmO1OIJc6fI7', // Brand Approval (singleSelect)
   'fldWceYkW6KgT58KI', // Brand Ranking
-  'fld0pTahNYhyvIMgK', // Instagram URL — lookup
-  'fldT0Ay8sZT2CdFSO', // TikTok URL — lookup
-  'fld4PkLU2QwRoJ8Sk', // YouTube URL — lookup
-  'fldMnSn105js66oLh', // Snapchat URL — lookup
-  'fldFlu16WtdeFsWfX', // Headshot — lookup of attachments
-  'fldGwHtpe9pNZmCYI', // Biography — lookup
-  'fldWRvRqw9E1leW0g', // US Audience — lookup
+  'fld0pTahNYhyvIMgK', // Instagram URL — multipleLookupValues
+  'fldT0Ay8sZT2CdFSO', // TikTok URL — multipleLookupValues
+  'fld4PkLU2QwRoJ8Sk', // YouTube URL — multipleLookupValues
+  'fldMnSn105js66oLh', // Snapchat URL — multipleLookupValues
+  'fldFlu16WtdeFsWfX', // Headshot — multipleLookupValues of attachments
+  'fldGwHtpe9pNZmCYI', // Biography — multipleLookupValues
+  'fldWRvRqw9E1leW0g', // US Audience — multipleLookupValues
   'fldmqzhGoXj8iuuDa', // Offer amount
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-async function atGet(path, fieldIds, token) {
+// Fetch a single record by path (no fields[] filter — single-record endpoint
+// doesn't support it). Returns fields keyed by NAME.
+async function atGet(path, token) {
   const url = new URL(`${AT_BASE}/${path}`);
-  if (fieldIds && fieldIds.length) {
-    fieldIds.forEach(id => url.searchParams.append('fields[]', id));
-  }
   const res = await fetch(url.toString(), {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -83,6 +67,9 @@ async function atGet(path, fieldIds, token) {
   return res.json();
 }
 
+// Fetch multiple records from a table by record IDs.
+// Uses returnFieldsByFieldId=true so fields are keyed by field ID (avoids
+// field-name ambiguity and matches our DELIVERABLE_FIELDS / OFFER_FIELDS arrays).
 async function atGetByIds(tableId, ids, fieldIds, token) {
   if (!ids || ids.length === 0) return { records: [] };
   const formula = ids.length === 1
@@ -90,6 +77,7 @@ async function atGetByIds(tableId, ids, fieldIds, token) {
     : `OR(${ids.map(id => `RECORD_ID()='${id}'`).join(',')})`;
   const url = new URL(`${AT_BASE}/${tableId}`);
   url.searchParams.set('filterByFormula', formula);
+  url.searchParams.set('returnFieldsByFieldId', 'true');
   fieldIds.forEach(id => url.searchParams.append('fields[]', id));
   const res = await fetch(url.toString(), {
     headers: { Authorization: `Bearer ${token}` },
@@ -113,9 +101,7 @@ function extractHeadshot(field) {
   if (!field || !Array.isArray(field) || field.length === 0) return null;
   const first = field[0];
   if (!first) return null;
-  // Direct attachment object
   if (typeof first === 'object' && first.url) return first.url;
-  // Nested array of attachment objects (lookup of attachment field)
   if (Array.isArray(first) && first[0] && first[0].url) return first[0].url;
   return null;
 }
@@ -143,26 +129,16 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // 1. Fetch campaign record (single-record endpoint doesn't support fields[],
-    //    so we fetch all fields and pick what we need)
-    const campRecord = await atGet(
-      `${TABLES.campaigns}/${campaignId}`,
-      [],
-      token
-    );
+    // 1. Fetch campaign record (all fields, keyed by name)
+    const campRecord = await atGet(`${TABLES.campaigns}/${campaignId}`, token);
     const cf = campRecord.fields;
 
-    // Temporary: expose raw field keys to help verify names
-    if (req.query.debug === 'fields') {
-      return res.status(200).json({ fieldKeys: Object.keys(cf), sample: cf });
-    }
-
-    // Airtable returns linked record fields as plain string arrays of IDs
+    // Linked record fields return plain string ID arrays in the REST API
     const deliverableIds = cf['Deliverables'] || [];
     const offerIds       = cf['Offers']       || [];
     const timelineIds    = cf['📅 Timelines'] || [];
 
-    // 2. Fetch related records in parallel
+    // 2. Fetch related records in parallel (fields keyed by field ID)
     const [delivsData, offersData, timelinesData] = await Promise.all([
       atGetByIds(TABLES.deliverables, deliverableIds, DELIVERABLE_FIELDS, token),
       atGetByIds(TABLES.offers,       offerIds,       OFFER_FIELDS,       token),
@@ -170,67 +146,67 @@ module.exports = async function handler(req, res) {
     ]);
 
     // 3. Shape campaign
+    // Single-select fields return plain strings (not objects) in the REST API
     const campaign = {
-      name:            cf['Campaign']                  || 'Snap – Lionsgate Michael',
+      name:            (cf['📇 Campaign Name'] || cf['Campaign'] || '').trim(),
       budget:          cf['Budget']                    ?? 0,
       startDate:       cf['Start Date']                || null,
       endDate:         cf['End Date']                  || null,
-      status:          cf['Status']?.name              || null,
+      status:          cf['Status']                    || null,
       briefBackground: cf['Brief Background']          || null,
       briefGuidelines: cf['Brief Creative Guidelines'] || null,
       briefCTA:        cf['Brief CTA']                 || null,
     };
 
-    // 4. Shape deliverables (sorted by code)
+    // 4. Shape deliverables — fields keyed by field ID
     const deliverables = (delivsData.records || [])
       .map(r => {
         const f = r.fields;
-        const talentArr = f['Talent'];
         return {
           id:       r.id,
-          code:     f['Deliverable Code'] || '',
-          talent:   Array.isArray(talentArr) ? (talentArr[0]?.name || '') : '',
-          type:     f['Type']?.name    || '',
-          status:   f['Status']?.name  || '',
-          airDate:  f['Air Date']      || null,
-          postLink: f['Post Link']     || null,
-          views:    f['Views']         ?? null,
-          likes:    f['Likes']         ?? null,
-          comments: f['Comments']      ?? null,
-          shares:   f['Shares']        ?? null,
+          code:     f['fldrNfr3G8KgviLkR'] || '',  // Deliverable Code
+          talent:   f['fldDiP9NLIgCSUPkA'] || '',  // Talent Name (formula)
+          type:     f['fldDjtURDzrqQqT8O'] || '',  // Type (singleSelect string)
+          status:   f['fld9R7BcRAKciybge'] || '',  // Status (singleSelect string)
+          airDate:  f['fldgonVo2oC1R483t'] || null,
+          postLink: f['fldoSvBFD45ZdpYHJ'] || null,
+          views:    f['fldliR0ZyX2OzMkvs'] ?? null,
+          likes:    f['fld3BhTWQ1IdTe6um'] ?? null,
+          comments: f['fldTm8YrIhRvRCQUr'] ?? null,
+          shares:   f['fldqqQzTtUl6k5crI'] ?? null,
         };
       })
       .sort((a, b) => a.code.localeCompare(b.code));
 
-    // 5. Shape offers
+    // 5. Shape offers — fields keyed by field ID
     const offers = (offersData.records || []).map(r => {
       const f = r.fields;
       return {
-        id:             r.id,
-        name:           firstLookup(f['Name (from Talent)']) || '',
-        status:         f['Status']?.name          || '',
-        brandFeedback:  f['Brand Feedback']        || '',
-        brandApproval:  f['Brand Approval']?.name  || null,
-        brandRanking:   f['Brand Ranking']         ?? null,
-        instagramUrl:   firstLookup(f['Instagram URL']),
-        tiktokUrl:      firstLookup(f['TikTok URL']),
-        youtubeUrl:     firstLookup(f['YouTube URL']),
-        snapchatUrl:    firstLookup(f['Snapchat URL']),
-        headshotUrl:    extractHeadshot(f['Headshot']),
-        biography:      firstLookup(f['Biography']),
-        usAudience:     firstLookup(f['US Audience']),
-        offer:          f['Offer'] ?? null,
+        id:            r.id,
+        name:          firstLookup(f['fldrjJQqkKpdXFDyM']) || '',  // Name (from Talent)
+        status:        f['fldj9RNXpglllTMBE']              || '',  // Status
+        brandFeedback: f['fld2jDj78o2PYGukg']              || '',  // Brand Feedback
+        brandApproval: f['fldoZlmO1OIJc6fI7']              || null, // Brand Approval
+        brandRanking:  f['fldWceYkW6KgT58KI']              ?? null, // Brand Ranking
+        instagramUrl:  firstLookup(f['fld0pTahNYhyvIMgK']),
+        tiktokUrl:     firstLookup(f['fldT0Ay8sZT2CdFSO']),
+        youtubeUrl:    firstLookup(f['fld4PkLU2QwRoJ8Sk']),
+        snapchatUrl:   firstLookup(f['fldMnSn105js66oLh']),
+        headshotUrl:   extractHeadshot(f['fldFlu16WtdeFsWfX']),
+        biography:     firstLookup(f['fldGwHtpe9pNZmCYI']),
+        usAudience:    firstLookup(f['fldWRvRqw9E1leW0g']),
+        offer:         f['fldmqzhGoXj8iuuDa']              ?? null,
       };
     });
 
-    // 6. Shape timelines (sorted by date)
+    // 6. Shape timelines — fetched without field filter; fields keyed by name
     const timelines = (timelinesData.records || [])
       .map(r => ({
         id:     r.id,
-        task:   r.fields['Task']           || '',
-        date:   r.fields['Date']           || null,
-        status: r.fields['Status']?.name   || null,
-        phase:  r.fields['Phase']?.name    || null,
+        task:   r.fields['Task']   || '',
+        date:   r.fields['Date']   || null,
+        status: r.fields['Status'] || null,
+        phase:  r.fields['Phase']  || null,
       }))
       .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
 
