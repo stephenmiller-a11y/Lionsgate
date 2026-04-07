@@ -604,7 +604,7 @@
         <p>👻 Snapchat: <span id="modal-snap-count">0</span> posts with links</p>
       </div>
       <div class="modal-prompt">
-        To run this, ask Claude: <code>"Update the engagement stats for the Lionsgate campaign"</code>
+        To run this, ask Claude: <code id="modal-prompt-text">"Update the engagement stats for this campaign"</code>
       </div>
       <button class="modal-close" onclick="document.getElementById('update-modal').classList.remove('visible')">Close</button>
     </div>
@@ -713,6 +713,14 @@ function showLoading(on) {
 // ── RENDER ALL ────────────────────────────────────────────────────────────────
 function renderAll(data) {
   const { campaign, deliverables, offers, timelines } = data;
+  // Update brand-specific elements
+  const brand = campaign.brandName || campaign.name;
+  document.title = `${brand} | ZATV Campaign Portal`;
+  document.getElementById('topbar-brand').textContent = brand;
+  document.getElementById('footer').textContent =
+    `ZATV Partner Portal · Confidential · This page is intended only for ${brand}`;
+  document.getElementById('modal-prompt-text').textContent =
+    `"Update the engagement stats for the ${brand} campaign"`;
   renderHero(campaign);
   renderOverviewStats(campaign, deliverables, offers);
   renderProgressBar(deliverables);
@@ -722,7 +730,7 @@ function renderAll(data) {
   renderTalentTab(offers);
   renderTimeline(campaign, timelines);
   renderApprovals(offers, deliverables);
-  renderReporting(deliverables);
+  renderReporting(campaign, deliverables);
   // Restore saved states
   restoreFeedback(offers);
   restoreApprovalState();
@@ -1123,7 +1131,7 @@ function renderApprovals(offers, deliverables) {
 }
 
 // ── REPORTING TAB ─────────────────────────────────────────────────────────────
-function renderReporting(deliverables) {
+function renderReporting(campaign, deliverables) {
   let totalViews = 0, totalLikes = 0, totalComments = 0, totalShares = 0;
   let hasMetrics = false, postsLive = 0;
 
@@ -1197,7 +1205,7 @@ function renderReporting(deliverables) {
     <div class="reporting-header">
       <div class="reporting-header-left">
         <h2>Campaign Report</h2>
-        <p>Snap – Lionsgate Michael · ${deliverables.length} deliverables · <span class="last-updated">Last updated: ${lastUpdated}</span></p>
+        <p>${campaign.name} · ${deliverables.length} deliverables · <span class="last-updated">Last updated: ${lastUpdated}</span></p>
       </div>
       <div class="reporting-buttons">
         <button class="btn-refresh" onclick="refreshReporting()">⟳ Refresh Data</button>
