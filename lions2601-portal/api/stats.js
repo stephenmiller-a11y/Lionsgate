@@ -14,9 +14,10 @@ const AT_BASE            = `https://api.airtable.com/v0/${BASE_ID}`;
 const DELIVERABLES_TABLE = 'tblNOrIcXwZ0R78LJ';
 
 // Deliverable field IDs (returnFieldsByFieldId=true)
-const F_VIEWS    = 'fldliR0ZyX2OzMkvs';
-const F_LIKES    = 'fld3BhTWQ1IdTe6um';
-const F_COMMENTS = 'fldTm8YrIhRvRCQUr';
+const F_VIEWS       = 'fldliR0ZyX2OzMkvs';
+const F_LIKES       = 'fld3BhTWQ1IdTe6um';
+const F_COMMENTS    = 'fldTm8YrIhRvRCQUr';
+const F_SOCIAL_POST = 'fldHkJxRyOoTrXvHc'; // Social Post (dateTime)
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -48,7 +49,7 @@ async function fetchYouTubeStats(videoIds, apiKey) {
 
   const result = {};
   for (const chunk of chunks) {
-    const url = `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${chunk.join(',')}&key=${apiKey}`;
+    const url = `https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet&id=${chunk.join(',')}&key=${apiKey}`;
     const res = await fetch(url);
     if (!res.ok) {
       const body = await res.text();
@@ -57,10 +58,12 @@ async function fetchYouTubeStats(videoIds, apiKey) {
     const data = await res.json();
     for (const item of (data.items || [])) {
       const s = item.statistics || {};
+      const sn = item.snippet    || {};
       result[item.id] = {
-        views:    s.viewCount    != null ? parseInt(s.viewCount,    10) : null,
-        likes:    s.likeCount    != null ? parseInt(s.likeCount,    10) : null,
-        comments: s.commentCount != null ? parseInt(s.commentCount, 10) : null,
+        views:       s.viewCount    != null ? parseInt(s.viewCount,    10) : null,
+        likes:       s.likeCount    != null ? parseInt(s.likeCount,    10) : null,
+        comments:    s.commentCount != null ? parseInt(s.commentCount, 10) : null,
+        publishedAt: sn.publishedAt || null, // ISO 8601 e.g. "2024-03-15T18:00:00Z"
       };
     }
   }
@@ -159,9 +162,10 @@ module.exports = async function handler(req, res) {
           return;
         }
         const fields = {};
-        if (stats.views    != null) fields[F_VIEWS]    = stats.views;
-        if (stats.likes    != null) fields[F_LIKES]    = stats.likes;
-        if (stats.comments != null) fields[F_COMMENTS] = stats.comments;
+        if (stats.views       != null) fields[F_VIEWS]       = stats.views;
+        if (stats.likes       != null) fields[F_LIKES]       = stats.likes;
+        if (stats.comments    != null) fields[F_COMMENTS]    = stats.comments;
+        if (stats.publishedAt != null) fields[F_SOCIAL_POST] = stats.publishedAt;
 
         if (Object.keys(fields).length > 0) {
           await patchDeliverable(deliverable.id, fields, airtableToken);
