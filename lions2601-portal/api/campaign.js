@@ -137,18 +137,25 @@ module.exports = async function handler(req, res) {
     const deliverableIds = cf['Deliverables'] || [];
     const offerIds       = cf['Offers']       || [];
     const timelineIds    = cf['📅 Timelines'] || [];
+    const brandId        = (cf['Brand'] || [])[0] || null;
 
     // 2. Fetch related records in parallel (fields keyed by field ID)
-    const [delivsData, offersData, timelinesData] = await Promise.all([
+    // Brand table primary field: fldzffs5mAHRcIadt
+    const BRAND_TABLE = 'tblzolzC9inRloCvo';
+    const [delivsData, offersData, timelinesData, brandData] = await Promise.all([
       atGetByIds(TABLES.deliverables, deliverableIds, DELIVERABLE_FIELDS, token),
       atGetByIds(TABLES.offers,       offerIds,       OFFER_FIELDS,       token),
       atGetByIds(TABLES.timelines,    timelineIds,    [],                 token),
+      brandId ? atGetByIds(BRAND_TABLE, [brandId], ['fldzffs5mAHRcIadt'], token) : Promise.resolve({ records: [] }),
     ]);
+
+    const brandName = brandData.records?.[0]?.fields?.['fldzffs5mAHRcIadt'] || null;
 
     // 3. Shape campaign
     // Single-select fields return plain strings (not objects) in the REST API
     const campaign = {
       name:            (cf['📇 Campaign Name'] || cf['Campaign'] || '').trim(),
+      brandName:       brandName,
       budget:          cf['Budget']                    ?? 0,
       startDate:       cf['Start Date']                || null,
       endDate:         cf['End Date']                  || null,
