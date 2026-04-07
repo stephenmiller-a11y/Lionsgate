@@ -565,13 +565,13 @@
 <!-- ── TALENT PANEL ─────────────────────────────────────────────────────────── -->
 <div class="tab-panel" id="panel-talent">
   <div class="talent-main">
-    <div class="talent-section" id="section-approved">
-      <div class="talent-section-heading">Approved</div>
-      <div id="approved-cards"></div>
-    </div>
     <div class="talent-section" id="section-pending">
       <div class="talent-section-heading">Pending</div>
       <div id="pending-cards"></div>
+    </div>
+    <div class="talent-section" id="section-approved">
+      <div class="talent-section-heading">Approved</div>
+      <div id="approved-cards"></div>
     </div>
     <div class="talent-section" id="section-not-approved">
       <div class="talent-section-heading">Not Approved</div>
@@ -939,17 +939,8 @@ function renderTalentTab(offers) {
     sections[section].insertAdjacentHTML('beforeend', card);
   });
 
-  // Empty state messages
-  const labels = {
-    'approved':     'No approved talent.',
-    'pending':      'No talent pending review.',
-    'not-approved': 'No talent marked as not approved.',
-  };
-  Object.entries(sections).forEach(([key, el]) => {
-    if (!el.querySelector('.talent-offer-card')) {
-      el.innerHTML = `<div class="talent-section-empty">${labels[key]}</div>`;
-    }
-  });
+  // Hide sections that have no cards
+  updateSectionEmptyStates();
 }
 
 function approvalClass(offer) {
@@ -1347,17 +1338,12 @@ function syncBadge(sel) {
 }
 
 function updateSectionEmptyStates() {
-  [['approved-cards','No approved talent.'],['pending-cards','No talent pending review.'],['not-approved-cards','No talent marked as not approved.']].forEach(([id, msg]) => {
-    const container = document.getElementById(id);
-    if (!container) return;
-    const cards = container.querySelectorAll('.talent-offer-card');
-    let emptyEl = container.querySelector('.talent-section-empty');
-    if (cards.length === 0) {
-      if (!emptyEl) { emptyEl = document.createElement('div'); emptyEl.className='talent-section-empty'; container.appendChild(emptyEl); }
-      emptyEl.textContent = msg; emptyEl.style.display = '';
-    } else if (emptyEl) {
-      emptyEl.style.display = 'none';
-    }
+  [['section-pending','pending-cards'],['section-approved','approved-cards'],['section-not-approved','not-approved-cards']].forEach(([sectionId, cardsId]) => {
+    const section   = document.getElementById(sectionId);
+    const container = document.getElementById(cardsId);
+    if (!section || !container) return;
+    const hasCards = container.querySelectorAll('.talent-offer-card').length > 0;
+    section.style.display = hasCards ? '' : 'none';
   });
 }
 
