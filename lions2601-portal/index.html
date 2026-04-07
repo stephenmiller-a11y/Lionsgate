@@ -1290,14 +1290,24 @@ function syncBadge(sel) {
   setTimeout(() => {
     if (sel.value === 'approved') {
       card.setAttribute('draggable', 'true');
-      if (!card.querySelector('.rank-badge'))    { const b = document.createElement('div'); b.className='rank-badge'; card.insertBefore(b, card.firstChild); }
-      if (!card.querySelector('.drag-handle'))   { const h = document.createElement('div'); h.className='drag-handle'; h.textContent='⠿'; card.insertBefore(h, card.children[1]); }
-      if (!card.querySelector('.rank-dropdown-wrap')) {
+      // Show or create rank-badge
+      var existingBadge = card.querySelector('.rank-badge');
+      if (existingBadge) { existingBadge.style.display = ''; }
+      else { const b = document.createElement('div'); b.className='rank-badge'; card.insertBefore(b, card.firstChild); }
+      // Show or create drag-handle
+      var existingHandle = card.querySelector('.drag-handle');
+      if (existingHandle) { existingHandle.style.display = ''; }
+      else { const h = document.createElement('div'); h.className='drag-handle'; h.textContent='⠿'; card.insertBefore(h, card.children[1]); }
+      // Show or create rank-dropdown-wrap
+      var existingWrap = card.querySelector('.rank-dropdown-wrap');
+      if (existingWrap) {
+        existingWrap.style.display = '';
+      } else {
         const wrap = document.createElement('div'); wrap.className='rank-dropdown-wrap';
         const dd = document.createElement('select'); dd.className='rank-dropdown'; dd.setAttribute('onchange','changeRankByDropdown(this)');
         wrap.appendChild(dd);
         const top = card.querySelector('.talent-offer-top');
-        if (top && top.nextSibling) top.parentNode.insertBefore(wrap, top.nextSibling);
+        if (top) top.after(wrap);
       }
     } else {
       card.removeAttribute('draggable');
@@ -1311,6 +1321,7 @@ function syncBadge(sel) {
     targetContainer.appendChild(card);
     card.style.opacity = '1';
     initDragAndDrop(); // may replace card with a clone for drag listeners
+    updateRankDropdowns(); // ensure the newly moved card's rank dropdown is populated
 
     // Re-find the live card (initDragAndDrop clones approved cards, resetting <select>)
     const liveCard = offerId
