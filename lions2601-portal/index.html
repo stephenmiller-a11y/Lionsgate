@@ -707,8 +707,6 @@ function renderAll(data) {
   document.getElementById('topbar-brand').textContent = brand;
   document.getElementById('footer').textContent =
     `ZATV Partner Portal · Confidential · This page is intended only for ${brand}`;
-  document.getElementById('modal-prompt-text').textContent =
-    `"Update the engagement stats for the ${brand} campaign"`;
   renderHero(campaign);
   renderOverviewStats(campaign, deliverables, offers);
   renderProgressBar(deliverables);
