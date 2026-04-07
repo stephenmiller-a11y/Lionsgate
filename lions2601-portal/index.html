@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Lionsgate – Michael | ZATV Campaign Portal</title>
+  <title>ZATV Campaign Portal</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -505,14 +505,14 @@
     </svg>
   </div>
   <div class="topbar-divider"></div>
-  <div class="topbar-brand" id="topbar-brand">Lionsgate</div>
+  <div class="topbar-brand" id="topbar-brand"></div>
 </nav>
 
 <!-- ── HERO ─────────────────────────────────────────────────────────────────── -->
 <div class="hero">
   <div class="hero-inner">
     <div class="hero-logo-wrap" id="hero-logo-wrap">
-      <div class="hero-logo-fallback">LIONS<br>GATE</div>
+      <div class="hero-logo-fallback" id="hero-logo-fallback"></div>
     </div>
     <div class="hero-text">
       <h1 class="hero-title" id="hero-title">Loading…</h1>
@@ -613,7 +613,7 @@
 
 <!-- ── FOOTER ────────────────────────────────────────────────────────────────── -->
 <div class="footer" id="footer">
-  ZATV Partner Portal · Confidential · This page is intended only for Lionsgate
+  ZATV Partner Portal · Confidential
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
@@ -743,6 +743,21 @@ function renderHero(campaign) {
   const dates = [campaign.startDate, campaign.endDate].filter(Boolean).map(fmtDate).join(' – ');
   document.getElementById('hero-meta').innerHTML =
     dates ? `<div class="hero-meta-item">📅 ${dates}</div>` : '';
+
+  // Logo: use brand logo attachment if available, otherwise show brand name as text
+  const brand = campaign.brandName || campaign.name;
+  const fallbackEl = document.getElementById('hero-logo-fallback');
+  const wrap = document.getElementById('hero-logo-wrap');
+  if (campaign.logoUrl) {
+    const img = document.createElement('img');
+    img.src = campaign.logoUrl;
+    img.alt = brand;
+    img.onerror = () => { img.remove(); fallbackEl.textContent = brand; };
+    wrap.insertBefore(img, fallbackEl);
+    fallbackEl.style.display = 'none';
+  } else {
+    fallbackEl.textContent = brand;
+  }
 }
 
 // ── OVERVIEW STATS ────────────────────────────────────────────────────────────
