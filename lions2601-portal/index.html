@@ -623,8 +623,13 @@ function fmtNum(n) {
 
 function fmtDate(d) {
   if (!d) return 'TBD';
-  // Airtable date strings are YYYY-MM-DD; parse as local to avoid TZ shift
-  const [y, m, day] = d.split('-').map(Number);
+  // Coerce to string — some Airtable fields return numbers or datetime objects
+  const str = String(d);
+  // Strip time portion from ISO datetimes e.g. "2024-03-15T00:00:00.000Z"
+  const datePart = str.includes('T') ? str.split('T')[0] : str;
+  const parts = datePart.split('-').map(Number);
+  const [y, m, day] = parts;
+  if (!y || !m || !day) return 'TBD';
   return new Date(y, m - 1, day).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
