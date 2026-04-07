@@ -1313,19 +1313,34 @@ function syncBadge(sel) {
         if (el) el.style.display = 'none';
       });
     }
+    const offerId   = card.dataset.offerId;
+    const newValue  = sel.value;
     targetContainer.appendChild(card);
     card.style.opacity = '1';
-    initDragAndDrop();
+    initDragAndDrop(); // may replace card with a clone for drag listeners
+
+    // Re-find the live card (initDragAndDrop clones approved cards, resetting <select>)
+    const liveCard = offerId
+      ? targetContainer.querySelector(`[data-offer-id="${offerId}"]`)
+      : card;
+    if (liveCard) {
+      const liveSelect = liveCard.querySelector('.badge-select');
+      if (liveSelect) {
+        liveSelect.value     = newValue;
+        liveSelect.className = 'badge-select ' + newValue;
+      }
+      liveCard.style.opacity = '1';
+    }
+
     updateSectionEmptyStates();
 
     // Save approval to Airtable
-    const offerId = card.dataset.offerId;
     if (offerId) {
       const approvalMap = { 'approved': 'Approved', 'not-approved': 'Rejected', 'pending': 'Pending' };
       fetch('/api/offer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ offerId, approval: approvalMap[sel.value] }),
+        body: JSON.stringify({ offerId, approval: approvalMap[newValue] }),
       }).catch(err => console.error('[approval save]', err));
     }
   }, 260);
