@@ -975,7 +975,7 @@ function buildOfferCard(offer, section) {
   const social = socialButtons(offer);
   const us = offer.usAudience || '—';
 
-  const savedFeedback = localStorage.getItem('feedback_' + offer.id) || offer.brandFeedback || '';
+  const savedFeedback = offer.brandFeedback || '';
 
   return `<div class="talent-offer-card ${passed}" ${draggable} data-offer-id="${offer.id}">
     ${rankBadge}${dragHandle}
@@ -1000,7 +1000,7 @@ function buildOfferCard(offer, section) {
                data-placeholder="Add your feedback here…"
                data-offer="${offer.id}"
                oninput="markUnsaved(this)">${savedFeedback}</div>
-          <div class="feedback-save-hint" id="hint-${offer.id}"></div>
+          <div class="feedback-save-hint" id="hint-${offer.id}">${savedFeedback ? 'Loaded from Airtable' : ''}</div>
         </div>
       </div>
     </div>
@@ -1251,11 +1251,21 @@ function restoreApprovalState() {
 function markUnsaved(el) {
   const id   = el.dataset.offer;
   const hint = document.getElementById('hint-' + id);
-  if (hint) hint.textContent = 'Unsaved changes';
+  if (hint) hint.textContent = 'Saving…';
   clearTimeout(el._saveTimer);
-  el._saveTimer = setTimeout(() => {
-    localStorage.setItem('feedback_' + id, el.innerText);
-    if (hint) hint.textContent = 'Saved locally ✓';
+  el._saveTimer = setTimeout(async () => {
+    try {
+      const resp = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ offerId: id, feedback: el.innerText }),
+      });
+      if (!resp.ok) throw new Error('Save failed');
+      if (hint) hint.textContent = 'Saved ✓';
+    } catch (err) {
+      if (hint) hint.textContent = '⚠️ Save failed — check connection';
+      console.error('[feedback]', err);
+    }
   }, 1000);
 }
 
