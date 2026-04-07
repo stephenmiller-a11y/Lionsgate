@@ -735,6 +735,7 @@ function renderAll(data) {
   restoreFeedback(offers);
   restoreApprovalState();
   initDragAndDrop();
+  syncAllBadges();
 }
 
 // ── HERO ──────────────────────────────────────────────────────────────────────
@@ -975,8 +976,9 @@ function buildOfferCard(offer, section) {
   const us = offer.usAudience || '—';
 
   const savedFeedback = offer.brandFeedback || '';
+  const approvalKey = section === 'approved' ? 'approved' : section === 'not-approved' ? 'rejected' : 'pending';
 
-  return `<div class="talent-offer-card ${passed}" ${draggable} data-offer-id="${offer.id}">
+  return `<div class="talent-offer-card ${passed}" ${draggable} data-offer-id="${offer.id}" data-approval="${approvalKey}">
     ${rankBadge}${dragHandle}
     <div class="talent-offer-inner">
       ${imgHtml}${fallback}
@@ -1320,6 +1322,9 @@ function syncBadge(sel) {
         liveSelect.value     = newValue;
         liveSelect.className = 'badge-select ' + newValue;
       }
+      // Keep data-approval in sync so syncAllBadges() has accurate ground truth
+      const approvalMap2 = { 'approved': 'approved', 'not-approved': 'rejected', 'pending': 'pending' };
+      liveCard.dataset.approval = approvalMap2[newValue] || 'pending';
       liveCard.style.opacity = '1';
     }
 
@@ -1375,6 +1380,24 @@ function initDragAndDrop() {
   });
   updateRankBadges();
   updateRankDropdowns();
+  syncAllBadges();
+}
+
+// Re-sync every badge-select's value and CSS class after any DOM rearrangement.
+// cloneNode(true) resets <select> to the first <option> with the HTML `selected`
+// attribute, so we re-read the data-approval stored on the card and reapply.
+function syncAllBadges() {
+  document.querySelectorAll('.talent-offer-card').forEach(function(card) {
+    var sel = card.querySelector('.badge-select');
+    if (!sel) return;
+    // data-approval is set when the card is built; use it as ground truth
+    var approval = card.dataset.approval || 'pending';
+    var cls = approval === 'approved' ? 'approved'
+            : approval === 'rejected' ? 'not-approved'
+            : 'pending';
+    sel.value = cls;
+    sel.className = 'badge-select ' + cls;
+  });
 }
 
 function updateRankBadges() {
