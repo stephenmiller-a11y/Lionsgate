@@ -925,7 +925,15 @@ function renderTalentTab(offers) {
   };
   Object.values(sections).forEach(el => { el.innerHTML = ''; });
 
-  offers.forEach(offer => {
+  // Sort approved offers by brandRanking so Airtable order is respected on load
+  const sortedOffers = [...offers].sort((a, b) => {
+    if (offerSection(a) === 'approved' && offerSection(b) === 'approved') {
+      return (a.brandRanking ?? 9999) - (b.brandRanking ?? 9999);
+    }
+    return 0;
+  });
+
+  sortedOffers.forEach(offer => {
     const section = offerSection(offer);
     const card    = buildOfferCard(offer, section);
     sections[section].insertAdjacentHTML('beforeend', card);
@@ -946,9 +954,9 @@ function renderTalentTab(offers) {
 
 function approvalClass(offer) {
   const a = (offer.brandApproval || '').toLowerCase();
-  if (a.includes('approved') && !a.includes('not')) return 'approved';
-  if (a.includes('not'))                              return 'not-approved';
-  return 'pending';
+  if (a === 'approved')  return 'approved';
+  if (a === 'rejected')  return 'not-approved';
+  return 'pending'; // "Pending" or empty
 }
 
 function buildOfferCard(offer, section) {
@@ -1309,6 +1317,17 @@ function syncBadge(sel) {
     card.style.opacity = '1';
     initDragAndDrop();
     updateSectionEmptyStates();
+
+    // Save approval to Airtable
+    const offerId = card.dataset.offerId;
+    if (offerId) {
+      const approvalMap = { 'approved': 'Approved', 'not-approved': 'Rejected', 'pending': 'Pending' };
+      fetch('/api/offer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ offerId, approval: approvalMap[sel.value] }),
+      }).catch(err => console.error('[approval save]', err));
+    }
   }, 260);
 }
 
@@ -1355,7 +1374,6 @@ function initDragAndDrop() {
   });
   updateRankBadges();
   updateRankDropdowns();
-  restoreRanking();
 }
 
 function updateRankBadges() {
@@ -1371,9 +1389,18 @@ function updateRankBadges() {
 function saveRanking() {
   var section = document.getElementById('approved-cards');
   if (!section) return;
-  var names = [];
-  section.querySelectorAll('.talent-offer-name').forEach(el => names.push(el.textContent));
-  localStorage.setItem('talent-ranking-lions2601', JSON.stringify(names));
+  var rank = 1;
+  section.querySelectorAll('.talent-offer-card').forEach(function(card) {
+    var offerId = card.dataset.offerId;
+    if (offerId) {
+      fetch('/api/offer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ offerId: offerId, ranking: rank }),
+      }).catch(err => console.error('[ranking save]', err));
+      rank++;
+    }
+  });
 }
 
 function restoreRanking() {
