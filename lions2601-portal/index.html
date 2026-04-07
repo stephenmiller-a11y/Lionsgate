@@ -1260,10 +1260,11 @@ function markUnsaved(el) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ offerId: id, feedback: el.innerText }),
       });
-      if (!resp.ok) throw new Error('Save failed');
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || `HTTP ${resp.status}`);
       if (hint) hint.textContent = 'Saved ✓';
     } catch (err) {
-      if (hint) hint.textContent = '⚠️ Save failed — check connection';
+      if (hint) hint.textContent = `⚠️ ${err.message}`;
       console.error('[feedback]', err);
     }
   }, 1000);
