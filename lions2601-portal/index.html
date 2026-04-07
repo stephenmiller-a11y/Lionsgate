@@ -676,9 +676,9 @@ function isCompleted(d) {
 
 // ── SECTION CLASSIFICATION ─────────────────────────────────────────────────────
 function offerSection(offer) {
-  const s = offer.status || '';
-  if (s.includes('Accepted')) return 'approved';
-  if (s.includes('Pass'))     return 'not-approved';
+  const a = (offer.brandApproval || '').toLowerCase();
+  if (a === 'approved')  return 'approved';
+  if (a === 'rejected')  return 'not-approved';
   return 'pending';
 }
 
