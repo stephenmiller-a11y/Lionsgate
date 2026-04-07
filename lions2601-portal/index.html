@@ -764,7 +764,7 @@ function renderOverviewStats(campaign, deliverables, offers) {
     </div>
     <div class="stat-card">
       <div class="stat-label">Talent</div>
-      <div class="stat-value">${accepted} <span class="stat-unit">Creators</span></div>
+      <div class="stat-value" id="stat-talent-count">${accepted} <span class="stat-unit">Creators</span></div>
     </div>`;
 
   // Compute totals from deliverable metrics
@@ -1392,6 +1392,7 @@ function syncBadge(sel) {
     }
 
     updateSectionEmptyStates();
+    refreshTalentStatCard();
 
     // Save approval to Airtable
     if (offerId) {
@@ -1413,6 +1414,14 @@ function updateSectionEmptyStates() {
     const hasCards = container.querySelectorAll('.talent-offer-card').length > 0;
     section.style.display = hasCards ? '' : 'none';
   });
+}
+
+function refreshTalentStatCard() {
+  const el = document.getElementById('stat-talent-count');
+  if (!el) return;
+  const count = (document.getElementById('approved-cards') || { querySelectorAll: () => [] })
+    .querySelectorAll('.talent-offer-card').length;
+  el.innerHTML = `${count} <span class="stat-unit">Creators</span>`;
 }
 
 // ── DRAG & DROP RANKING ───────────────────────────────────────────────────────
