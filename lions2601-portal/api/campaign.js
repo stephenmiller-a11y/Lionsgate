@@ -156,6 +156,7 @@ module.exports = async function handler(req, res) {
     const campaign = {
       name:            (cf['📇 Campaign Name'] || cf['Campaign'] || '').trim(),
       brandName:       brandName,
+      logoUrl:         cf['Logo']?.[0]?.url || null,
       budget:          cf['Budget']                    ?? 0,
       startDate:       cf['Start Date']                || null,
       endDate:         cf['End Date']                  || null,
