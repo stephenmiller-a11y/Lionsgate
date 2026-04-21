@@ -632,8 +632,9 @@ const SVG = {
 // ── UTILITY FUNCTIONS ─────────────────────────────────────────────────────────
 function fmtNum(n) {
   if (n == null || n === '') return '—';
-  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
-  if (n >= 1000)    return (n / 1000).toFixed(1) + 'K';
+  const fmt = v => v % 1 === 0 ? v.toFixed(0) : v.toFixed(1);
+  if (n >= 1000000) return fmt(n / 1000000) + 'M';
+  if (n >= 1000)    return fmt(n / 1000) + 'K';
   return Number(n).toLocaleString();
 }
 
