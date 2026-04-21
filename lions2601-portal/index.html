@@ -227,6 +227,21 @@
     .brief-card-icon  { font-size: 18px; }
     .brief-card-title { font-size: 15px; font-weight: 700; color: #1a1a1a; }
     .brief-card-body  { padding: 20px 24px; font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; }
+    .brief-card-body[contenteditable="true"] {
+      outline: none; cursor: text;
+      border-radius: 0 0 12px 12px;
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .brief-card-body[contenteditable="true"]:hover  { background: #fafafa; }
+    .brief-card-body[contenteditable="true"]:focus  { background: #f9f5ff; box-shadow: inset 0 0 0 2px #b39ddb; }
+    .brief-card-body:empty:before { content: attr(data-placeholder); color: #bbb; font-style: italic; pointer-events: none; }
+    .brief-save-hint {
+      font-size: 11px; color: #bbb; padding: 0 24px 14px;
+      min-height: 20px; transition: color 0.2s;
+    }
+    .brief-save-hint.saving { color: #7b2d8b; }
+    .brief-save-hint.saved  { color: #1a7a3a; }
+    .brief-save-hint.error  { color: #991b1b; }
     .brief-empty { color: #bbb; font-style: italic; font-size: 13px; }
 
     /* ── TALENT OFFER CARDS ──────────────────────────────────────────────── */
@@ -701,6 +716,7 @@ function showLoading(on) {
 
 // ── GLOBAL STATE ─────────────────────────────────────────────────────────────
 var _deliverables = []; // cached for updateStats()
+var _campaignId   = new URLSearchParams(window.location.search).get('campaign') || '';
 
 // ── RENDER ALL ────────────────────────────────────────────────────────────────
 function renderAll(data) {
@@ -893,9 +909,9 @@ function socialLinks(offer, cls) {
 // ── CREATIVE TAB ──────────────────────────────────────────────────────────────
 function renderCreative(campaign) {
   const sections = [
-    { icon: '📖', title: 'Background',   val: campaign.briefBackground  },
-    { icon: '🎨', title: 'Guidelines',   val: campaign.briefGuidelines  },
-    { icon: '📣', title: 'Call-To-Action', val: campaign.briefCTA       },
+    { key: 'background', icon: '📖', title: 'Background',        val: campaign.briefBackground },
+    { key: 'guidelines', icon: '🎨', title: 'Creative Guidelines', val: campaign.briefGuidelines },
+    { key: 'cta',        icon: '📣', title: 'Call-To-Action',     val: campaign.briefCTA        },
   ];
   document.getElementById('creative-main').innerHTML = sections.map(s => `
     <div class="brief-card">
@@ -903,10 +919,52 @@ function renderCreative(campaign) {
         <span class="brief-card-icon">${s.icon}</span>
         <span class="brief-card-title">${s.title}</span>
       </div>
-      <div class="brief-card-body">
-        ${s.val ? s.val : `<span class="brief-empty">No ${s.title.toLowerCase()} has been added to this campaign yet.</span>`}
-      </div>
+      <div class="brief-card-body"
+           contenteditable="true"
+           data-brief-key="${s.key}"
+           data-placeholder="Add ${s.title.toLowerCase()} here…"
+           oninput="onBriefInput(this)">${s.val ? escapeHtml(s.val) : ''}</div>
+      <div class="brief-save-hint" id="brief-hint-${s.key}"></div>
     </div>`).join('');
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ── BRIEF SAVE LOGIC ──────────────────────────────────────────────────────────
+var _briefTimers = {};
+
+function onBriefInput(el) {
+  const key = el.dataset.briefKey;
+  if (!key) return;
+  const hint = document.getElementById(`brief-hint-${key}`);
+  if (hint) { hint.textContent = 'Unsaved changes…'; hint.className = 'brief-save-hint'; }
+
+  clearTimeout(_briefTimers[key]);
+  _briefTimers[key] = setTimeout(() => saveBriefField(key, el, hint), 1000);
+}
+
+async function saveBriefField(key, el, hint) {
+  if (!_campaignId) return;
+  if (hint) { hint.textContent = 'Saving…'; hint.className = 'brief-save-hint saving'; }
+
+  try {
+    const resp = await fetch('/api/campaign-update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ campaignId: _campaignId, field: key, value: el.innerText }),
+    });
+    const result = await resp.json();
+    if (!resp.ok) throw new Error(result.error || `HTTP ${resp.status}`);
+    if (hint) { hint.textContent = 'Saved'; hint.className = 'brief-save-hint saved'; setTimeout(() => { if (hint) hint.textContent = ''; }, 2000); }
+  } catch (err) {
+    if (hint) { hint.textContent = `Save failed: ${err.message}`; hint.className = 'brief-save-hint error'; }
+  }
 }
 
 // ── TALENT TAB ────────────────────────────────────────────────────────────────
