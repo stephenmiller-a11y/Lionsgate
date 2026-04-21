@@ -49,6 +49,16 @@ const OFFER_FIELDS = [
   'fldGwHtpe9pNZmCYI', // Biography — multipleLookupValues
   'fldWRvRqw9E1leW0g', // US Audience — multipleLookupValues
   'fldmqzhGoXj8iuuDa', // Offer amount
+  'fldBtszBWAURqUSl0', // Talent — multipleRecordLinks (needed to join follower counts)
+];
+
+// Talent table — fetched separately to get per-platform follower counts
+const TALENT_TABLE = 'tblE6sYQNKXKiDYJl';
+const TALENT_FOLLOWER_FIELDS = [
+  'fldy8xbWpSQg3yEMW', // Instagram followers
+  'fldDY0xBfZcEDD7wb', // TikTok followers
+  'fldRB7SmxeDcdKP6Z', // YouTube subscribers
+  'fldZ1DBL9f9dDmynX', // Snapchat followers
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -151,6 +161,22 @@ module.exports = async function handler(req, res) {
 
     const brandName = brandData.records?.[0]?.fields?.['fldzffs5mAHRcIadt'] || null;
 
+    // 2b. Collect unique Talent IDs from offers and fetch follower counts
+    const talentIds = [...new Set(
+      (offersData.records || []).flatMap(r => r.fields['fldBtszBWAURqUSl0'] || [])
+    )];
+    const talentData = await atGetByIds(TALENT_TABLE, talentIds, TALENT_FOLLOWER_FIELDS, token);
+    // Build a map: talentId → { instagramFollowers, tiktokFollowers, youtubeFollowers, snapchatFollowers }
+    const talentFollowers = {};
+    (talentData.records || []).forEach(r => {
+      talentFollowers[r.id] = {
+        instagramFollowers: r.fields['fldy8xbWpSQg3yEMW'] ?? null,
+        tiktokFollowers:    r.fields['fldDY0xBfZcEDD7wb'] ?? null,
+        youtubeFollowers:   r.fields['fldRB7SmxeDcdKP6Z'] ?? null,
+        snapchatFollowers:  r.fields['fldZ1DBL9f9dDmynX'] ?? null,
+      };
+    });
+
     // 3. Shape campaign
     // Single-select fields return plain strings (not objects) in the REST API
     const campaign = {
@@ -189,21 +215,28 @@ module.exports = async function handler(req, res) {
     // 5. Shape offers — fields keyed by field ID
     const offers = (offersData.records || []).map(r => {
       const f = r.fields;
+      // Join follower counts from linked Talent record
+      const talentId = (f['fldBtszBWAURqUSl0'] || [])[0] || null;
+      const followers = talentId ? (talentFollowers[talentId] || {}) : {};
       return {
-        id:            r.id,
-        name:          firstLookup(f['fldrjJQqkKpdXFDyM']) || '',  // Name (from Talent)
-        status:        f['fldj9RNXpglllTMBE']              || '',  // Status
-        brandFeedback: f['fld2jDj78o2PYGukg']              || '',  // Brand Feedback
-        brandApproval: f['fldoZlmO1OIJc6fI7']              || null, // Brand Approval
-        brandRanking:  f['fldWceYkW6KgT58KI']              ?? null, // Brand Ranking
-        instagramUrl:  firstLookup(f['fld0pTahNYhyvIMgK']),
-        tiktokUrl:     firstLookup(f['fldT0Ay8sZT2CdFSO']),
-        youtubeUrl:    firstLookup(f['fld4PkLU2QwRoJ8Sk']),
-        snapchatUrl:   firstLookup(f['fldMnSn105js66oLh']),
-        headshotUrl:   extractHeadshot(f['fldFlu16WtdeFsWfX']),
-        biography:     firstLookup(f['fldGwHtpe9pNZmCYI']),
-        usAudience:    firstLookup(f['fldWRvRqw9E1leW0g']),
-        offer:         f['fldmqzhGoXj8iuuDa']              ?? null,
+        id:                  r.id,
+        name:                firstLookup(f['fldrjJQqkKpdXFDyM']) || '',  // Name (from Talent)
+        status:              f['fldj9RNXpglllTMBE']              || '',  // Status
+        brandFeedback:       f['fld2jDj78o2PYGukg']              || '',  // Brand Feedback
+        brandApproval:       f['fldoZlmO1OIJc6fI7']              || null, // Brand Approval
+        brandRanking:        f['fldWceYkW6KgT58KI']              ?? null, // Brand Ranking
+        instagramUrl:        firstLookup(f['fld0pTahNYhyvIMgK']),
+        tiktokUrl:           firstLookup(f['fldT0Ay8sZT2CdFSO']),
+        youtubeUrl:          firstLookup(f['fld4PkLU2QwRoJ8Sk']),
+        snapchatUrl:         firstLookup(f['fldMnSn105js66oLh']),
+        headshotUrl:         extractHeadshot(f['fldFlu16WtdeFsWfX']),
+        biography:           firstLookup(f['fldGwHtpe9pNZmCYI']),
+        usAudience:          firstLookup(f['fldWRvRqw9E1leW0g']),
+        offer:               f['fldmqzhGoXj8iuuDa']              ?? null,
+        instagramFollowers:  followers.instagramFollowers  ?? null,
+        tiktokFollowers:     followers.tiktokFollowers     ?? null,
+        youtubeFollowers:    followers.youtubeFollowers    ?? null,
+        snapchatFollowers:   followers.snapchatFollowers   ?? null,
       };
     });
 
