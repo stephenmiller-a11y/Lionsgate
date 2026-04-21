@@ -713,9 +713,10 @@ function renderAll(data) {
   document.getElementById('footer').textContent =
     `ZATV Partner Portal · Confidential · This page is intended only for ${brand}`;
   renderHero(campaign);
-  renderOverviewStats(campaign, deliverables, offers);
-  renderProgressBar(deliverables);
-  renderDeliverablesTable(deliverables);
+  const activeDeliverables = deliverables.filter(d => (d.status || '').toLowerCase() !== 'voided');
+  renderOverviewStats(campaign, activeDeliverables, offers);
+  renderProgressBar(activeDeliverables);
+  renderDeliverablesTable(activeDeliverables);
   renderOverviewTalentGrid(offers);
   renderCreative(campaign);
   renderTalentTab(offers);
