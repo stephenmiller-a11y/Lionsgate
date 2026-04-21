@@ -1061,10 +1061,11 @@ function buildOfferCard(offer, section) {
 
 function socialButtons(offer) {
   let out = '';
-  if (offer.snapchatUrl)  out += `<a class="follower-btn snap"    href="${offer.snapchatUrl}"  target="_blank">👻 Snapchat</a>`;
-  if (offer.instagramUrl) out += `<a class="follower-btn insta"   href="${offer.instagramUrl}" target="_blank">📸 Instagram</a>`;
-  if (offer.tiktokUrl)    out += `<a class="follower-btn tiktok"  href="${offer.tiktokUrl}"    target="_blank">♪ TikTok</a>`;
-  if (offer.youtubeUrl)   out += `<a class="follower-btn youtube" href="${offer.youtubeUrl}"   target="_blank">▶ YouTube</a>`;
+  const fc = n => n != null ? ` (${fmtNum(n)})` : '';
+  if (offer.snapchatUrl)  out += `<a class="follower-btn snap"    href="${offer.snapchatUrl}"  target="_blank">👻 Snapchat${fc(offer.snapchatFollowers)}</a>`;
+  if (offer.instagramUrl) out += `<a class="follower-btn insta"   href="${offer.instagramUrl}" target="_blank">📸 Instagram${fc(offer.instagramFollowers)}</a>`;
+  if (offer.tiktokUrl)    out += `<a class="follower-btn tiktok"  href="${offer.tiktokUrl}"    target="_blank">♪ TikTok${fc(offer.tiktokFollowers)}</a>`;
+  if (offer.youtubeUrl)   out += `<a class="follower-btn youtube" href="${offer.youtubeUrl}"   target="_blank">▶ YouTube${fc(offer.youtubeFollowers)}</a>`;
   return out;
 }
 
