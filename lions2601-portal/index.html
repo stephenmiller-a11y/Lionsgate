@@ -713,7 +713,7 @@ function renderAll(data) {
   document.getElementById('footer').textContent =
     `ZATV Partner Portal · Confidential · This page is intended only for ${brand}`;
   renderHero(campaign);
-  const activeDeliverables = deliverables.filter(d => (d.status || '').toLowerCase() !== 'voided');
+  const activeDeliverables = deliverables.filter(d => !(d.status || '').toLowerCase().includes('voided'));
   renderOverviewStats(campaign, activeDeliverables, offers);
   renderProgressBar(activeDeliverables);
   renderDeliverablesTable(activeDeliverables);
