@@ -1318,12 +1318,14 @@ async function updateStats() {
       throw new Error(result.error || `HTTP ${resp.status}`);
     }
 
+    const warnings = result.warnings && result.warnings.length > 0
+      ? '\n⚠ ' + result.warnings.join('\n⚠ ')
+      : '';
     if (result.updated > 0) {
-      showStatsToast(`✓ ${result.message}`, 'success');
-      // Re-fetch campaign data so the reporting table shows fresh numbers
+      showStatsToast(`✓ ${result.message}${warnings}`, 'success');
       loadCampaign();
     } else {
-      showStatsToast(result.message || 'No stats were updated.', 'warn');
+      showStatsToast((result.message || 'No stats were updated.') + warnings, 'warn');
     }
   } catch (err) {
     showStatsToast(`Update failed: ${err.message}`, 'error');
