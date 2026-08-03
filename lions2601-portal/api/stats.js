@@ -6,10 +6,9 @@
 //   AIRTABLE_TOKEN        — Airtable Personal Access Token
 //
 // Per-platform env vars (only needed for the platforms you use):
-//   YOUTUBE_API_KEY       — YouTube Data API v3 key (Google Cloud Console)
-//   INSTAGRAM_ACCESS_TOKEN — Meta long-lived User Access Token with instagram_basic scope
-//   TIKTOK_CLIENT_KEY     — TikTok Research API client key
-//   TIKTOK_CLIENT_SECRET  — TikTok Research API client secret
+//   YOUTUBE_API_KEY           — YouTube Data API v3 key (Google Cloud Console)
+//   INSTAGRAM_ACCESS_TOKEN    — Meta long-lived User Access Token with instagram_basic scope
+//   APIFY_API_TOKEN           — Apify API token (apify.com) — used for TikTok scraping
 
 const BASE_ID            = process.env.AIRTABLE_BASE_ID || 'appcKC14Om93O40QC';
 const AT_BASE            = `https://api.airtable.com/v0/${BASE_ID}`;
@@ -105,59 +104,56 @@ async function fetchInstagramStats(mediaId, token) {
   };
 }
 
-// ── TikTok ────────────────────────────────────────────────────────────────────
-// Uses the TikTok Research API (client credentials flow).
-// Apply at: https://developers.tiktok.com/products/research-api
+// ── TikTok (via Apify clockworks/tiktok-scraper) ─────────────────────────────
+// Requires APIFY_API_TOKEN env var. Get one at apify.com.
+// Uses run-sync-get-dataset-items so results come back in a single request.
 
 function extractTikTokVideoId(url) {
   const m = url.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/);
   return m ? m[1] : null;
 }
 
-async function getTikTokAccessToken(clientKey, clientSecret) {
-  const res = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Cache-Control': 'no-cache' },
-    body: `client_key=${encodeURIComponent(clientKey)}&client_secret=${encodeURIComponent(clientSecret)}&grant_type=client_credentials`,
-  });
-  const data = await res.json();
-  if (!res.ok || !data.access_token) throw new Error(`TikTok OAuth failed: ${JSON.stringify(data)}`);
-  return data.access_token;
-}
+async function fetchTikTokStatsApify(deliverables, apiToken) {
+  const urls = deliverables.map(d => d.postLink);
 
-async function fetchTikTokStats(videoId, token) {
-  // Research API requires a date range — use a wide window to be safe
-  const today    = new Date();
-  const endDate  = today.toISOString().slice(0, 10).replace(/-/g, '');
-  const startDate = '20200101';
-
+  // Run the Apify TikTok scraper synchronously — waits up to 120s for results
   const res = await fetch(
-    'https://open.tiktokapis.com/v2/research/video/query/?fields=id,like_count,comment_count,share_count,view_count,create_time',
+    `https://api.apify.com/v2/acts/clockworks~tiktok-scraper/run-sync-get-dataset-items?token=${apiToken}&timeout=120`,
     {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        query: { and: [{ operation: 'EQ', field_name: 'video_id', field_values: [videoId] }] },
-        start_date: startDate,
-        end_date:   endDate,
-        max_count:  1,
-        cursor:     0,
+        postURLs:                     urls,
+        shouldDownloadVideos:         false,
+        shouldDownloadCovers:         false,
+        shouldDownloadSubtitles:      false,
+        shouldDownloadSlideshowImages: false,
       }),
     }
   );
-  const data = await res.json();
-  if (data.error?.code && data.error.code !== 'ok') throw new Error(`TikTok API: ${data.error.message}`);
-  const video = data.data?.videos?.[0];
-  if (!video) return null;
-  return {
-    views:       video.view_count    ?? null,
-    likes:       video.like_count    ?? null,
-    comments:    video.comment_count ?? null,
-    shares:      video.share_count   ?? null,
-    publishedAt: video.create_time
-      ? new Date(video.create_time * 1000).toISOString()
-      : null,
-  };
+
+  if (!res.ok) {
+    const b = await res.text();
+    throw new Error(`Apify TikTok scraper [${res.status}]: ${b}`);
+  }
+
+  const items = await res.json();
+
+  // Build a map: videoId (string) → stats
+  const byVideoId = {};
+  for (const item of (Array.isArray(items) ? items : [])) {
+    const id = String(item.id || '');
+    if (!id) continue;
+    byVideoId[id] = {
+      views:       item.playCount    ?? item.stats?.playCount    ?? null,
+      likes:       item.diggCount    ?? item.stats?.diggCount    ?? null,
+      comments:    item.commentCount ?? item.stats?.commentCount ?? null,
+      shares:      item.shareCount   ?? item.stats?.shareCount   ?? null,
+      publishedAt: item.createTimeISO
+        || (item.createTime ? new Date(item.createTime * 1000).toISOString() : null),
+    };
+  }
+  return byVideoId;
 }
 
 // ── Airtable PATCH ────────────────────────────────────────────────────────────
@@ -194,10 +190,9 @@ module.exports = async function handler(req, res) {
   const airtableToken = process.env.AIRTABLE_TOKEN;
   if (!airtableToken) return res.status(500).json({ error: 'AIRTABLE_TOKEN not configured.' });
 
-  const youtubeKey       = process.env.YOUTUBE_API_KEY;
-  const instagramToken   = process.env.INSTAGRAM_ACCESS_TOKEN;
-  const tiktokClientKey  = process.env.TIKTOK_CLIENT_KEY;
-  const tiktokClientSecret = process.env.TIKTOK_CLIENT_SECRET;
+  const youtubeKey     = process.env.YOUTUBE_API_KEY;
+  const instagramToken = process.env.INSTAGRAM_ACCESS_TOKEN;
+  const apifyToken     = process.env.APIFY_API_TOKEN;
 
   const { deliverables } = req.body || {};
   if (!Array.isArray(deliverables) || deliverables.length === 0) {
@@ -259,31 +254,24 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // ── TikTok ─────────────────────────────────────────────────────────────────
+    // ── TikTok (via Apify) ─────────────────────────────────────────────────────
     if (byPlatform.tiktok.length > 0) {
-      if (!tiktokClientKey || !tiktokClientSecret) {
-        warnings.push('TikTok: TIKTOK_CLIENT_KEY / TIKTOK_CLIENT_SECRET not configured — skipped. Apply for TikTok Research API access at developers.tiktok.com.');
+      if (!apifyToken) {
+        warnings.push('TikTok: APIFY_API_TOKEN not configured — skipped. Add your Apify token to Vercel env vars.');
       } else {
-        let tiktokToken;
         try {
-          tiktokToken = await getTikTokAccessToken(tiktokClientKey, tiktokClientSecret);
-        } catch (err) {
-          warnings.push(`TikTok auth failed: ${err.message}`);
-        }
-        if (tiktokToken) {
+          const byVideoId = await fetchTikTokStatsApify(byPlatform.tiktok, apifyToken);
           await Promise.all(byPlatform.tiktok.map(async (d) => {
             const videoId = extractTikTokVideoId(d.postLink);
             if (!videoId) { warnings.push(`TikTok: could not parse video ID from ${d.postLink}`); return; }
-            try {
-              const stats = await fetchTikTokStats(videoId, tiktokToken);
-              if (!stats) { results.push({ id: d.id, platform: 'tiktok', status: 'not_found' }); return; }
-              await patchDeliverable(d.id, buildFields(stats), airtableToken);
-              results.push({ id: d.id, platform: 'tiktok', status: 'updated', ...stats });
-            } catch (err) {
-              warnings.push(`TikTok (${videoId}): ${err.message}`);
-              results.push({ id: d.id, platform: 'tiktok', status: 'error' });
-            }
+            const stats = byVideoId[videoId];
+            if (!stats) { results.push({ id: d.id, platform: 'tiktok', status: 'not_found' }); return; }
+            await patchDeliverable(d.id, buildFields(stats), airtableToken);
+            results.push({ id: d.id, platform: 'tiktok', status: 'updated', ...stats });
           }));
+        } catch (err) {
+          warnings.push(`TikTok (Apify): ${err.message}`);
+          byPlatform.tiktok.forEach(d => results.push({ id: d.id, platform: 'tiktok', status: 'error' }));
         }
       }
     }
