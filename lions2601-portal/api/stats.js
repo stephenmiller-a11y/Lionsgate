@@ -120,17 +120,45 @@ function isShortTikTokUrl(url) {
 
 // Follow redirect to resolve shortened TikTok URLs (e.g. tiktok.com/t/XXXX)
 // to their canonical /@user/video/ID form so we can extract the video ID.
+//
+// Strategy: read the Location header from the first redirect hop (manual redirect
+// mode). This is cheaper and less likely to be bot-blocked than following all
+// hops. Falls back to fully-followed GET if the first hop doesn't land on a
+// canonical URL.
 async function resolveShortUrl(url) {
+  const headers = {
+    'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.9',
+  };
+
+  // First try: read the Location header directly (no page body needed)
   try {
     const res = await fetch(url, {
-      method:   'HEAD',
-      redirect: 'follow',
+      method:   'GET',
+      redirect: 'manual',
+      headers,
       signal:   AbortSignal.timeout(6000),
     });
-    return res.url || url;
-  } catch {
-    return url;
-  }
+    if (res.status >= 300 && res.status < 400) {
+      const location = res.headers.get('location') || '';
+      if (location && extractTikTokVideoId(location)) return location;
+      // Location might itself need following — fall through to full redirect
+    }
+  } catch {}
+
+  // Second try: follow all redirects and use the final URL
+  try {
+    const res = await fetch(url, {
+      method:   'GET',
+      redirect: 'follow',
+      headers,
+      signal:   AbortSignal.timeout(8000),
+    });
+    if (res.url && extractTikTokVideoId(res.url)) return res.url;
+  } catch {}
+
+  return url; // give up — caller will emit a warning
 }
 
 async function fetchTikTokStatsApify(deliverables, apiToken, sessionId) {
@@ -299,6 +327,9 @@ module.exports = async function handler(req, res) {
           const resolved = await Promise.all(byPlatform.tiktok.map(async d => {
             if (isShortTikTokUrl(d.postLink)) {
               const canonical = await resolveShortUrl(d.postLink);
+              if (canonical === d.postLink) {
+                warnings.push(`TikTok: short URL could not be resolved — update the link in Airtable to the full URL format (tiktok.com/@user/video/ID): ${d.postLink}`);
+              }
               return { ...d, postLink: canonical };
             }
             return d;
