@@ -109,8 +109,28 @@ async function fetchInstagramStats(mediaId, token) {
 // Uses run-sync-get-dataset-items so results come back in a single request.
 
 function extractTikTokVideoId(url) {
+  if (!url) return null;
   const m = url.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/);
   return m ? m[1] : null;
+}
+
+function isShortTikTokUrl(url) {
+  return /tiktok\.com\/t\/|vm\.tiktok\.com|vt\.tiktok\.com/.test(url || '');
+}
+
+// Follow redirect to resolve shortened TikTok URLs (e.g. tiktok.com/t/XXXX)
+// to their canonical /@user/video/ID form so we can extract the video ID.
+async function resolveShortUrl(url) {
+  try {
+    const res = await fetch(url, {
+      method:   'HEAD',
+      redirect: 'follow',
+      signal:   AbortSignal.timeout(6000),
+    });
+    return res.url || url;
+  } catch {
+    return url;
+  }
 }
 
 async function fetchTikTokStatsApify(deliverables, apiToken, sessionId) {
@@ -274,8 +294,18 @@ module.exports = async function handler(req, res) {
         warnings.push('TikTok: APIFY_API_TOKEN not configured — skipped. Add your Apify token to Vercel env vars.');
       } else {
         try {
-          const byVideoId = await fetchTikTokStatsApify(byPlatform.tiktok, apifyToken, tiktokSessionId);
-          await Promise.all(byPlatform.tiktok.map(async (d) => {
+          // Resolve any shortened URLs (tiktok.com/t/XXXX, vm.tiktok.com, etc.)
+          // to canonical /@user/video/ID form so we can extract video IDs.
+          const resolved = await Promise.all(byPlatform.tiktok.map(async d => {
+            if (isShortTikTokUrl(d.postLink)) {
+              const canonical = await resolveShortUrl(d.postLink);
+              return { ...d, postLink: canonical };
+            }
+            return d;
+          }));
+
+          const byVideoId = await fetchTikTokStatsApify(resolved, apifyToken, tiktokSessionId);
+          await Promise.all(resolved.map(async (d) => {
             const videoId = extractTikTokVideoId(d.postLink);
             if (!videoId) { warnings.push(`TikTok: could not parse video ID from ${d.postLink}`); return; }
             const stats = byVideoId[videoId];
