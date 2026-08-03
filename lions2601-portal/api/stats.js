@@ -149,9 +149,13 @@ async function fetchTikTokStatsApify(deliverables, apiToken, sessionId) {
   const items = await res.json();
 
   // Build a map: videoId (string) → stats
+  // IMPORTANT: TikTok video IDs are 19-digit numbers that exceed JS safe integer range.
+  // Apify may return them as JSON numbers which lose precision. Extract from the URL
+  // string instead (webVideoUrl) which preserves the full digit sequence.
   const byVideoId = {};
   for (const item of (Array.isArray(items) ? items : [])) {
-    const id = String(item.id || '');
+    const urlId = extractTikTokVideoId(item.webVideoUrl || item.videoUrl || '');
+    const id    = urlId || String(item.id ?? '');
     if (!id) continue;
     byVideoId[id] = {
       views:       item.playCount    ?? item.stats?.playCount    ?? null,
