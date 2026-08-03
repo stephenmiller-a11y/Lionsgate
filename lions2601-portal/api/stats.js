@@ -113,8 +113,23 @@ function extractTikTokVideoId(url) {
   return m ? m[1] : null;
 }
 
-async function fetchTikTokStatsApify(deliverables, apiToken) {
+async function fetchTikTokStatsApify(deliverables, apiToken, sessionId) {
   const urls = deliverables.map(d => d.postLink);
+
+  const input = {
+    postURLs:                      urls,
+    shouldDownloadVideos:          false,
+    shouldDownloadCovers:          false,
+    shouldDownloadSubtitles:       false,
+    shouldDownloadSlideshowImages: false,
+  };
+
+  // Pass a logged-in session cookie so age-restricted videos are accessible
+  if (sessionId) {
+    input.cookies = [
+      { name: 'sessionid', value: sessionId, domain: '.tiktok.com' },
+    ];
+  }
 
   // Run the Apify TikTok scraper synchronously — waits up to 120s for results
   const res = await fetch(
@@ -122,13 +137,7 @@ async function fetchTikTokStatsApify(deliverables, apiToken) {
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        postURLs:                     urls,
-        shouldDownloadVideos:         false,
-        shouldDownloadCovers:         false,
-        shouldDownloadSubtitles:      false,
-        shouldDownloadSlideshowImages: false,
-      }),
+      body: JSON.stringify(input),
     }
   );
 
@@ -190,9 +199,10 @@ module.exports = async function handler(req, res) {
   const airtableToken = process.env.AIRTABLE_TOKEN;
   if (!airtableToken) return res.status(500).json({ error: 'AIRTABLE_TOKEN not configured.' });
 
-  const youtubeKey     = process.env.YOUTUBE_API_KEY;
-  const instagramToken = process.env.INSTAGRAM_ACCESS_TOKEN;
-  const apifyToken     = process.env.APIFY_API_TOKEN;
+  const youtubeKey      = process.env.YOUTUBE_API_KEY;
+  const instagramToken  = process.env.INSTAGRAM_ACCESS_TOKEN;
+  const apifyToken      = process.env.APIFY_API_TOKEN;
+  const tiktokSessionId = process.env.TIKTOK_SESSION_ID;
 
   const { deliverables } = req.body || {};
   if (!Array.isArray(deliverables) || deliverables.length === 0) {
@@ -260,7 +270,7 @@ module.exports = async function handler(req, res) {
         warnings.push('TikTok: APIFY_API_TOKEN not configured — skipped. Add your Apify token to Vercel env vars.');
       } else {
         try {
-          const byVideoId = await fetchTikTokStatsApify(byPlatform.tiktok, apifyToken);
+          const byVideoId = await fetchTikTokStatsApify(byPlatform.tiktok, apifyToken, tiktokSessionId);
           await Promise.all(byPlatform.tiktok.map(async (d) => {
             const videoId = extractTikTokVideoId(d.postLink);
             if (!videoId) { warnings.push(`TikTok: could not parse video ID from ${d.postLink}`); return; }
