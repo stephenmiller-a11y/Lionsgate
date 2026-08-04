@@ -322,27 +322,38 @@ module.exports = async function handler(req, res) {
         warnings.push('TikTok: APIFY_API_TOKEN not configured — skipped. Add your Apify token to Vercel env vars.');
       } else {
         try {
-          // Resolve any shortened URLs (tiktok.com/t/XXXX, vm.tiktok.com, etc.)
-          // to canonical /@user/video/ID form so we can extract video IDs.
-          const resolved = await Promise.all(byPlatform.tiktok.map(async d => {
-            if (isShortTikTokUrl(d.postLink)) {
-              const canonical = await resolveShortUrl(d.postLink);
-              if (canonical === d.postLink) {
-                warnings.push(`TikTok: short URL could not be resolved — update the link in Airtable to the full URL format (tiktok.com/@user/video/ID): ${d.postLink}`);
-              }
-              return { ...d, postLink: canonical };
-            }
-            return d;
-          }));
+          // Split: long URLs can be batched; short URLs are sent one at a time so
+          // we can match the single result back to the right deliverable without
+          // needing to resolve the redirect server-side (Apify's browser handles it).
+          const longUrls  = byPlatform.tiktok.filter(d => !isShortTikTokUrl(d.postLink));
+          const shortUrls = byPlatform.tiktok.filter(d =>  isShortTikTokUrl(d.postLink));
 
-          const byVideoId = await fetchTikTokStatsApify(resolved, apifyToken, tiktokSessionId);
-          await Promise.all(resolved.map(async (d) => {
-            const videoId = extractTikTokVideoId(d.postLink);
-            if (!videoId) { warnings.push(`TikTok: could not parse video ID from ${d.postLink}`); return; }
-            const stats = byVideoId[videoId];
-            if (!stats) { results.push({ id: d.id, platform: 'tiktok', status: 'not_found' }); return; }
-            await patchDeliverable(d.id, buildFields(stats), airtableToken);
-            results.push({ id: d.id, platform: 'tiktok', status: 'updated', ...stats });
+          // Batch the long URLs as before
+          if (longUrls.length > 0) {
+            const byVideoId = await fetchTikTokStatsApify(longUrls, apifyToken, tiktokSessionId);
+            await Promise.all(longUrls.map(async (d) => {
+              const videoId = extractTikTokVideoId(d.postLink);
+              if (!videoId) { warnings.push(`TikTok: could not parse video ID from ${d.postLink}`); return; }
+              const stats = byVideoId[videoId];
+              if (!stats) { results.push({ id: d.id, platform: 'tiktok', status: 'not_found' }); return; }
+              await patchDeliverable(d.id, buildFields(stats), airtableToken);
+              results.push({ id: d.id, platform: 'tiktok', status: 'updated', ...stats });
+            }));
+          }
+
+          // Send each short URL individually — 1 in, 1 out, no matching problem
+          await Promise.all(shortUrls.map(async (d) => {
+            try {
+              const byVideoId = await fetchTikTokStatsApify([d], apifyToken, tiktokSessionId);
+              const ids = Object.keys(byVideoId);
+              if (ids.length === 0) { results.push({ id: d.id, platform: 'tiktok', status: 'not_found' }); return; }
+              const stats = byVideoId[ids[0]];
+              await patchDeliverable(d.id, buildFields(stats), airtableToken);
+              results.push({ id: d.id, platform: 'tiktok', status: 'updated', ...stats });
+            } catch (err) {
+              warnings.push(`TikTok (${d.postLink}): ${err.message}`);
+              results.push({ id: d.id, platform: 'tiktok', status: 'error' });
+            }
           }));
         } catch (err) {
           warnings.push(`TikTok (Apify): ${err.message}`);
