@@ -110,8 +110,15 @@ async function fetchInstagramStats(mediaId, token) {
 
 function extractTikTokVideoId(url) {
   if (!url) return null;
-  const m = url.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/);
-  return m ? m[1] : null;
+  // Handles /@username/video/ID and /@/video/ID (empty username)
+  const m = url.match(/tiktok\.com\/@[^/]*\/video\/(\d+)/);
+  if (m) return m[1];
+  // Fallback: share_item_id query param (present in some share URLs)
+  try {
+    const id = new URL(url).searchParams.get('share_item_id');
+    if (id && /^\d+$/.test(id)) return id;
+  } catch {}
+  return null;
 }
 
 function isShortTikTokUrl(url) {
