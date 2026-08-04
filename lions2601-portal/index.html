@@ -434,6 +434,18 @@
     }
     .rpt-sort-btn:hover { border-color: #bbb; color: #333; }
     .rpt-sort-btn.active { background: #1a1a1a; border-color: #1a1a1a; color: #fff; }
+    .rpt-pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 28px; padding-top: 20px; border-top: 1px solid #f0f0f0; }
+    .rpt-page-info { font-size: 12px; color: #aaa; }
+    .rpt-page-btns { display: flex; gap: 4px; align-items: center; }
+    .rpt-page-btn {
+      min-width: 32px; height: 32px; padding: 0 8px; border-radius: 7px;
+      font-size: 13px; font-weight: 600; border: 1.5px solid #e8e8e8;
+      background: #fff; color: #555; cursor: pointer; transition: all 0.12s;
+    }
+    .rpt-page-btn:hover:not(:disabled) { border-color: #bbb; color: #222; }
+    .rpt-page-btn.active { background: #1a1a1a; border-color: #1a1a1a; color: #fff; }
+    .rpt-page-btn:disabled { opacity: 0.35; cursor: default; }
+    .rpt-page-ellipsis { font-size: 13px; color: #bbb; padding: 0 4px; }
     .btn-refresh, .btn-update {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
@@ -949,6 +961,8 @@ function escapeHtml(str) {
 // ── BRIEF SAVE LOGIC ──────────────────────────────────────────────────────────
 var _briefTimers  = {};
 var _reportSort   = 'code'; // 'code' | 'creator' | 'views'
+var _reportPage   = 1;
+var _reportPageSz = 25;
 
 function onBriefInput(el) {
   const key = el.dataset.briefKey;
@@ -1209,22 +1223,89 @@ function renderApprovals(offers, deliverables) {
 }
 
 // ── REPORTING TAB ─────────────────────────────────────────────────────────────
-function renderReporting(campaign, deliverables) {
-  let totalViews = 0, totalLikes = 0, totalComments = 0, totalShares = 0;
-  let hasMetrics = false, postsLive = 0;
 
+function buildRptCardHtml(d) {
+  const metrics = ['views','likes','comments','shares'].map(m => {
+    const val = d[m], isEmpty = val == null;
+    return `<div class="rpt-metric">
+      <div class="rpt-metric-value${isEmpty ? ' empty' : ''}">${fmtNum(val)}</div>
+      <div class="rpt-metric-label">${m.charAt(0).toUpperCase() + m.slice(1)}</div>
+    </div>`;
+  }).join('');
+  const linkHtml = d.postLink
+    ? `<a class="rpt-post-link" href="${d.postLink}" target="_blank">↗ View Post</a>`
+    : `<span class="rpt-no-link">No post link yet</span>`;
+  return `<div class="rpt-deliverable-card">
+    <div class="rpt-del-header">
+      <div class="rpt-del-header-left">
+        <div class="rpt-del-avatar">${initials(d.talent)}</div>
+        <div>
+          <div class="rpt-del-name">${d.talent}</div>
+          <div class="rpt-del-code">${d.code} · ${d.type || '👻 Snap Video'}</div>
+        </div>
+      </div>
+      ${statusPill(d.status)}
+    </div>
+    <div class="rpt-del-body"><div class="rpt-metrics-grid">${metrics}</div></div>
+    <div class="rpt-del-footer">
+      <div class="rpt-del-footer-left">${platformPill(d.type)}${linkHtml}</div>
+    </div>
+  </div>`;
+}
+
+function buildPaginationHtml(cur, total, count, start, end) {
+  if (total <= 1) return '';
+  // Build page number list with ellipsis
+  var near = new Set([1, total, cur-1, cur, cur+1].filter(p => p >= 1 && p <= total));
+  var pages = [...near].sort((a,b) => a-b);
+  var btns = '', prev = -1;
+  pages.forEach(p => {
+    if (prev !== -1 && p - prev > 1) btns += `<span class="rpt-page-ellipsis">…</span>`;
+    btns += `<button class="rpt-page-btn${p === cur ? ' active' : ''}" onclick="goToRptPage(${p})">${p}</button>`;
+    prev = p;
+  });
+  return `<div class="rpt-pagination">
+    <span class="rpt-page-info">Showing ${start+1}–${end} of ${count}</span>
+    <div class="rpt-page-btns">
+      <button class="rpt-page-btn" onclick="goToRptPage(${cur-1})" ${cur===1?'disabled':''}>‹</button>
+      ${btns}
+      <button class="rpt-page-btn" onclick="goToRptPage(${cur+1})" ${cur===total?'disabled':''}>›</button>
+    </div>
+  </div>`;
+}
+
+function renderRptPage(sorted) {
+  var totalPages = Math.max(1, Math.ceil(sorted.length / _reportPageSz));
+  _reportPage = Math.max(1, Math.min(_reportPage, totalPages));
+  var start = (_reportPage - 1) * _reportPageSz;
+  var end   = Math.min(start + _reportPageSz, sorted.length);
+  var cards = sorted.slice(start, end).map(buildRptCardHtml).join('');
+  var pagination = buildPaginationHtml(_reportPage, totalPages, sorted.length, start, end);
+  var container = document.getElementById('rpt-cards');
+  if (container) container.innerHTML = cards + pagination;
+}
+
+function rptSorted() {
+  return [..._deliverables].sort((a, b) => {
+    if (_reportSort === 'creator') return (a.talent || '').localeCompare(b.talent || '');
+    if (_reportSort === 'views')   return (b.views ?? -1) - (a.views ?? -1);
+    return (a.code || '').localeCompare(b.code || '');
+  });
+}
+
+function renderReporting(campaign, deliverables) {
+  var totalViews = 0, totalLikes = 0, totalComments = 0, totalShares = 0;
+  var hasMetrics = false, postsLive = 0;
   deliverables.forEach(d => {
     if (isCompleted(d)) postsLive++;
-    if (d.views != null)    { totalViews    += d.views;    hasMetrics = true; }
-    if (d.likes != null)    { totalLikes    += d.likes;    hasMetrics = true; }
+    if (d.views    != null) { totalViews    += d.views;    hasMetrics = true; }
+    if (d.likes    != null) { totalLikes    += d.likes;    hasMetrics = true; }
     if (d.comments != null) { totalComments += d.comments; hasMetrics = true; }
-    if (d.shares != null)   { totalShares   += d.shares;   hasMetrics = true; }
+    if (d.shares   != null) { totalShares   += d.shares;   hasMetrics = true; }
   });
+  var totalEng = totalLikes + totalComments + totalShares;
 
-  const totalEng = totalLikes + totalComments + totalShares;
-  const snapLinksCount = deliverables.filter(d => d.postLink && (d.type || '').toLowerCase().includes('snap')).length;
-
-  const summaryCards = `
+  var summaryCards = `
     <div class="reporting-stats">
       <div class="rpt-stat-card">
         <div class="rpt-stat-label">Deliverables</div>
@@ -1246,54 +1327,16 @@ function renderReporting(campaign, deliverables) {
       </div>
     </div>`;
 
-  const sorted = [...deliverables].sort((a, b) => {
-    if (_reportSort === 'creator') return (a.talent || '').localeCompare(b.talent || '');
-    if (_reportSort === 'views')   return (b.views ?? -1) - (a.views ?? -1);
-    return (a.code || '').localeCompare(b.code || '');
-  });
-
-  const sortBar = `
+  var sortBar = `
     <div class="rpt-sort-bar">
       <span class="rpt-sort-label">Sort by</span>
-      <button class="rpt-sort-btn ${_reportSort === 'code'    ? 'active' : ''}" onclick="sortReporting('code')">Deliverable Code</button>
-      <button class="rpt-sort-btn ${_reportSort === 'creator' ? 'active' : ''}" onclick="sortReporting('creator')">Creator</button>
-      <button class="rpt-sort-btn ${_reportSort === 'views'   ? 'active' : ''}" onclick="sortReporting('views')">Views ↓</button>
+      <button class="rpt-sort-btn ${_reportSort==='code'    ? 'active':''}" onclick="sortReporting('code')">Deliverable Code</button>
+      <button class="rpt-sort-btn ${_reportSort==='creator' ? 'active':''}" onclick="sortReporting('creator')">Creator</button>
+      <button class="rpt-sort-btn ${_reportSort==='views'   ? 'active':''}" onclick="sortReporting('views')">Views ↓</button>
     </div>`;
 
-  const delCards = sorted.map(d => {
-    const metrics = ['views','likes','comments','shares'].map(m => {
-      const val = d[m];
-      const isEmpty = val == null;
-      return `<div class="rpt-metric">
-        <div class="rpt-metric-value${isEmpty ? ' empty' : ''}">${fmtNum(val)}</div>
-        <div class="rpt-metric-label">${m.charAt(0).toUpperCase() + m.slice(1)}</div>
-      </div>`;
-    }).join('');
-
-    const linkHtml = d.postLink
-      ? `<a class="rpt-post-link" href="${d.postLink}" target="_blank">↗ View Post</a>`
-      : `<span class="rpt-no-link">No post link yet</span>`;
-
-    return `<div class="rpt-deliverable-card">
-      <div class="rpt-del-header">
-        <div class="rpt-del-header-left">
-          <div class="rpt-del-avatar">${initials(d.talent)}</div>
-          <div>
-            <div class="rpt-del-name">${d.talent}</div>
-            <div class="rpt-del-code">${d.code} · ${d.type || '👻 Snap Video'}</div>
-          </div>
-        </div>
-        ${statusPill(d.status)}
-      </div>
-      <div class="rpt-del-body"><div class="rpt-metrics-grid">${metrics}</div></div>
-      <div class="rpt-del-footer">
-        <div class="rpt-del-footer-left">${platformPill(d.type)}${linkHtml}</div>
-      </div>
-    </div>`;
-  }).join('');
-
-  const lastUpdated = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString();
-  const header = `
+  var lastUpdated = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString();
+  var header = `
     <div class="reporting-header">
       <div class="reporting-header-left">
         <h2>Campaign Report</h2>
@@ -1306,54 +1349,26 @@ function renderReporting(campaign, deliverables) {
     </div>`;
 
   document.getElementById('reporting-main').innerHTML =
-    header + summaryCards + sortBar + `<div id="rpt-cards">` + delCards + `</div>`;
+    header + summaryCards + sortBar + `<div id="rpt-cards"></div>`;
+  renderRptPage(rptSorted());
 }
 
 function sortReporting(key) {
   _reportSort = key;
-  // Update button active states
+  _reportPage = 1;
   document.querySelectorAll('.rpt-sort-btn').forEach(btn => {
     btn.classList.toggle('active', btn.textContent.toLowerCase().includes(
       key === 'code' ? 'deliverable' : key === 'views' ? 'views' : 'creator'
     ));
   });
-  // Re-sort and re-render just the cards
-  const sorted = [..._deliverables].sort((a, b) => {
-    if (key === 'creator') return (a.talent || '').localeCompare(b.talent || '');
-    if (key === 'views')   return (b.views ?? -1) - (a.views ?? -1);
-    return (a.code || '').localeCompare(b.code || '');
-  });
-  const delCards = sorted.map(d => {
-    const metrics = ['views','likes','comments','shares'].map(m => {
-      const val = d[m];
-      const isEmpty = val == null;
-      return `<div class="rpt-metric">
-        <div class="rpt-metric-value${isEmpty ? ' empty' : ''}">${fmtNum(val)}</div>
-        <div class="rpt-metric-label">${m.charAt(0).toUpperCase() + m.slice(1)}</div>
-      </div>`;
-    }).join('');
-    const linkHtml = d.postLink
-      ? `<a class="rpt-post-link" href="${d.postLink}" target="_blank">↗ View Post</a>`
-      : `<span class="rpt-no-link">No post link yet</span>`;
-    return `<div class="rpt-deliverable-card">
-      <div class="rpt-del-header">
-        <div class="rpt-del-header-left">
-          <div class="rpt-del-avatar">${initials(d.talent)}</div>
-          <div>
-            <div class="rpt-del-name">${d.talent}</div>
-            <div class="rpt-del-code">${d.code} · ${d.type || '👻 Snap Video'}</div>
-          </div>
-        </div>
-        ${statusPill(d.status)}
-      </div>
-      <div class="rpt-del-body"><div class="rpt-metrics-grid">${metrics}</div></div>
-      <div class="rpt-del-footer">
-        <div class="rpt-del-footer-left">${platformPill(d.type)}${linkHtml}</div>
-      </div>
-    </div>`;
-  }).join('');
-  const container = document.getElementById('rpt-cards');
-  if (container) container.innerHTML = delCards;
+  renderRptPage(rptSorted());
+}
+
+function goToRptPage(page) {
+  _reportPage = page;
+  renderRptPage(rptSorted());
+  var el = document.getElementById('rpt-cards');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function refreshReporting() {
