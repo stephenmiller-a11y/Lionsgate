@@ -338,11 +338,17 @@ module.exports = async function handler(req, res) {
           // Batch the long URLs as before
           if (longUrls.length > 0) {
             const byVideoId = await fetchTikTokStatsApify(longUrls, apifyToken, tiktokSessionId);
+            const returnedIds = Object.keys(byVideoId);
+            console.log('[stats] TikTok batch — sent:', longUrls.length, '| Apify returned:', returnedIds.length, '| IDs:', returnedIds.join(','));
             await Promise.all(longUrls.map(async (d) => {
               const videoId = extractTikTokVideoId(d.postLink);
               if (!videoId) { warnings.push(`TikTok: could not parse video ID from ${d.postLink}`); return; }
               const stats = byVideoId[videoId];
-              if (!stats) { results.push({ id: d.id, platform: 'tiktok', status: 'not_found' }); return; }
+              if (!stats) {
+                warnings.push(`TikTok: Apify returned no data for video ${videoId} — video may be private or deleted (${d.postLink})`);
+                results.push({ id: d.id, platform: 'tiktok', status: 'not_found' });
+                return;
+              }
               await patchDeliverable(d.id, buildFields(stats), airtableToken);
               results.push({ id: d.id, platform: 'tiktok', status: 'updated', ...stats });
             }));
@@ -353,7 +359,12 @@ module.exports = async function handler(req, res) {
             try {
               const byVideoId = await fetchTikTokStatsApify([d], apifyToken, tiktokSessionId);
               const ids = Object.keys(byVideoId);
-              if (ids.length === 0) { results.push({ id: d.id, platform: 'tiktok', status: 'not_found' }); return; }
+              console.log('[stats] TikTok short URL —', d.postLink, '| Apify returned:', ids.length, 'items');
+              if (ids.length === 0) {
+                warnings.push(`TikTok: Apify returned no data for short URL — video may be private or deleted (${d.postLink})`);
+                results.push({ id: d.id, platform: 'tiktok', status: 'not_found' });
+                return;
+              }
               const stats = byVideoId[ids[0]];
               await patchDeliverable(d.id, buildFields(stats), airtableToken);
               results.push({ id: d.id, platform: 'tiktok', status: 'updated', ...stats });
