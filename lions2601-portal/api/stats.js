@@ -6,9 +6,8 @@
 //   AIRTABLE_TOKEN        — Airtable Personal Access Token
 //
 // Per-platform env vars (only needed for the platforms you use):
-//   YOUTUBE_API_KEY           — YouTube Data API v3 key (Google Cloud Console)
-//   INSTAGRAM_ACCESS_TOKEN    — Meta long-lived User Access Token with instagram_basic scope
-//   APIFY_API_TOKEN           — Apify API token (apify.com) — used for TikTok scraping
+//   YOUTUBE_API_KEY   — YouTube Data API v3 key (Google Cloud Console)
+//   APIFY_API_TOKEN   — Apify API token (apify.com) — used for Instagram + TikTok scraping
 
 const BASE_ID            = process.env.AIRTABLE_BASE_ID || 'appcKC14Om93O40QC';
 const AT_BASE            = `https://api.airtable.com/v0/${BASE_ID}`;
@@ -68,40 +67,54 @@ async function fetchYouTubeStats(videoIds, apiKey) {
   return result;
 }
 
-// ── Instagram ─────────────────────────────────────────────────────────────────
-// Uses the Instagram Graph API with a long-lived access token.
-// The shortcode (e.g. "CxyzABC") in the URL is decoded to a numeric media ID
-// using the standard base64url alphabet Instagram uses internally.
+// ── Instagram (via Apify apify/instagram-scraper) ────────────────────────────
+// No access token needed — uses the same APIFY_API_TOKEN as TikTok.
+// Matches results back to deliverables via the post shortcode in the URL.
 
 function extractInstagramShortcode(url) {
+  if (!url) return null;
   const m = url.match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/);
   return m ? m[1] : null;
 }
 
-function shortcodeToMediaId(shortcode) {
-  // Instagram encodes media IDs in base64url; reverse it to get the numeric ID
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
-  let id = BigInt(0);
-  for (const char of shortcode) {
-    const idx = alphabet.indexOf(char);
-    if (idx === -1) return null;
-    id = id * BigInt(64) + BigInt(idx);
-  }
-  return id.toString();
-}
+async function fetchInstagramStatsApify(deliverables, apiToken) {
+  const urls = deliverables.map(d => d.postLink);
 
-async function fetchInstagramStats(mediaId, token) {
-  // video_views = play count; like_count / comments_count also available
-  const url = `https://graph.facebook.com/v19.0/${mediaId}?fields=video_views,like_count,comments_count,timestamp&access_token=${token}`;
-  const res = await fetch(url);
-  const data = await res.json();
-  if (data.error) throw new Error(`Instagram API: ${data.error.message}`);
-  return {
-    views:       data.video_views    ?? null,
-    likes:       data.like_count     ?? null,
-    comments:    data.comments_count ?? null,
-    publishedAt: data.timestamp      || null,
-  };
+  const res = await fetch(
+    `https://api.apify.com/v2/acts/apify~instagram-scraper/run-sync-get-dataset-items?token=${apiToken}&timeout=120`,
+    {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        resultsType:  'posts',
+        directUrls:   urls,
+        resultsLimit: 1,
+      }),
+    }
+  );
+
+  if (!res.ok) {
+    const b = await res.text();
+    throw new Error(`Apify Instagram scraper [${res.status}]: ${b}`);
+  }
+
+  const items = await res.json();
+
+  // Build a map: shortCode → stats
+  const byShortCode = {};
+  for (const item of (Array.isArray(items) ? items : [])) {
+    const code = item.shortCode;
+    if (!code) continue;
+    byShortCode[code] = {
+      // videoViewCount is for feed videos; igPlayCount for Reels — use whichever is present
+      views:       item.videoViewCount ?? item.igPlayCount ?? item.videoPlayCount ?? null,
+      likes:       item.likesCount     ?? null,
+      comments:    item.commentsCount  ?? null,
+      shares:      item.reshareCount   ?? null,
+      publishedAt: item.timestamp      || null,
+    };
+  }
+  return byShortCode;
 }
 
 // ── TikTok (via Apify clockworks/tiktok-scraper) ─────────────────────────────
@@ -180,7 +193,7 @@ function canonicalizeTikTokUrl(url) {
   }
 }
 
-async function fetchTikTokStatsApify(deliverables, apiToken, sessionId) {
+async function fetchTikTokStatsApify(deliverables, apiToken) {
   const urls = deliverables.map(d => canonicalizeTikTokUrl(d.postLink));
 
   const input = {
@@ -190,13 +203,6 @@ async function fetchTikTokStatsApify(deliverables, apiToken, sessionId) {
     shouldDownloadSubtitles:       false,
     shouldDownloadSlideshowImages: false,
   };
-
-  // Pass a logged-in session cookie so age-restricted videos are accessible
-  if (sessionId) {
-    input.cookies = [
-      { name: 'sessionid', value: sessionId, domain: '.tiktok.com' },
-    ];
-  }
 
   // Run the Apify TikTok scraper synchronously — waits up to 120s for results
   const res = await fetch(
@@ -270,10 +276,8 @@ module.exports = async function handler(req, res) {
   const airtableToken = process.env.AIRTABLE_TOKEN;
   if (!airtableToken) return res.status(500).json({ error: 'AIRTABLE_TOKEN not configured.' });
 
-  const youtubeKey      = process.env.YOUTUBE_API_KEY;
-  const instagramToken  = process.env.INSTAGRAM_ACCESS_TOKEN;
-  const apifyToken      = process.env.APIFY_API_TOKEN;
-  const tiktokSessionId = process.env.TIKTOK_SESSION_ID;
+  const youtubeKey = process.env.YOUTUBE_API_KEY;
+  const apifyToken = process.env.APIFY_API_TOKEN;
 
   const { deliverables } = req.body || {};
   if (!Array.isArray(deliverables) || deliverables.length === 0) {
@@ -313,25 +317,38 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // ── Instagram ──────────────────────────────────────────────────────────────
+    // ── Instagram (via Apify) ──────────────────────────────────────────────────
     if (byPlatform.instagram.length > 0) {
-      if (!instagramToken) {
-        warnings.push('Instagram: INSTAGRAM_ACCESS_TOKEN not configured — skipped. Add a long-lived Meta User Access Token in Vercel env vars.');
+      if (!apifyToken) {
+        warnings.push('Instagram: APIFY_API_TOKEN not configured — skipped.');
       } else {
-        await Promise.all(byPlatform.instagram.map(async (d) => {
-          const shortcode = extractInstagramShortcode(d.postLink);
-          if (!shortcode) { warnings.push(`Instagram: could not parse shortcode from ${d.postLink}`); return; }
-          const mediaId = shortcodeToMediaId(shortcode);
-          if (!mediaId) { warnings.push(`Instagram: could not decode media ID for ${d.postLink}`); return; }
-          try {
-            const stats = await fetchInstagramStats(mediaId, instagramToken);
+        try {
+          // Chunk into groups of 10 to avoid Apify timeouts
+          const CHUNK = 10;
+          const chunks = [];
+          for (let i = 0; i < byPlatform.instagram.length; i += CHUNK) {
+            chunks.push(byPlatform.instagram.slice(i, i + CHUNK));
+          }
+          const chunkMaps = await Promise.all(chunks.map(c => fetchInstagramStatsApify(c, apifyToken)));
+          const byShortCode = Object.assign({}, ...chunkMaps);
+
+          console.log('[stats] Instagram — sent:', byPlatform.instagram.length, '| Apify returned:', Object.keys(byShortCode).length);
+          await Promise.all(byPlatform.instagram.map(async (d) => {
+            const shortcode = extractInstagramShortcode(d.postLink);
+            if (!shortcode) { warnings.push(`Instagram: could not parse shortcode from ${d.postLink}`); return; }
+            const stats = byShortCode[shortcode];
+            if (!stats) {
+              warnings.push(`Instagram: could not fetch stats for ${shortcode} — post may be private or removed`);
+              results.push({ id: d.id, platform: 'instagram', status: 'not_found' });
+              return;
+            }
             await patchDeliverable(d.id, buildFields(stats), airtableToken);
             results.push({ id: d.id, platform: 'instagram', status: 'updated', ...stats });
-          } catch (err) {
-            warnings.push(`Instagram (${shortcode}): ${err.message}`);
-            results.push({ id: d.id, platform: 'instagram', status: 'error' });
-          }
-        }));
+          }));
+        } catch (err) {
+          warnings.push(`Instagram (Apify): ${err.message}`);
+          byPlatform.instagram.forEach(d => results.push({ id: d.id, platform: 'instagram', status: 'error' }));
+        }
       }
     }
 
@@ -354,7 +371,7 @@ module.exports = async function handler(req, res) {
             const chunks = [];
             for (let i = 0; i < longUrls.length; i += CHUNK) chunks.push(longUrls.slice(i, i + CHUNK));
 
-            const chunkMaps = await Promise.all(chunks.map(c => fetchTikTokStatsApify(c, apifyToken, tiktokSessionId)));
+            const chunkMaps = await Promise.all(chunks.map(c => fetchTikTokStatsApify(c, apifyToken)));
             const byVideoId = Object.assign({}, ...chunkMaps);
 
             console.log('[stats] TikTok long URLs — sent:', longUrls.length, '| Apify returned:', Object.keys(byVideoId).length);
@@ -363,7 +380,7 @@ module.exports = async function handler(req, res) {
               if (!videoId) { warnings.push(`TikTok: could not parse video ID from ${d.postLink}`); return; }
               const stats = byVideoId[videoId];
               if (!stats) {
-                warnings.push(`TikTok: Apify returned no data for video ${videoId} — video may be private or deleted (${d.postLink})`);
+                warnings.push(`TikTok: could not fetch stats for video ${videoId} — video likely has audience controls (18+/friends only) and requires manual entry (${d.postLink})`);
                 results.push({ id: d.id, platform: 'tiktok', status: 'not_found' });
                 return;
               }
@@ -375,11 +392,11 @@ module.exports = async function handler(req, res) {
           // Send each short URL individually — 1 in, 1 out, no matching problem
           await Promise.all(shortUrls.map(async (d) => {
             try {
-              const byVideoId = await fetchTikTokStatsApify([d], apifyToken, tiktokSessionId);
+              const byVideoId = await fetchTikTokStatsApify([d], apifyToken);
               const ids = Object.keys(byVideoId);
               console.log('[stats] TikTok short URL —', d.postLink, '| Apify returned:', ids.length, 'items');
               if (ids.length === 0) {
-                warnings.push(`TikTok: Apify returned no data for short URL — video may be private or deleted (${d.postLink})`);
+                warnings.push(`TikTok: could not fetch stats for short URL — video likely has audience controls and requires manual entry (${d.postLink})`);
                 results.push({ id: d.id, platform: 'tiktok', status: 'not_found' });
                 return;
               }
@@ -399,7 +416,7 @@ module.exports = async function handler(req, res) {
     }
 
     const updated = results.filter(r => r.status === 'updated').length;
-    const byPlat  = ['youtube','instagram','tiktok'].map(p => {
+    const byPlat = ['youtube', 'instagram', 'tiktok'].map(p => {
       const n = results.filter(r => r.platform === p && r.status === 'updated').length;
       return n > 0 ? `${n} ${p}` : null;
     }).filter(Boolean).join(', ');
