@@ -347,11 +347,17 @@ module.exports = async function handler(req, res) {
           const longUrls  = byPlatform.tiktok.filter(d => !isShortTikTokUrl(d.postLink));
           const shortUrls = byPlatform.tiktok.filter(d =>  isShortTikTokUrl(d.postLink));
 
-          // Batch the long URLs as before
+          // Batch the long URLs in chunks of 10 to avoid Apify timeouts on large runs.
+          // Chunks run in parallel so total time stays reasonable.
           if (longUrls.length > 0) {
-            const byVideoId = await fetchTikTokStatsApify(longUrls, apifyToken, tiktokSessionId);
-            const returnedIds = Object.keys(byVideoId);
-            console.log('[stats] TikTok batch — sent:', longUrls.length, '| Apify returned:', returnedIds.length, '| IDs:', returnedIds.join(','));
+            const CHUNK = 10;
+            const chunks = [];
+            for (let i = 0; i < longUrls.length; i += CHUNK) chunks.push(longUrls.slice(i, i + CHUNK));
+
+            const chunkMaps = await Promise.all(chunks.map(c => fetchTikTokStatsApify(c, apifyToken, tiktokSessionId)));
+            const byVideoId = Object.assign({}, ...chunkMaps);
+
+            console.log('[stats] TikTok long URLs — sent:', longUrls.length, '| Apify returned:', Object.keys(byVideoId).length);
             await Promise.all(longUrls.map(async (d) => {
               const videoId = extractTikTokVideoId(d.postLink);
               if (!videoId) { warnings.push(`TikTok: could not parse video ID from ${d.postLink}`); return; }
