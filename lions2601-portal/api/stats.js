@@ -168,8 +168,20 @@ async function resolveShortUrl(url) {
   return url; // give up — caller will emit a warning
 }
 
+// Strip query params from a TikTok URL, keeping only the canonical path.
+// e.g. https://www.tiktok.com/@user/video/123?is_from_webapp=1 → https://www.tiktok.com/@user/video/123
+function canonicalizeTikTokUrl(url) {
+  if (!url) return url;
+  try {
+    const p = new URL(url);
+    return `https://www.tiktok.com${p.pathname}`;
+  } catch {
+    return url;
+  }
+}
+
 async function fetchTikTokStatsApify(deliverables, apiToken, sessionId) {
-  const urls = deliverables.map(d => d.postLink);
+  const urls = deliverables.map(d => canonicalizeTikTokUrl(d.postLink));
 
   const input = {
     postURLs:                      urls,
