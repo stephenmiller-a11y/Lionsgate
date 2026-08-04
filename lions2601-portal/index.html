@@ -426,6 +426,14 @@
     .reporting-header-left h2 { font-size: 20px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
     .reporting-header-left p  { font-size: 13px; color: #999; }
     .reporting-buttons { display: flex; gap: 10px; align-items: center; }
+    .rpt-sort-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .rpt-sort-label { font-size: 12px; font-weight: 600; color: #aaa; text-transform: uppercase; letter-spacing: 0.06em; margin-right: 2px; }
+    .rpt-sort-btn {
+      padding: 5px 13px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      border: 1.5px solid #e0e0e0; background: #fff; color: #666; cursor: pointer; transition: all 0.15s;
+    }
+    .rpt-sort-btn:hover { border-color: #bbb; color: #333; }
+    .rpt-sort-btn.active { background: #1a1a1a; border-color: #1a1a1a; color: #fff; }
     .btn-refresh, .btn-update {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
@@ -939,7 +947,8 @@ function escapeHtml(str) {
 }
 
 // ── BRIEF SAVE LOGIC ──────────────────────────────────────────────────────────
-var _briefTimers = {};
+var _briefTimers  = {};
+var _reportSort   = 'code'; // 'code' | 'creator' | 'views'
 
 function onBriefInput(el) {
   const key = el.dataset.briefKey;
@@ -1237,7 +1246,21 @@ function renderReporting(campaign, deliverables) {
       </div>
     </div>`;
 
-  const delCards = deliverables.map(d => {
+  const sorted = [...deliverables].sort((a, b) => {
+    if (_reportSort === 'creator') return (a.talent || '').localeCompare(b.talent || '');
+    if (_reportSort === 'views')   return (b.views ?? -1) - (a.views ?? -1);
+    return (a.code || '').localeCompare(b.code || '');
+  });
+
+  const sortBar = `
+    <div class="rpt-sort-bar">
+      <span class="rpt-sort-label">Sort by</span>
+      <button class="rpt-sort-btn ${_reportSort === 'code'    ? 'active' : ''}" onclick="sortReporting('code')">Deliverable Code</button>
+      <button class="rpt-sort-btn ${_reportSort === 'creator' ? 'active' : ''}" onclick="sortReporting('creator')">Creator</button>
+      <button class="rpt-sort-btn ${_reportSort === 'views'   ? 'active' : ''}" onclick="sortReporting('views')">Views ↓</button>
+    </div>`;
+
+  const delCards = sorted.map(d => {
     const metrics = ['views','likes','comments','shares'].map(m => {
       const val = d[m];
       const isEmpty = val == null;
@@ -1282,7 +1305,55 @@ function renderReporting(campaign, deliverables) {
       </div>
     </div>`;
 
-  document.getElementById('reporting-main').innerHTML = header + summaryCards + delCards;
+  document.getElementById('reporting-main').innerHTML =
+    header + summaryCards + sortBar + `<div id="rpt-cards">` + delCards + `</div>`;
+}
+
+function sortReporting(key) {
+  _reportSort = key;
+  // Update button active states
+  document.querySelectorAll('.rpt-sort-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.toLowerCase().includes(
+      key === 'code' ? 'deliverable' : key === 'views' ? 'views' : 'creator'
+    ));
+  });
+  // Re-sort and re-render just the cards
+  const sorted = [..._deliverables].sort((a, b) => {
+    if (key === 'creator') return (a.talent || '').localeCompare(b.talent || '');
+    if (key === 'views')   return (b.views ?? -1) - (a.views ?? -1);
+    return (a.code || '').localeCompare(b.code || '');
+  });
+  const delCards = sorted.map(d => {
+    const metrics = ['views','likes','comments','shares'].map(m => {
+      const val = d[m];
+      const isEmpty = val == null;
+      return `<div class="rpt-metric">
+        <div class="rpt-metric-value${isEmpty ? ' empty' : ''}">${fmtNum(val)}</div>
+        <div class="rpt-metric-label">${m.charAt(0).toUpperCase() + m.slice(1)}</div>
+      </div>`;
+    }).join('');
+    const linkHtml = d.postLink
+      ? `<a class="rpt-post-link" href="${d.postLink}" target="_blank">↗ View Post</a>`
+      : `<span class="rpt-no-link">No post link yet</span>`;
+    return `<div class="rpt-deliverable-card">
+      <div class="rpt-del-header">
+        <div class="rpt-del-header-left">
+          <div class="rpt-del-avatar">${initials(d.talent)}</div>
+          <div>
+            <div class="rpt-del-name">${d.talent}</div>
+            <div class="rpt-del-code">${d.code} · ${d.type || '👻 Snap Video'}</div>
+          </div>
+        </div>
+        ${statusPill(d.status)}
+      </div>
+      <div class="rpt-del-body"><div class="rpt-metrics-grid">${metrics}</div></div>
+      <div class="rpt-del-footer">
+        <div class="rpt-del-footer-left">${platformPill(d.type)}${linkHtml}</div>
+      </div>
+    </div>`;
+  }).join('');
+  const container = document.getElementById('rpt-cards');
+  if (container) container.innerHTML = delCards;
 }
 
 function refreshReporting() {
@@ -1351,14 +1422,30 @@ function showStatsToast(message, type) {
   toast.style.cssText = `
     position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
     background: ${c.bg}; border: 1.5px solid ${c.border}; color: ${c.color};
-    padding: 12px 22px; border-radius: 10px; font-size: 13px; font-weight: 600;
-    box-shadow: 0 4px 18px rgba(0,0,0,0.12); z-index: 9999; max-width: 480px;
-    text-align: center; white-space: pre-line;
+    padding: 12px 18px 12px 22px; border-radius: 10px; font-size: 13px; font-weight: 600;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.12); z-index: 9999; max-width: 620px; width: max-content;
+    text-align: left; white-space: pre-line; user-select: text; cursor: text;
+    display: flex; align-items: flex-start; gap: 12px;
   `;
-  toast.textContent = message;
+
+  var text = document.createElement('span');
+  text.textContent = message;
+
+  var close = document.createElement('button');
+  close.textContent = '×';
+  close.style.cssText = `
+    background: none; border: none; cursor: pointer; font-size: 18px; font-weight: 700;
+    line-height: 1; padding: 0; color: inherit; opacity: 0.6; flex-shrink: 0; margin-top: -1px;
+  `;
+  close.onclick = function() { toast.remove(); };
+
+  toast.appendChild(text);
+  toast.appendChild(close);
   document.body.appendChild(toast);
 
-  setTimeout(() => { if (toast.parentNode) toast.remove(); }, 6000);
+  // Auto-dismiss after 20s for warnings/errors, 6s for success
+  var delay = (type === 'success') ? 6000 : 20000;
+  setTimeout(() => { if (toast.parentNode) toast.remove(); }, delay);
 }
 
 // ── FEEDBACK & LOCAL STATE ────────────────────────────────────────────────────
