@@ -77,26 +77,36 @@ async function atGet(path, token) {
   return res.json();
 }
 
-// Fetch multiple records from a table by record IDs.
-// Uses returnFieldsByFieldId=true so fields are keyed by field ID (avoids
-// field-name ambiguity and matches our DELIVERABLE_FIELDS / OFFER_FIELDS arrays).
+// Fetch multiple records from a table by record IDs, handling Airtable pagination
+// (max 100 records per page). Uses returnFieldsByFieldId=true.
 async function atGetByIds(tableId, ids, fieldIds, token) {
   if (!ids || ids.length === 0) return { records: [] };
   const formula = ids.length === 1
     ? `RECORD_ID()='${ids[0]}'`
     : `OR(${ids.map(id => `RECORD_ID()='${id}'`).join(',')})`;
-  const url = new URL(`${AT_BASE}/${tableId}`);
-  url.searchParams.set('filterByFormula', formula);
-  url.searchParams.set('returnFieldsByFieldId', 'true');
-  fieldIds.forEach(id => url.searchParams.append('fields[]', id));
-  const res = await fetch(url.toString(), {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Airtable [${res.status}] ${tableId}: ${body}`);
-  }
-  return res.json();
+
+  const allRecords = [];
+  let offset;
+  do {
+    const url = new URL(`${AT_BASE}/${tableId}`);
+    url.searchParams.set('filterByFormula', formula);
+    url.searchParams.set('returnFieldsByFieldId', 'true');
+    fieldIds.forEach(id => url.searchParams.append('fields[]', id));
+    if (offset) url.searchParams.set('offset', offset);
+
+    const res = await fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Airtable [${res.status}] ${tableId}: ${body}`);
+    }
+    const data = await res.json();
+    allRecords.push(...(data.records || []));
+    offset = data.offset;
+  } while (offset);
+
+  return { records: allRecords };
 }
 
 // Get first value from a multipleLookupValues array
