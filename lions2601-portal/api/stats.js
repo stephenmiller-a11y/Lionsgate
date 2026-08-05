@@ -76,16 +76,35 @@ async function fetchYouTubeStats(videoIds, apiKey) {
 
 function extractInstagramShortcode(url) {
   if (!url) return null;
-  const m = url.match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/);
+  // Handles /p/, /reel/, /reels/ (plural), /tv/
+  const m = url.match(/instagram\.com\/(?:p|reels?|tv)\/([A-Za-z0-9_-]+)/);
   return m ? m[1] : null;
 }
 
+// Strip query params and normalise reels→reel so Apify's URL validator accepts it.
+// e.g. https://www.instagram.com/reels/ABC/?utm_source=... → https://www.instagram.com/reel/ABC/
+function canonicalizeInstagramUrl(url) {
+  if (!url) return null;
+  const shortcode = extractInstagramShortcode(url);
+  if (!shortcode) return null;
+  const isReel = /\/(?:reels?|tv)\//.test(url);
+  return `https://www.instagram.com/${isReel ? 'reel' : 'p'}/${shortcode}/`;
+}
+
 async function fetchInstagramStatsApify(deliverables, apiToken, cookies) {
-  const urls = deliverables.map(d => d.postLink);
+  // Canonicalize (strip query params, normalise reels→reel) and deduplicate.
+  // Apify rejects batches containing duplicate or malformed URLs.
+  const seen = new Set();
+  const uniqueUrls = [];
+  for (const d of deliverables) {
+    const canonical = canonicalizeInstagramUrl(d.postLink);
+    if (canonical && !seen.has(canonical)) { seen.add(canonical); uniqueUrls.push(canonical); }
+  }
+  if (uniqueUrls.length === 0) return {};
 
   const input = {
     resultsType:  'posts',
-    directUrls:   urls,
+    directUrls:   uniqueUrls,
     resultsLimit: 1,
   };
   // Cookies let the scraper authenticate, which is required for age-restricted Reels.
