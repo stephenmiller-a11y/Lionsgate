@@ -6,8 +6,11 @@
 //   AIRTABLE_TOKEN        — Airtable Personal Access Token
 //
 // Per-platform env vars (only needed for the platforms you use):
-//   YOUTUBE_API_KEY   — YouTube Data API v3 key (Google Cloud Console)
-//   APIFY_API_TOKEN   — Apify API token (apify.com) — used for Instagram + TikTok scraping
+//   YOUTUBE_API_KEY       — YouTube Data API v3 key (Google Cloud Console)
+//   APIFY_API_TOKEN       — Apify API token (apify.com) — used for Instagram + TikTok scraping
+//   INSTAGRAM_COOKIES     — JSON array of instagram.com cookies from a logged-in browser session.
+//                           Export with the "Cookie-Editor" browser extension → Export → JSON.
+//                           Required to scrape age-restricted Reels. Optional otherwise.
 
 const BASE_ID            = process.env.AIRTABLE_BASE_ID || 'appcKC14Om93O40QC';
 const AT_BASE            = `https://api.airtable.com/v0/${BASE_ID}`;
@@ -77,19 +80,24 @@ function extractInstagramShortcode(url) {
   return m ? m[1] : null;
 }
 
-async function fetchInstagramStatsApify(deliverables, apiToken) {
+async function fetchInstagramStatsApify(deliverables, apiToken, cookies) {
   const urls = deliverables.map(d => d.postLink);
+
+  const input = {
+    resultsType:  'posts',
+    directUrls:   urls,
+    resultsLimit: 1,
+  };
+  // Cookies let the scraper authenticate, which is required for age-restricted Reels.
+  // Pass them through if provided — the scraper silently ignores them if absent.
+  if (Array.isArray(cookies) && cookies.length > 0) input.cookies = cookies;
 
   const res = await fetch(
     `https://api.apify.com/v2/acts/apify~instagram-scraper/run-sync-get-dataset-items?token=${apiToken}&timeout=120`,
     {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        resultsType:  'posts',
-        directUrls:   urls,
-        resultsLimit: 1,
-      }),
+      body: JSON.stringify(input),
     }
   );
 
@@ -276,8 +284,23 @@ module.exports = async function handler(req, res) {
   const airtableToken = process.env.AIRTABLE_TOKEN;
   if (!airtableToken) return res.status(500).json({ error: 'AIRTABLE_TOKEN not configured.' });
 
-  const youtubeKey = process.env.YOUTUBE_API_KEY;
-  const apifyToken = process.env.APIFY_API_TOKEN;
+  const youtubeKey       = process.env.YOUTUBE_API_KEY;
+  const apifyToken       = process.env.APIFY_API_TOKEN;
+  const instagramCookies = (() => {
+    const raw = (process.env.INSTAGRAM_COOKIES || '').trim();
+    if (!raw) return null;
+    // Accept either a JSON array (from Cookie-Editor) or a raw document.cookie string
+    // (semicolon-separated name=value pairs copied from the browser console).
+    if (raw.startsWith('[')) {
+      try { return JSON.parse(raw); } catch { return null; }
+    }
+    // Parse "name=value; name2=value2" into Apify's expected format
+    return raw.split(';').map(pair => {
+      const eq = pair.indexOf('=');
+      if (eq === -1) return null;
+      return { name: pair.slice(0, eq).trim(), value: pair.slice(eq + 1).trim(), domain: '.instagram.com', path: '/' };
+    }).filter(Boolean);
+  })();
 
   const { deliverables } = req.body || {};
   if (!Array.isArray(deliverables) || deliverables.length === 0) {
@@ -328,14 +351,14 @@ module.exports = async function handler(req, res) {
           const CHUNK = 10;
           for (let i = 0; i < byPlatform.instagram.length; i += CHUNK) {
             const chunk = byPlatform.instagram.slice(i, i + CHUNK);
-            const byShortCode = await fetchInstagramStatsApify(chunk, apifyToken);
+            const byShortCode = await fetchInstagramStatsApify(chunk, apifyToken, instagramCookies);
             console.log(`[stats] Instagram chunk ${Math.floor(i/CHUNK)+1} — returned: ${Object.keys(byShortCode).length}`);
             for (const d of chunk) {
               const shortcode = extractInstagramShortcode(d.postLink);
               if (!shortcode) { warnings.push(`Instagram: could not parse shortcode from ${d.postLink}`); continue; }
               const stats = byShortCode[shortcode];
               if (!stats) {
-                warnings.push(`Instagram: could not fetch stats for ${shortcode} — post may be private or removed`);
+                warnings.push(`Instagram: no data returned for ${shortcode} — post may be age-restricted, private, or removed. Requires manual entry. (${d.postLink})`);
                 results.push({ id: d.id, platform: 'instagram', status: 'not_found' });
                 continue;
               }
