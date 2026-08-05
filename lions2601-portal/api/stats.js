@@ -323,28 +323,26 @@ module.exports = async function handler(req, res) {
         warnings.push('Instagram: APIFY_API_TOKEN not configured — skipped.');
       } else {
         try {
-          // Chunk into groups of 10 to avoid Apify timeouts
+          // Sequential chunks — one Apify response in memory at a time.
+          // Patch Airtable immediately per chunk before fetching the next.
           const CHUNK = 10;
-          const chunks = [];
           for (let i = 0; i < byPlatform.instagram.length; i += CHUNK) {
-            chunks.push(byPlatform.instagram.slice(i, i + CHUNK));
-          }
-          const chunkMaps = await Promise.all(chunks.map(c => fetchInstagramStatsApify(c, apifyToken)));
-          const byShortCode = Object.assign({}, ...chunkMaps);
-
-          console.log('[stats] Instagram — sent:', byPlatform.instagram.length, '| Apify returned:', Object.keys(byShortCode).length);
-          await Promise.all(byPlatform.instagram.map(async (d) => {
-            const shortcode = extractInstagramShortcode(d.postLink);
-            if (!shortcode) { warnings.push(`Instagram: could not parse shortcode from ${d.postLink}`); return; }
-            const stats = byShortCode[shortcode];
-            if (!stats) {
-              warnings.push(`Instagram: could not fetch stats for ${shortcode} — post may be private or removed`);
-              results.push({ id: d.id, platform: 'instagram', status: 'not_found' });
-              return;
+            const chunk = byPlatform.instagram.slice(i, i + CHUNK);
+            const byShortCode = await fetchInstagramStatsApify(chunk, apifyToken);
+            console.log(`[stats] Instagram chunk ${Math.floor(i/CHUNK)+1} — returned: ${Object.keys(byShortCode).length}`);
+            for (const d of chunk) {
+              const shortcode = extractInstagramShortcode(d.postLink);
+              if (!shortcode) { warnings.push(`Instagram: could not parse shortcode from ${d.postLink}`); continue; }
+              const stats = byShortCode[shortcode];
+              if (!stats) {
+                warnings.push(`Instagram: could not fetch stats for ${shortcode} — post may be private or removed`);
+                results.push({ id: d.id, platform: 'instagram', status: 'not_found' });
+                continue;
+              }
+              await patchDeliverable(d.id, buildFields(stats), airtableToken);
+              results.push({ id: d.id, platform: 'instagram', status: 'updated', ...stats });
             }
-            await patchDeliverable(d.id, buildFields(stats), airtableToken);
-            results.push({ id: d.id, platform: 'instagram', status: 'updated', ...stats });
-          }));
+          }
         } catch (err) {
           warnings.push(`Instagram (Apify): ${err.message}`);
           byPlatform.instagram.forEach(d => results.push({ id: d.id, platform: 'instagram', status: 'error' }));
@@ -364,33 +362,31 @@ module.exports = async function handler(req, res) {
           const longUrls  = byPlatform.tiktok.filter(d => !isShortTikTokUrl(d.postLink));
           const shortUrls = byPlatform.tiktok.filter(d =>  isShortTikTokUrl(d.postLink));
 
-          // Batch the long URLs in chunks of 10 to avoid Apify timeouts on large runs.
-          // Chunks run in parallel so total time stays reasonable.
+          // Sequential chunks — one Apify response in memory at a time.
+          // Patch Airtable immediately per chunk before fetching the next.
           if (longUrls.length > 0) {
             const CHUNK = 10;
-            const chunks = [];
-            for (let i = 0; i < longUrls.length; i += CHUNK) chunks.push(longUrls.slice(i, i + CHUNK));
-
-            const chunkMaps = await Promise.all(chunks.map(c => fetchTikTokStatsApify(c, apifyToken)));
-            const byVideoId = Object.assign({}, ...chunkMaps);
-
-            console.log('[stats] TikTok long URLs — sent:', longUrls.length, '| Apify returned:', Object.keys(byVideoId).length);
-            await Promise.all(longUrls.map(async (d) => {
-              const videoId = extractTikTokVideoId(d.postLink);
-              if (!videoId) { warnings.push(`TikTok: could not parse video ID from ${d.postLink}`); return; }
-              const stats = byVideoId[videoId];
-              if (!stats) {
-                warnings.push(`TikTok: could not fetch stats for video ${videoId} — video likely has audience controls (18+/friends only) and requires manual entry (${d.postLink})`);
-                results.push({ id: d.id, platform: 'tiktok', status: 'not_found' });
-                return;
+            for (let i = 0; i < longUrls.length; i += CHUNK) {
+              const chunk = longUrls.slice(i, i + CHUNK);
+              const byVideoId = await fetchTikTokStatsApify(chunk, apifyToken);
+              console.log(`[stats] TikTok chunk ${Math.floor(i/CHUNK)+1} — returned: ${Object.keys(byVideoId).length}`);
+              for (const d of chunk) {
+                const videoId = extractTikTokVideoId(d.postLink);
+                if (!videoId) { warnings.push(`TikTok: could not parse video ID from ${d.postLink}`); continue; }
+                const stats = byVideoId[videoId];
+                if (!stats) {
+                  warnings.push(`TikTok: could not fetch stats for video ${videoId} — video likely has audience controls (18+/friends only) and requires manual entry (${d.postLink})`);
+                  results.push({ id: d.id, platform: 'tiktok', status: 'not_found' });
+                  continue;
+                }
+                await patchDeliverable(d.id, buildFields(stats), airtableToken);
+                results.push({ id: d.id, platform: 'tiktok', status: 'updated', ...stats });
               }
-              await patchDeliverable(d.id, buildFields(stats), airtableToken);
-              results.push({ id: d.id, platform: 'tiktok', status: 'updated', ...stats });
-            }));
+            }
           }
 
-          // Send each short URL individually — 1 in, 1 out, no matching problem
-          await Promise.all(shortUrls.map(async (d) => {
+          // Short URLs — sequential, one Apify call each (1 in, 1 out, no matching problem)
+          for (const d of shortUrls) {
             try {
               const byVideoId = await fetchTikTokStatsApify([d], apifyToken);
               const ids = Object.keys(byVideoId);
@@ -398,7 +394,7 @@ module.exports = async function handler(req, res) {
               if (ids.length === 0) {
                 warnings.push(`TikTok: could not fetch stats for short URL — video likely has audience controls and requires manual entry (${d.postLink})`);
                 results.push({ id: d.id, platform: 'tiktok', status: 'not_found' });
-                return;
+                continue;
               }
               const stats = byVideoId[ids[0]];
               await patchDeliverable(d.id, buildFields(stats), airtableToken);
@@ -407,7 +403,7 @@ module.exports = async function handler(req, res) {
               warnings.push(`TikTok (${d.postLink}): ${err.message}`);
               results.push({ id: d.id, platform: 'tiktok', status: 'error' });
             }
-          }));
+          }
         } catch (err) {
           warnings.push(`TikTok (Apify): ${err.message}`);
           byPlatform.tiktok.forEach(d => results.push({ id: d.id, platform: 'tiktok', status: 'error' }));
