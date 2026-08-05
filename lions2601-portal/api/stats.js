@@ -70,9 +70,10 @@ async function fetchYouTubeStats(videoIds, apiKey) {
   return result;
 }
 
-// ── Instagram (via Apify apify/instagram-scraper) ────────────────────────────
-// No access token needed — uses the same APIFY_API_TOKEN as TikTok.
-// Matches results back to deliverables via the post shortcode in the URL.
+// ── Instagram (via Apify patient_discovery/instagram-reel-analytics-by-url) ──
+// No login required. Returns all six engagement metrics (views, likes, comments,
+// shares, saves, reposts) for any public post or Reel URL.
+// Matches results back to deliverables via the post shortcode (item.code).
 
 function extractInstagramShortcode(url) {
   if (!url) return null;
@@ -91,9 +92,8 @@ function canonicalizeInstagramUrl(url) {
   return `https://www.instagram.com/${isReel ? 'reel' : 'p'}/${shortcode}/`;
 }
 
-async function fetchInstagramStatsApify(deliverables, apiToken, cookies) {
+async function fetchInstagramStatsApify(deliverables, apiToken) {
   // Canonicalize (strip query params, normalise reels→reel) and deduplicate.
-  // Apify rejects batches containing duplicate or malformed URLs.
   const seen = new Set();
   const uniqueUrls = [];
   for (const d of deliverables) {
@@ -102,21 +102,12 @@ async function fetchInstagramStatsApify(deliverables, apiToken, cookies) {
   }
   if (uniqueUrls.length === 0) return {};
 
-  const input = {
-    resultsType:  'posts',
-    directUrls:   uniqueUrls,
-    resultsLimit: 1,
-  };
-  // Cookies let the scraper authenticate, which is required for age-restricted Reels.
-  // Pass them through if provided — the scraper silently ignores them if absent.
-  if (Array.isArray(cookies) && cookies.length > 0) input.cookies = cookies;
-
   const res = await fetch(
-    `https://api.apify.com/v2/acts/apify~instagram-scraper/run-sync-get-dataset-items?token=${apiToken}&timeout=120`,
+    `https://api.apify.com/v2/acts/patient_discovery~instagram-reel-analytics-by-url/run-sync-get-dataset-items?token=${apiToken}&timeout=120`,
     {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(input),
+      body: JSON.stringify({ postUrls: uniqueUrls }),
     }
   );
 
@@ -128,17 +119,18 @@ async function fetchInstagramStatsApify(deliverables, apiToken, cookies) {
   const items = await res.json();
 
   // Build a map: shortCode → stats
+  // Output schema: item.code, item.metrics.{play_count, like_count, comment_count, share_count}, item.taken_at_date
   const byShortCode = {};
   for (const item of (Array.isArray(items) ? items : [])) {
-    const code = item.shortCode;
+    const code = item.code;
     if (!code) continue;
+    const m = item.metrics || {};
     byShortCode[code] = {
-      // videoViewCount is for feed videos; igPlayCount for Reels — use whichever is present
-      views:       item.videoViewCount ?? item.igPlayCount ?? item.videoPlayCount ?? null,
-      likes:       item.likesCount     ?? null,
-      comments:    item.commentsCount  ?? null,
-      shares:      item.reshareCount   ?? null,
-      publishedAt: item.timestamp      || null,
+      views:       m.play_count     ?? m.ig_play_count ?? null,
+      likes:       m.like_count     ?? null,
+      comments:    m.comment_count  ?? null,
+      shares:      m.share_count    ?? null,
+      publishedAt: item.taken_at_date || null,
     };
   }
   return byShortCode;
@@ -370,7 +362,7 @@ module.exports = async function handler(req, res) {
           const CHUNK = 10;
           for (let i = 0; i < byPlatform.instagram.length; i += CHUNK) {
             const chunk = byPlatform.instagram.slice(i, i + CHUNK);
-            const byShortCode = await fetchInstagramStatsApify(chunk, apifyToken, instagramCookies);
+            const byShortCode = await fetchInstagramStatsApify(chunk, apifyToken);
             console.log(`[stats] Instagram chunk ${Math.floor(i/CHUNK)+1} — returned: ${Object.keys(byShortCode).length}`);
             for (const d of chunk) {
               const shortcode = extractInstagramShortcode(d.postLink);
