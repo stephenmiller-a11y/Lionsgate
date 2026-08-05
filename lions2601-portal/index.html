@@ -1420,7 +1420,9 @@ async function updateStats() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ deliverables: batch.map(function(d) { return { id: d.id, postLink: d.postLink, type: d.type }; }) }),
     });
-    var result = await resp.json();
+    var text = await resp.text();
+    var result;
+    try { result = JSON.parse(text); } catch(e) { throw new Error('Server error (HTTP ' + resp.status + '): ' + text.slice(0, 200)); }
     if (!resp.ok) throw new Error(result.error || 'HTTP ' + resp.status);
     if (result.results)  allResults.push.apply(allResults, result.results);
     if (result.warnings) allWarnings.push.apply(allWarnings, result.warnings);
