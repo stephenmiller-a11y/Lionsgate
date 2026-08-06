@@ -471,6 +471,7 @@
       display: flex; align-items: center; justify-content: center;
       color: #fff; font-size: 16px; font-weight: 700; flex-shrink: 0;
     }
+    img.rpt-del-avatar { object-fit: cover; background: #e8e8e8; display: block; }
     .rpt-del-name { font-size: 15px; font-weight: 700; color: #1a1a1a; }
     .rpt-del-code { font-size: 12px; color: #999; margin-top: 2px; }
     .rpt-del-body { padding: 20px 24px; }
@@ -738,13 +739,17 @@ function showLoading(on) {
 }
 
 // ── GLOBAL STATE ─────────────────────────────────────────────────────────────
-var _deliverables = []; // cached for updateStats()
-var _campaignId   = new URLSearchParams(window.location.search).get('campaign') || '';
+var _deliverables  = []; // cached for updateStats()
+var _headshotMap   = {}; // talent name → headshotUrl, built from offers
+var _campaignId    = new URLSearchParams(window.location.search).get('campaign') || '';
 
 // ── RENDER ALL ────────────────────────────────────────────────────────────────
 function renderAll(data) {
   const { campaign, deliverables, offers, timelines } = data;
   _deliverables = deliverables; // cache for updateStats()
+  // Build headshot lookup: talent name → headshotUrl
+  _headshotMap = {};
+  (offers || []).forEach(function(o) { if (o.name && o.headshotUrl) _headshotMap[o.name] = o.headshotUrl; });
   // Update brand-specific elements
   const brand = campaign.brandName || campaign.name;
   document.title = `${brand} | ZATV Campaign Portal`;
@@ -1239,7 +1244,9 @@ function buildRptCardHtml(d) {
   return `<div class="rpt-deliverable-card">
     <div class="rpt-del-header">
       <div class="rpt-del-header-left">
-        <div class="rpt-del-avatar">${initials(d.talent)}</div>
+        ${_headshotMap[d.talent]
+          ? `<img class="rpt-del-avatar rpt-del-avatar-img" src="${_headshotMap[d.talent]}" alt="${d.talent}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`+`<div class="rpt-del-avatar" style="display:none">${initials(d.talent)}</div>`
+          : `<div class="rpt-del-avatar">${initials(d.talent)}</div>`}
         <div>
           <div class="rpt-del-name">${d.talent}</div>
           <div class="rpt-del-code">${fmtDate(d.airDate)} · ${d.type || '👻 Snap Video'}</div>
