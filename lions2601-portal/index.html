@@ -968,7 +968,7 @@ function escapeHtml(str) {
 var _briefTimers  = {};
 var _reportSort   = 'date'; // 'date' | 'creator' | 'views'
 var _reportPage   = 1;
-var _reportPageSz = 25;
+var _reportPageSz = 10;
 
 function onBriefInput(el) {
   const key = el.dataset.briefKey;
@@ -1231,11 +1231,12 @@ function renderApprovals(offers, deliverables) {
 // ── REPORTING TAB ─────────────────────────────────────────────────────────────
 
 function buildRptCardHtml(d) {
+  const metricIcons = { views: '👁', likes: '❤️', comments: '💬', shares: '🔁' };
   const metrics = ['views','likes','comments','shares'].map(m => {
     const val = d[m], isEmpty = val == null;
     return `<div class="rpt-metric">
       <div class="rpt-metric-value${isEmpty ? ' empty' : ''}">${fmtNum(val)}</div>
-      <div class="rpt-metric-label">${m.charAt(0).toUpperCase() + m.slice(1)}</div>
+      <div class="rpt-metric-label">${metricIcons[m]} ${m.charAt(0).toUpperCase() + m.slice(1)}</div>
     </div>`;
   }).join('');
   const linkHtml = d.postLink
@@ -1324,12 +1325,11 @@ function renderReporting(campaign, deliverables) {
       <div class="rpt-stat-card">
         <div class="rpt-stat-label">Total Views</div>
         <div class="rpt-stat-value">${hasMetrics ? fmtNum(totalViews) : '—'}</div>
-        <div class="rpt-stat-sub">${hasMetrics ? 'Across all posts' : 'Awaiting post links'}</div>
+        ${!hasMetrics ? `<div class="rpt-stat-sub">Awaiting post links</div>` : ''}
       </div>
       <div class="rpt-stat-card">
         <div class="rpt-stat-label">Total Engagement</div>
         <div class="rpt-stat-value">${hasMetrics ? fmtNum(totalEng) : '—'}</div>
-        <div class="rpt-stat-sub">Likes + comments + shares</div>
       </div>
       <div class="rpt-stat-card">
         <div class="rpt-stat-label">Posts Live</div>
