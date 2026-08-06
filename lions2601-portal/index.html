@@ -120,7 +120,7 @@
     .section-title { font-size: 16px; font-weight: 700; margin-bottom: 0; }
     .collapsible-section { margin-bottom: 24px; }
     .section-header {
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex; align-items: center; justify-content: flex-start; gap: 10px;
       padding: 14px 0; cursor: pointer; user-select: none;
       border-bottom: 2px solid #f0f0f0; margin-bottom: 16px;
     }
@@ -632,8 +632,8 @@
     <!-- KPIs -->
     <div class="collapsible-section" id="section-kpis">
       <div class="section-header" onclick="toggleSection('section-kpis')">
-        <span class="section-title">KPIs</span>
         <span class="section-chevron">▾</span>
+        <span class="section-title">KPIs</span>
       </div>
       <div class="section-body">
         <div class="kpi-card">
@@ -649,8 +649,8 @@
     <!-- Talent -->
     <div class="collapsible-section" id="section-talent">
       <div class="section-header" onclick="toggleSection('section-talent')">
-        <span class="section-title">Talent</span>
         <span class="section-chevron">▾</span>
+        <span class="section-title">Talent</span>
       </div>
       <div class="section-body">
         <div class="talent-grid" id="talent-grid-overview"></div>
@@ -660,8 +660,8 @@
     <!-- Deliverables -->
     <div class="collapsible-section" id="section-deliverables">
       <div class="section-header" onclick="toggleSection('section-deliverables')">
-        <span class="section-title">Deliverables</span>
         <span class="section-chevron">▾</span>
+        <span class="section-title">Deliverables</span>
       </div>
       <div class="section-body">
         <div class="deliverables-card">
