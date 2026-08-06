@@ -200,6 +200,7 @@ module.exports = async function handler(req, res) {
       briefBackground: cf['Brief Background']          || null,
       briefGuidelines: cf['Brief Creative Guidelines'] || null,
       briefCTA:        cf['Brief CTA']                 || null,
+      kpis:            cf['KPIs']                      || null,
     };
 
     // 4. Shape deliverables — fields keyed by field ID
