@@ -117,7 +117,42 @@
     .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
 
     /* ── SECTION TITLE ───────────────────────────────────────────────────── */
-    .section-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+    .section-title { font-size: 16px; font-weight: 700; margin-bottom: 0; }
+    .collapsible-section { margin-bottom: 24px; }
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 0; cursor: pointer; user-select: none;
+      border-bottom: 2px solid #f0f0f0; margin-bottom: 16px;
+    }
+    .section-header:hover .section-title { color: #7b2d8b; }
+    .section-chevron {
+      font-size: 18px; color: #aaa; transition: transform 0.2s;
+      display: inline-block;
+    }
+    .collapsible-section.collapsed .section-chevron { transform: rotate(-90deg); }
+    .collapsible-section.collapsed .section-body { display: none; }
+    /* KPI section */
+    .kpi-card {
+      background: #fff; border-radius: 12px; border: 1px solid #e8e8e8;
+      overflow: hidden; margin-bottom: 8px;
+    }
+    .kpi-textarea {
+      width: 100%; min-height: 120px; padding: 18px 20px;
+      border: none; outline: none; resize: vertical;
+      font-size: 14px; line-height: 1.6; color: #333;
+      font-family: inherit; box-sizing: border-box; background: transparent;
+    }
+    .kpi-footer {
+      display: flex; align-items: center; justify-content: flex-end; gap: 12px;
+      padding: 10px 16px; border-top: 1px solid #f0f0f0; background: #fafafa;
+    }
+    .kpi-save-status { font-size: 12px; color: #999; }
+    .kpi-save-btn {
+      padding: 6px 18px; border-radius: 20px; border: 1.5px solid #7b2d8b;
+      background: #fff; color: #7b2d8b; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s, color 0.15s;
+    }
+    .kpi-save-btn:hover { background: #7b2d8b; color: #fff; }
 
     /* ── DELIVERABLES TABLE ──────────────────────────────────────────────── */
     .deliverables-card {
@@ -593,13 +628,48 @@
     <div class="stats-row" id="stats-row-main"></div>
     <div class="stats-row stats-row-metrics" id="stats-row-metrics"></div>
     <div class="progress-card" id="progress-card"></div>
-    <div class="section-title">Deliverables</div>
-    <div class="deliverables-card">
-      <div class="deliverables-card-header"><span id="deliverables-header-count">Deliverables</span></div>
-      <div id="deliverables-tbody"></div>
+
+    <!-- KPIs -->
+    <div class="collapsible-section" id="section-kpis">
+      <div class="section-header" onclick="toggleSection('section-kpis')">
+        <span class="section-title">KPIs</span>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="kpi-card">
+          <textarea id="kpi-textarea" class="kpi-textarea" placeholder="No KPIs set for this campaign yet."></textarea>
+          <div class="kpi-footer">
+            <span class="kpi-save-status" id="kpi-save-status"></span>
+            <button class="kpi-save-btn" onclick="saveKPIs()">Save</button>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="section-title">Talent</div>
-    <div class="talent-grid" id="talent-grid-overview"></div>
+
+    <!-- Talent -->
+    <div class="collapsible-section" id="section-talent">
+      <div class="section-header" onclick="toggleSection('section-talent')">
+        <span class="section-title">Talent</span>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="talent-grid" id="talent-grid-overview"></div>
+      </div>
+    </div>
+
+    <!-- Deliverables -->
+    <div class="collapsible-section" id="section-deliverables">
+      <div class="section-header" onclick="toggleSection('section-deliverables')">
+        <span class="section-title">Deliverables</span>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="deliverables-card">
+          <div class="deliverables-card-header"><span id="deliverables-header-count">Deliverables</span></div>
+          <div id="deliverables-tbody"></div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -765,6 +835,7 @@ function renderAll(data) {
   document.getElementById('footer').textContent =
     `ZATV Partner Portal · Confidential · This page is intended only for ${brand}`;
   renderHero(campaign);
+  renderKPIs(campaign);
   const activeDeliverables = deliverables.filter(d => !(d.status || '').toLowerCase().includes('voided'));
   renderOverviewStats(campaign, activeDeliverables, offers);
   renderProgressBar(activeDeliverables);
@@ -783,6 +854,38 @@ function renderAll(data) {
 }
 
 // ── HERO ──────────────────────────────────────────────────────────────────────
+// ── COLLAPSIBLE SECTIONS ──────────────────────────────────────────────────────
+function toggleSection(id) {
+  document.getElementById(id).classList.toggle('collapsed');
+}
+
+// ── KPIs ──────────────────────────────────────────────────────────────────────
+function renderKPIs(campaign) {
+  const ta = document.getElementById('kpi-textarea');
+  if (ta) ta.value = campaign.kpis || '';
+}
+
+function saveKPIs() {
+  const ta     = document.getElementById('kpi-textarea');
+  const status = document.getElementById('kpi-save-status');
+  if (!ta) return;
+  status.textContent = 'Saving…';
+  fetch('/api/patch-campaign', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ campaignId: _campaignId, kpis: ta.value }),
+  })
+  .then(r => r.json())
+  .then(d => {
+    status.textContent = d.ok ? '✓ Saved' : '✗ Error';
+    setTimeout(() => { status.textContent = ''; }, 3000);
+  })
+  .catch(() => {
+    status.textContent = '✗ Error';
+    setTimeout(() => { status.textContent = ''; }, 3000);
+  });
+}
+
 function renderHero(campaign) {
   document.getElementById('hero-title').textContent = campaign.name;
   const dates = [campaign.startDate, campaign.endDate].filter(Boolean).map(fmtDate).join(' – ');
