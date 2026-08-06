@@ -435,6 +435,16 @@
     }
     .rpt-sort-btn:hover { border-color: #bbb; color: #333; }
     .rpt-sort-btn.active { background: #1a1a1a; border-color: #1a1a1a; color: #fff; }
+    .rpt-sort-divider { width: 1px; height: 18px; background: #e0e0e0; margin: 0 4px; }
+    .rpt-month-select {
+      height: 32px; padding: 0 10px; border-radius: 20px; border: 1.5px solid #ddd;
+      font-size: 13px; font-weight: 600; color: #555; background: #fff;
+      cursor: pointer; outline: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23aaa'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+      padding-right: 28px;
+    }
+    .rpt-month-select:hover { border-color: #bbb; color: #333; }
     .rpt-pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 28px; padding-top: 20px; border-top: 1px solid #f0f0f0; }
     .rpt-page-info { font-size: 12px; color: #aaa; }
     .rpt-page-btns { display: flex; gap: 4px; align-items: center; }
@@ -966,7 +976,8 @@ function escapeHtml(str) {
 
 // ── BRIEF SAVE LOGIC ──────────────────────────────────────────────────────────
 var _briefTimers  = {};
-var _reportSort   = 'date'; // 'date' | 'creator' | 'views'
+var _reportSort   = 'date';  // 'date' | 'creator' | 'views'
+var _reportMonth  = '';      // '' = all months, 'YYYY-MM' = filtered
 var _reportPage   = 1;
 var _reportPageSz = 10;
 
@@ -1294,14 +1305,28 @@ function renderRptPage(sorted) {
   if (container) container.innerHTML = cards + pagination;
 }
 
+function rptMonthLabel(ym) {
+  var parts = ym.split('-');
+  var names = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return names[parseInt(parts[1], 10) - 1] + ' ' + parts[0];
+}
+
 function rptSorted() {
-  return [..._deliverables].sort((a, b) => {
+  var base = _reportMonth
+    ? _deliverables.filter(d => d.airDate && d.airDate.startsWith(_reportMonth))
+    : _deliverables;
+  return [...base].sort((a, b) => {
     if (_reportSort === 'creator') return (a.talent || '').localeCompare(b.talent || '');
     if (_reportSort === 'views')   return (b.views ?? -1) - (a.views ?? -1);
-    // date: ascending; nulls go to end
     var da = a.airDate || '9999', db = b.airDate || '9999';
     return da.localeCompare(db);
   });
+}
+
+function filterReporting(month) {
+  _reportMonth = month;
+  _reportPage  = 1;
+  renderRptPage(rptSorted());
 }
 
 function renderReporting(campaign, deliverables) {
@@ -1337,12 +1362,21 @@ function renderReporting(campaign, deliverables) {
       </div>
     </div>`;
 
+  var allMonths = [...new Set(deliverables.map(d => d.airDate && d.airDate.slice(0,7)).filter(Boolean))].sort();
+  var monthDropdown = allMonths.length > 1
+    ? `<select class="rpt-month-select" onchange="filterReporting(this.value)">
+        <option value="">All Months</option>
+        ${allMonths.map(ym => `<option value="${ym}" ${_reportMonth===ym?'selected':''}>${rptMonthLabel(ym)}</option>`).join('')}
+      </select>`
+    : '';
+
   var sortBar = `
     <div class="rpt-sort-bar">
       <span class="rpt-sort-label">Sort by</span>
       <button class="rpt-sort-btn ${_reportSort==='date'    ? 'active':''}" onclick="sortReporting('date')">Post Date</button>
       <button class="rpt-sort-btn ${_reportSort==='creator' ? 'active':''}" onclick="sortReporting('creator')">Creator</button>
       <button class="rpt-sort-btn ${_reportSort==='views'   ? 'active':''}" onclick="sortReporting('views')">Views ↓</button>
+      ${monthDropdown ? `<span class="rpt-sort-divider"></span>${monthDropdown}` : ''}
     </div>`;
 
   var lastUpdated = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString();
@@ -1368,7 +1402,7 @@ function sortReporting(key) {
   _reportPage = 1;
   document.querySelectorAll('.rpt-sort-btn').forEach(btn => {
     btn.classList.toggle('active', btn.textContent.toLowerCase().includes(
-      key === 'code' ? 'deliverable' : key === 'views' ? 'views' : 'creator'
+      key === 'date' ? 'date' : key === 'views' ? 'views' : 'creator'
     ));
   });
   renderRptPage(rptSorted());
