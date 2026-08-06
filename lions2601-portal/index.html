@@ -126,6 +126,12 @@
     }
     .deliverables-card-header { padding: 18px 24px; border-bottom: 1px solid #f0f0f0; }
     .deliverables-card-header span { font-size: 14px; font-weight: 600; }
+    .del-type-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 24px; border-bottom: 1px solid #f7f7f7;
+    }
+    .del-type-row:last-child { border-bottom: none; }
+    .del-type-count { font-size: 20px; font-weight: 700; color: #1a1a1a; }
     table { width: 100%; border-collapse: collapse; }
     thead tr { background: #fafafa; }
     th {
@@ -590,15 +596,7 @@
     <div class="section-title">Deliverables</div>
     <div class="deliverables-card">
       <div class="deliverables-card-header"><span id="deliverables-header-count">Deliverables</span></div>
-      <table>
-        <thead>
-          <tr>
-            <th>Creator</th><th>Platform</th><th>Status</th>
-            <th>Air Date</th><th>Views</th><th>Post Link</th>
-          </tr>
-        </thead>
-        <tbody id="deliverables-tbody"></tbody>
-      </table>
+      <div id="deliverables-tbody"></div>
     </div>
     <div class="section-title">Talent</div>
     <div class="talent-grid" id="talent-grid-overview"></div>
@@ -890,27 +888,28 @@ function renderProgressBar(deliverables) {
 
 // ── DELIVERABLES TABLE ────────────────────────────────────────────────────────
 function renderDeliverablesTable(deliverables) {
+  const total = deliverables.length;
   document.getElementById('deliverables-header-count').textContent =
-    `${deliverables.length} Deliverable${deliverables.length !== 1 ? 's' : ''}`;
+    `${total} Deliverable${total !== 1 ? 's' : ''}`;
 
-  const rows = deliverables.map((d, i) => {
-    const postLinkHtml = d.postLink
-      ? `<a class="post-link" href="${d.postLink}" target="_blank">↗ View Post</a>`
-      : `<span class="no-link">Not yet live</span>`;
-    return `<tr>
-      <td>
-        <span class="post-label">Post ${i + 1}</span>
-        <span class="creator-name">${d.talent}</span>
-      </td>
-      <td>${platformPill(d.type)}</td>
-      <td>${statusPill(d.status)}</td>
-      <td style="color:${d.airDate ? '#1a1a1a' : '#ccc'};font-size:12px">${fmtDate(d.airDate)}</td>
-      <td style="color:${d.views != null ? '#1a1a1a' : '#ccc'};font-size:12px">${fmtNum(d.views)}</td>
-      <td>${postLinkHtml}</td>
-    </tr>`;
-  }).join('');
+  // Group by type and count
+  const counts = {};
+  deliverables.forEach(d => {
+    const key = d.type || '👻 Snap Video';
+    counts[key] = (counts[key] || 0) + 1;
+  });
 
-  document.getElementById('deliverables-tbody').innerHTML = rows || '<tr><td colspan="6" style="color:#bbb;font-style:italic;text-align:center">No deliverables found</td></tr>';
+  const rows = Object.entries(counts)
+    .sort((a, b) => b[1] - a[1]) // most common first
+    .map(([type, count]) => `
+      <div class="del-type-row">
+        ${platformPill(type)}
+        <span class="del-type-count">${count}</span>
+      </div>`)
+    .join('');
+
+  document.getElementById('deliverables-tbody').innerHTML =
+    rows || '<div style="padding:24px;color:#bbb;font-style:italic;text-align:center">No deliverables found</div>';
 }
 
 // ── OVERVIEW TALENT GRID ──────────────────────────────────────────────────────
