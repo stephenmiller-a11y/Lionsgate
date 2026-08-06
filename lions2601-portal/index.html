@@ -961,7 +961,7 @@ function escapeHtml(str) {
 
 // ── BRIEF SAVE LOGIC ──────────────────────────────────────────────────────────
 var _briefTimers  = {};
-var _reportSort   = 'code'; // 'code' | 'creator' | 'views'
+var _reportSort   = 'date'; // 'date' | 'creator' | 'views'
 var _reportPage   = 1;
 var _reportPageSz = 25;
 
@@ -1242,7 +1242,7 @@ function buildRptCardHtml(d) {
         <div class="rpt-del-avatar">${initials(d.talent)}</div>
         <div>
           <div class="rpt-del-name">${d.talent}</div>
-          <div class="rpt-del-code">${d.code} · ${d.type || '👻 Snap Video'}</div>
+          <div class="rpt-del-code">${fmtDate(d.airDate)} · ${d.type || '👻 Snap Video'}</div>
         </div>
       </div>
       ${statusPill(d.status)}
@@ -1290,7 +1290,9 @@ function rptSorted() {
   return [..._deliverables].sort((a, b) => {
     if (_reportSort === 'creator') return (a.talent || '').localeCompare(b.talent || '');
     if (_reportSort === 'views')   return (b.views ?? -1) - (a.views ?? -1);
-    return (a.code || '').localeCompare(b.code || '');
+    // date: ascending; nulls go to end
+    var da = a.airDate || '9999', db = b.airDate || '9999';
+    return da.localeCompare(db);
   });
 }
 
@@ -1331,7 +1333,7 @@ function renderReporting(campaign, deliverables) {
   var sortBar = `
     <div class="rpt-sort-bar">
       <span class="rpt-sort-label">Sort by</span>
-      <button class="rpt-sort-btn ${_reportSort==='code'    ? 'active':''}" onclick="sortReporting('code')">Deliverable Code</button>
+      <button class="rpt-sort-btn ${_reportSort==='date'    ? 'active':''}" onclick="sortReporting('date')">Post Date</button>
       <button class="rpt-sort-btn ${_reportSort==='creator' ? 'active':''}" onclick="sortReporting('creator')">Creator</button>
       <button class="rpt-sort-btn ${_reportSort==='views'   ? 'active':''}" onclick="sortReporting('views')">Views ↓</button>
     </div>`;
