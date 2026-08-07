@@ -1626,7 +1626,7 @@ function renderCalendarMonth() {
   // Coming Up list — upcoming events from today, sorted, capped at 20
   var upcoming = _calEvents.filter(function(e) { return e.date >= today; });
   upcoming.sort(function(a,b) {
-    if (a.date !== b.date) return a.date.localeCompare(b.date);
+    if (a.date !== b.date) return String(a.date).localeCompare(String(b.date));
     return typeOrder.indexOf(a.eventType) - typeOrder.indexOf(b.eventType);
   });
   upcoming = upcoming.slice(0, 20);
@@ -1831,7 +1831,7 @@ function rptSorted() {
     if (_reportSort === 'creator')  return (a.talent || '').localeCompare(b.talent || '');
     if (_reportSort === 'views')    return (b.views ?? -1) - (a.views ?? -1);
     if (_reportSort === 'platform') return (a.type || '').localeCompare(b.type || '');
-    var da = a.airDate || '9999', db = b.airDate || '9999';
+    var da = calSafeDate(a.airDate) || '9999', db = calSafeDate(b.airDate) || '9999';
     return da.localeCompare(db);
   });
 }
