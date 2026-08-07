@@ -486,6 +486,13 @@
       padding-right: 28px;
     }
     .rpt-month-select:hover { border-color: #bbb; color: #333; }
+    .rpt-search {
+      flex: 1; min-width: 160px; height: 32px; padding: 0 12px;
+      border-radius: 20px; border: 1.5px solid #ddd;
+      font-size: 13px; color: #555; outline: none; background: #fff;
+    }
+    .rpt-search:focus { border-color: #7b2d8b; }
+    .rpt-search::placeholder { color: #bbb; }
     .rpt-pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 28px; padding-top: 20px; border-top: 1px solid #f0f0f0; }
     .rpt-page-info { font-size: 12px; color: #aaa; }
     .rpt-page-btns { display: flex; gap: 4px; align-items: center; }
@@ -1094,8 +1101,9 @@ function escapeHtml(str) {
 
 // ── BRIEF SAVE LOGIC ──────────────────────────────────────────────────────────
 var _briefTimers  = {};
-var _reportSort   = 'date';  // 'date' | 'creator' | 'views'
+var _reportSort   = 'date';  // 'date' | 'creator' | 'views' | 'platform'
 var _reportMonth  = '';      // '' = all months, 'YYYY-MM' = filtered
+var _reportSearch = '';      // free-text search across creator + type
 var _reportPage   = 1;
 var _reportPageSz = 10;
 
@@ -1430,15 +1438,25 @@ function rptMonthLabel(ym) {
 }
 
 function rptSorted() {
-  var base = _reportMonth
-    ? _deliverables.filter(d => d.airDate && d.airDate.startsWith(_reportMonth))
-    : _deliverables;
+  var q = _reportSearch.toLowerCase().trim();
+  var base = _deliverables.filter(d => {
+    if (_reportMonth && !(d.airDate && d.airDate.startsWith(_reportMonth))) return false;
+    if (q && !((d.talent || '').toLowerCase().includes(q) || (d.type || '').toLowerCase().includes(q))) return false;
+    return true;
+  });
   return [...base].sort((a, b) => {
-    if (_reportSort === 'creator') return (a.talent || '').localeCompare(b.talent || '');
-    if (_reportSort === 'views')   return (b.views ?? -1) - (a.views ?? -1);
+    if (_reportSort === 'creator')  return (a.talent || '').localeCompare(b.talent || '');
+    if (_reportSort === 'views')    return (b.views ?? -1) - (a.views ?? -1);
+    if (_reportSort === 'platform') return (a.type || '').localeCompare(b.type || '');
     var da = a.airDate || '9999', db = b.airDate || '9999';
     return da.localeCompare(db);
   });
+}
+
+function searchReporting(val) {
+  _reportSearch = val;
+  _reportPage   = 1;
+  renderRptPage(rptSorted());
 }
 
 function filterReporting(month) {
@@ -1491,10 +1509,13 @@ function renderReporting(campaign, deliverables) {
   var sortBar = `
     <div class="rpt-sort-bar">
       <span class="rpt-sort-label">Sort by</span>
-      <button class="rpt-sort-btn ${_reportSort==='date'    ? 'active':''}" onclick="sortReporting('date')">Post Date</button>
-      <button class="rpt-sort-btn ${_reportSort==='creator' ? 'active':''}" onclick="sortReporting('creator')">Creator</button>
-      <button class="rpt-sort-btn ${_reportSort==='views'   ? 'active':''}" onclick="sortReporting('views')">Views ↓</button>
+      <button class="rpt-sort-btn ${_reportSort==='date'     ? 'active':''}" onclick="sortReporting('date')">Post Date</button>
+      <button class="rpt-sort-btn ${_reportSort==='creator'  ? 'active':''}" onclick="sortReporting('creator')">Creator</button>
+      <button class="rpt-sort-btn ${_reportSort==='platform' ? 'active':''}" onclick="sortReporting('platform')">Platform</button>
+      <button class="rpt-sort-btn ${_reportSort==='views'    ? 'active':''}" onclick="sortReporting('views')">Views ↓</button>
       ${monthDropdown ? `<span class="rpt-sort-divider"></span>${monthDropdown}` : ''}
+      <span class="rpt-sort-divider"></span>
+      <input class="rpt-search" type="text" placeholder="🔍 Search creator or platform…" value="${_reportSearch}" oninput="searchReporting(this.value)">
     </div>`;
 
   var lastUpdated = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString();
@@ -1519,9 +1540,8 @@ function sortReporting(key) {
   _reportSort = key;
   _reportPage = 1;
   document.querySelectorAll('.rpt-sort-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.textContent.toLowerCase().includes(
-      key === 'date' ? 'date' : key === 'views' ? 'views' : 'creator'
-    ));
+    var label = key === 'date' ? 'date' : key === 'views' ? 'views' : key === 'platform' ? 'platform' : 'creator';
+    btn.classList.toggle('active', btn.textContent.toLowerCase().includes(label));
   });
   renderRptPage(rptSorted());
 }
