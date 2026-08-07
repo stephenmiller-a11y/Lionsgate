@@ -33,6 +33,9 @@ const DELIVERABLE_FIELDS = [
   'fldTm8YrIhRvRCQUr', // Comments
   'fldqqQzTtUl6k5crI', // Shares
   'flds3ZtOYpN6eTur5', // Post Thumbnail (multipleAttachments — populated by stats pull)
+  'fldlhbnzU71XhvOPN', // Script Due (formula)
+  'fldt7DyDbsVthLa4U', // Draft Due (date)
+  'fldJH1c8IzvodKKoo', // Shoot Date (formula)
 ];
 
 // Offers table — accessed by field ID (returnFieldsByFieldId=true)
@@ -221,6 +224,9 @@ module.exports = async function handler(req, res) {
           comments:     f['fldTm8YrIhRvRCQUr'] ?? null,
           shares:       f['fldqqQzTtUl6k5crI'] ?? null,
           hasThumbnail: !!(f['flds3ZtOYpN6eTur5'] && f['flds3ZtOYpN6eTur5'].length > 0),
+          scriptDue:    f['fldlhbnzU71XhvOPN'] || null,
+          draftDue:     f['fldt7DyDbsVthLa4U'] || null,
+          shootDate:    f['fldJH1c8IzvodKKoo'] || null,
         };
       })
       .sort((a, b) => a.code.localeCompare(b.code));
