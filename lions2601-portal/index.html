@@ -563,6 +563,52 @@
     .modal-close { padding: 8px 20px; border-radius: 8px; border: 1px solid #e0e0e0; background: #fff; font-size: 13px; font-weight: 600; color: #555; cursor: pointer; }
     .modal-close:hover { background: #f5f5f5; }
 
+    /* ── CALENDAR TAB ────────────────────────────────────────────────────── */
+    .cal-outer { max-width: 960px; margin: 0 auto; padding: 32px 32px 64px; display: flex; flex-direction: column; gap: 20px; }
+    .cal-wrap { background: #fff; border-radius: 16px; border: 1px solid #e8e8e8; overflow: hidden; }
+    /* Header */
+    .cal-header { display: flex; align-items: center; gap: 10px; padding: 16px 22px; border-bottom: 1px solid #f0f0f0; }
+    .cal-month-label { font-size: 18px; font-weight: 700; min-width: 170px; }
+    .cal-nav-btn { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid #e0e0e0; background: #fff; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; color: #555; line-height: 1; }
+    .cal-nav-btn:hover { background: #f5f5f5; }
+    .cal-today-btn { padding: 5px 14px; border-radius: 20px; border: 1.5px solid #7b2d8b; background: #fff; color: #7b2d8b; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .cal-today-btn:hover { background: #7b2d8b; color: #fff; }
+    .cal-legend { display: flex; gap: 14px; margin-left: auto; flex-wrap: wrap; }
+    .cal-legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: #555; }
+    .cal-legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    /* Day headers */
+    .cal-dow-row { display: grid; grid-template-columns: repeat(7, 1fr); background: #fafafa; border-bottom: 1px solid #f0f0f0; }
+    .cal-dow { text-align: center; font-size: 11px; font-weight: 700; letter-spacing: 0.07em; color: #aaa; padding: 7px 0; }
+    /* Grid */
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+    .cal-cell { min-height: 96px; border-right: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; padding: 6px 5px 6px 6px; position: relative; }
+    .cal-cell:nth-child(7n) { border-right: none; }
+    .cal-cell.out-of-month { background: #fafafa; }
+    .cal-cell.cal-today-cell { background: #fdf8ff; }
+    .cal-date-num { font-size: 12px; font-weight: 600; color: #444; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; margin-bottom: 3px; }
+    .cal-date-num.cal-today-num { background: #7b2d8b; color: #fff; }
+    .cal-cell.out-of-month .cal-date-num { color: #ccc; }
+    /* Chips */
+    .cal-chip { display: flex; align-items: center; gap: 3px; padding: 2px 7px 2px 5px; border-radius: 0 20px 20px 0; margin-bottom: 3px; font-size: 10.5px; font-weight: 600; overflow: hidden; cursor: default; white-space: nowrap; }
+    .cal-chip-icon { display: flex; align-items: center; flex-shrink: 0; }
+    .cal-chip-icon svg { width: 10px !important; height: 10px !important; }
+    .cal-chip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90px; }
+    .cal-more { font-size: 10px; color: #aaa; padding-left: 4px; margin-top: 1px; }
+    /* Coming up */
+    .cal-coming-up-wrap { background: #fff; border-radius: 16px; border: 1px solid #e8e8e8; padding: 22px 24px; }
+    .cal-coming-up-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; color: #1a1a1a; }
+    .cal-upcoming-list { display: flex; flex-direction: column; gap: 0; }
+    .cal-upcoming-item { display: flex; align-items: center; gap: 14px; padding: 13px 0; border-bottom: 1px solid #f5f5f5; }
+    .cal-upcoming-item:last-child { border-bottom: none; }
+    .cal-date-badge { display: flex; flex-direction: column; align-items: center; border: 1px solid #e8e8e8; border-radius: 10px; padding: 5px 9px; min-width: 44px; text-align: center; flex-shrink: 0; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+    .cal-date-badge-month { font-size: 9px; font-weight: 800; color: #e05c2e; letter-spacing: 0.04em; text-transform: uppercase; line-height: 1.2; }
+    .cal-date-badge-day { font-size: 20px; font-weight: 700; color: #1a1a1a; line-height: 1.1; }
+    .cal-upcoming-info { flex: 1; min-width: 0; }
+    .cal-upcoming-title { font-size: 13px; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cal-upcoming-sub { font-size: 12px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cal-upcoming-pill { font-size: 11px; font-weight: 700; padding: 3px 11px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+    .cal-empty { color: #bbb; font-style: italic; text-align: center; padding: 32px 0; font-size: 14px; }
+
     /* ── FOOTER ──────────────────────────────────────────────────────────── */
     .footer { text-align: center; padding: 24px; font-size: 12px; color: #bbb; border-top: 1px solid #eee; }
 
@@ -581,6 +627,10 @@
       .talent-offer-inner { grid-template-columns: 90px 1fr; }
       .talent-offer-photo, .talent-offer-photo-fallback { width: 90px; height: 120px; }
       .timeline-wrap { padding: 20px 20px 48px; }
+      .cal-outer { padding: 20px 20px 48px; }
+      .cal-header { flex-wrap: wrap; gap: 8px; }
+      .cal-legend { margin-left: 0; }
+      .cal-cell { min-height: 72px; }
     }
   </style>
 </head>
@@ -624,6 +674,7 @@
     <div class="tab" onclick="switchTab('creative',this)">🎨 Creative</div>
     <div class="tab" onclick="switchTab('talent',this)">⭐️ Talent</div>
     <div class="tab" onclick="switchTab('timeline',this)">📅 Timeline</div>
+    <div class="tab" onclick="switchTab('calendar',this)">🗓️ Calendar</div>
     <div class="tab" onclick="switchTab('concepts',this)">💡 Concepts</div>
     <div class="tab" onclick="switchTab('approvals',this)">✍️ Drafts</div>
     <div class="tab" onclick="switchTab('reporting',this)">📈 Reporting</div>
@@ -712,6 +763,37 @@
 <!-- ── TIMELINE PANEL ───────────────────────────────────────────────────────── -->
 <div class="tab-panel" id="panel-timeline">
   <div class="timeline-wrap" id="timeline-wrap"></div>
+</div>
+
+<!-- ── CALENDAR PANEL ───────────────────────────────────────────────────────── -->
+<div class="tab-panel" id="panel-calendar">
+  <div class="cal-outer" id="cal-outer">
+    <!-- header row: nav + legend -->
+    <div class="cal-wrap">
+      <div class="cal-header">
+        <button class="cal-nav-btn" onclick="calPrev()">&#8249;</button>
+        <span class="cal-month-label" id="cal-month-label">August 2026</span>
+        <button class="cal-nav-btn" onclick="calNext()">&#8250;</button>
+        <button class="cal-today-btn" onclick="calToday()">Today</button>
+        <div class="cal-legend">
+          <span class="cal-legend-item"><span class="cal-legend-dot" style="background:#3b82f6"></span>Shoots</span>
+          <span class="cal-legend-item"><span class="cal-legend-dot" style="background:#ca8a04"></span>Scripts Due</span>
+          <span class="cal-legend-item"><span class="cal-legend-dot" style="background:#16a34a"></span>Drafts Due</span>
+          <span class="cal-legend-item"><span class="cal-legend-dot" style="background:#9333ea"></span>Posts Live</span>
+        </div>
+      </div>
+      <!-- day-of-week header -->
+      <div class="cal-dow-row">
+        <div class="cal-dow">SUN</div><div class="cal-dow">MON</div><div class="cal-dow">TUE</div>
+        <div class="cal-dow">WED</div><div class="cal-dow">THU</div><div class="cal-dow">FRI</div>
+        <div class="cal-dow">SAT</div>
+      </div>
+      <!-- cell grid injected by JS -->
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+    <!-- coming up -->
+    <div class="cal-coming-up-wrap" id="cal-coming-up"></div>
+  </div>
 </div>
 
 <!-- ── APPROVALS PANEL ──────────────────────────────────────────────────────── -->
@@ -863,6 +945,7 @@ function renderAll(data) {
   renderCreative(campaign);
   renderTalentTab(offers);
   renderTimeline(campaign, timelines);
+  renderCalendar(deliverables);
   renderApprovals(offers, deliverables);
   renderReporting(campaign, deliverables);
   // Restore saved states
@@ -1363,6 +1446,159 @@ function renderApprovals(offers, deliverables) {
       }
     }
   });
+}
+
+// ── CALENDAR TAB ──────────────────────────────────────────────────────────────
+
+var _calYear   = new Date().getFullYear();
+var _calMonth  = new Date().getMonth(); // 0-based
+var _calEvents = []; // all calendar events built from deliverables
+
+var CAL_TYPES = {
+  shoot:  { label: 'Shoot',      bg: '#dbeafe', border: '#3b82f6', text: '#1e40af' },
+  script: { label: 'Script Due', bg: '#fef9c3', border: '#ca8a04', text: '#713f12' },
+  draft:  { label: 'Draft Due',  bg: '#dcfce7', border: '#16a34a', text: '#14532d' },
+  post:   { label: 'Post Live',  bg: '#f3e8ff', border: '#9333ea', text: '#581c87' },
+};
+
+var CAL_MONTHS_LONG  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+var CAL_MONTHS_SHORT = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
+function calPlatformSvg(type) {
+  var t = (type || '').toLowerCase();
+  if (t.includes('tiktok') || t.includes('tik tok')) return SVG.tiktok;
+  if (t.includes('instagram') || t.includes('insta')) return SVG.insta;
+  if (t.includes('youtube')) return SVG.youtube;
+  return '📱';
+}
+
+function calPlatformLabel(type) {
+  var t = (type || '').toLowerCase();
+  if (t.includes('tiktok')) return 'TikTok';
+  if (t.includes('instagram') || t.includes('insta')) return 'Instagram';
+  if (t.includes('youtube')) return 'YouTube';
+  if (t.includes('snap')) return 'Snapchat';
+  return type || 'Unknown';
+}
+
+function buildCalEvents(deliverables) {
+  var evts = [];
+  for (var i = 0; i < deliverables.length; i++) {
+    var d = deliverables[i];
+    var base = { talent: d.talent || '', type: d.type || '', code: d.code || d.type || '' };
+    if (d.shootDate)  evts.push(Object.assign({}, base, { date: d.shootDate.slice(0,10),  eventType: 'shoot'  }));
+    if (d.scriptDue)  evts.push(Object.assign({}, base, { date: d.scriptDue.slice(0,10),  eventType: 'script' }));
+    if (d.draftDue)   evts.push(Object.assign({}, base, { date: d.draftDue.slice(0,10),   eventType: 'draft'  }));
+    if (d.airDate)    evts.push(Object.assign({}, base, { date: d.airDate.slice(0,10),     eventType: 'post'   }));
+  }
+  return evts;
+}
+
+function renderCalendar(deliverables) {
+  var active = deliverables.filter(function(d) { return !(d.status || '').toLowerCase().includes('voided'); });
+  _calEvents = buildCalEvents(active);
+  renderCalendarMonth();
+}
+
+function calPrev()  { _calMonth--; if (_calMonth < 0) { _calMonth = 11; _calYear--; } renderCalendarMonth(); }
+function calNext()  { _calMonth++; if (_calMonth > 11) { _calMonth = 0;  _calYear++; } renderCalendarMonth(); }
+function calToday() { var n = new Date(); _calYear = n.getFullYear(); _calMonth = n.getMonth(); renderCalendarMonth(); }
+
+function renderCalendarMonth() {
+  var today     = new Date().toISOString().slice(0,10);
+  var label     = document.getElementById('cal-month-label');
+  var grid      = document.getElementById('cal-grid');
+  var comingUp  = document.getElementById('cal-coming-up');
+  if (!label || !grid || !comingUp) return;
+
+  label.textContent = CAL_MONTHS_LONG[_calMonth] + ' ' + _calYear;
+
+  var firstDow   = new Date(_calYear, _calMonth, 1).getDay(); // 0=Sun
+  var daysInMo   = new Date(_calYear, _calMonth + 1, 0).getDate();
+  var prevLast   = new Date(_calYear, _calMonth, 0).getDate();
+
+  // Group events by date string
+  var byDate = {};
+  for (var i = 0; i < _calEvents.length; i++) {
+    var e = _calEvents[i];
+    if (!byDate[e.date]) byDate[e.date] = [];
+    byDate[e.date].push(e);
+  }
+
+  // Sort events within each date by type order: shoot, script, draft, post
+  var typeOrder = ['shoot','script','draft','post'];
+  Object.keys(byDate).forEach(function(dt) {
+    byDate[dt].sort(function(a,b) { return typeOrder.indexOf(a.eventType) - typeOrder.indexOf(b.eventType); });
+  });
+
+  var cells = '';
+
+  // Prev-month fill
+  for (var pd = firstDow - 1; pd >= 0; pd--) {
+    cells += '<div class="cal-cell out-of-month"><span class="cal-date-num">' + (prevLast - pd) + '</span></div>';
+  }
+
+  // Current month
+  for (var d = 1; d <= daysInMo; d++) {
+    var ds = _calYear + '-' + String(_calMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    var isToday = ds === today;
+    var evts = byDate[ds] || [];
+    var chips = '';
+    var MAX_CHIPS = 3;
+    for (var ei = 0; ei < Math.min(evts.length, MAX_CHIPS); ei++) {
+      var ev = evts[ei];
+      var ct = CAL_TYPES[ev.eventType];
+      chips += '<div class="cal-chip" style="background:' + ct.bg + ';border-left:3px solid ' + ct.border + ';color:' + ct.text + '">' +
+        '<span class="cal-chip-icon">' + calPlatformSvg(ev.type) + '</span>' +
+        '<span class="cal-chip-name">' + (ev.talent || ev.code) + '</span>' +
+        '</div>';
+    }
+    var more = evts.length > MAX_CHIPS ? '<div class="cal-more">+' + (evts.length - MAX_CHIPS) + ' more</div>' : '';
+    cells += '<div class="cal-cell' + (isToday ? ' cal-today-cell' : '') + '">' +
+      '<span class="cal-date-num' + (isToday ? ' cal-today-num' : '') + '">' + d + '</span>' +
+      chips + more + '</div>';
+  }
+
+  // Next-month fill
+  var totalCells = Math.ceil((firstDow + daysInMo) / 7) * 7;
+  for (var nd = 1; nd <= totalCells - firstDow - daysInMo; nd++) {
+    cells += '<div class="cal-cell out-of-month"><span class="cal-date-num">' + nd + '</span></div>';
+  }
+
+  grid.innerHTML = cells;
+
+  // Coming Up list — upcoming events from today, sorted, capped at 20
+  var upcoming = _calEvents.filter(function(e) { return e.date >= today; });
+  upcoming.sort(function(a,b) {
+    if (a.date !== b.date) return a.date.localeCompare(b.date);
+    return typeOrder.indexOf(a.eventType) - typeOrder.indexOf(b.eventType);
+  });
+  upcoming = upcoming.slice(0, 20);
+
+  if (upcoming.length === 0) {
+    comingUp.innerHTML = '';
+    return;
+  }
+
+  var items = upcoming.map(function(e) {
+    var parts = e.date.split('-');
+    var mo    = parseInt(parts[1], 10) - 1;
+    var day   = parseInt(parts[2], 10);
+    var ct    = CAL_TYPES[e.eventType];
+    return '<div class="cal-upcoming-item">' +
+      '<div class="cal-date-badge">' +
+        '<span class="cal-date-badge-month">' + CAL_MONTHS_SHORT[mo] + '</span>' +
+        '<span class="cal-date-badge-day">' + day + '</span>' +
+      '</div>' +
+      '<div class="cal-upcoming-info">' +
+        '<div class="cal-upcoming-title">' + ct.label + ' · ' + (e.code || e.talent) + '</div>' +
+        '<div class="cal-upcoming-sub">' + e.talent + ' · ' + calPlatformLabel(e.type) + '</div>' +
+      '</div>' +
+      '<span class="cal-upcoming-pill" style="background:' + ct.bg + ';color:' + ct.text + ';border:1px solid ' + ct.border + '">' + ct.label + '</span>' +
+    '</div>';
+  }).join('');
+
+  comingUp.innerHTML = '<div class="cal-coming-up-title">Coming Up</div><div class="cal-upcoming-list">' + items + '</div>';
 }
 
 // ── REPORTING TAB ─────────────────────────────────────────────────────────────
