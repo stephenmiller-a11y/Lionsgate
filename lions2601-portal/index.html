@@ -611,11 +611,13 @@
 
     /* ── CALENDAR CHIP TOOLTIP ───────────────────────────────────────────── */
     #cal-tooltip {
-      position: fixed; z-index: 9000; pointer-events: none;
+      position: fixed; z-index: 9000;
       background: #fff; border-radius: 14px; border: 1px solid #e8e8e8;
       box-shadow: 0 8px 32px rgba(0,0,0,0.14); padding: 16px;
       width: 270px; opacity: 0; transition: opacity 0.12s ease;
+      pointer-events: none;
     }
+    #cal-tooltip.visible { pointer-events: all; }
     #cal-tooltip.visible { opacity: 1; }
     .cal-tt-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
     .cal-tt-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; background: #e8e8e8; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #7b2d8b; flex-shrink: 0; overflow: hidden; }
@@ -630,6 +632,8 @@
     .cal-tt-stat { text-align: center; }
     .cal-tt-stat-val { font-size: 16px; font-weight: 700; color: #1a1a1a; }
     .cal-tt-stat-lbl { font-size: 10px; color: #aaa; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .cal-tt-view-btn { display: block; margin-top: 10px; padding: 7px 0; text-align: center; background: #7b2d8b; color: #fff; border-radius: 8px; font-size: 12px; font-weight: 700; text-decoration: none; pointer-events: all; }
+    .cal-tt-view-btn:hover { background: #6a2578; }
 
     /* ── FOOTER ──────────────────────────────────────────────────────────── */
     .footer { text-align: center; padding: 24px; font-size: 12px; color: #bbb; border-top: 1px solid #eee; }
@@ -835,7 +839,7 @@
 </div>
 
 <!-- ── CALENDAR CHIP TOOLTIP ─────────────────────────────────────────────────── -->
-<div id="cal-tooltip"></div>
+<div id="cal-tooltip" onmouseenter="clearTimeout(_calTtTimer)" onmouseleave="calChipLeave()"></div>
 
 <!-- ── FOOTER ────────────────────────────────────────────────────────────────── -->
 <div class="footer" id="footer">
@@ -1691,6 +1695,9 @@ function calChipEnter(evt, chip) {
 
   // Deliverable code line
   var codeHtml = '';
+  var viewPostHtml = (eventType === 'post' && del && del.postLink)
+    ? '<a href="' + del.postLink + '" target="_blank" class="cal-tt-view-btn">View Post ↗</a>'
+    : '';
 
   // Stats (only for post event type and when data exists)
   var statsHtml = '';
@@ -1719,7 +1726,7 @@ function calChipEnter(evt, chip) {
         '<div class="cal-tt-sub">' + type + '</div>' +
       '</div>' +
     '</div>' +
-    eventRow + codeHtml + statsHtml;
+    eventRow + codeHtml + statsHtml + viewPostHtml;
 
   // Position tooltip — prefer above the chip, keep on screen
   var rect = chip.getBoundingClientRect();
