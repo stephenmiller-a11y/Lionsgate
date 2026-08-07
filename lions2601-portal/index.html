@@ -1508,15 +1508,34 @@ function calPlatformLabel(type) {
   return type || 'Unknown';
 }
 
+// Coerce an Airtable date value (string or numeric timestamp) → "YYYY-MM-DD" or null
+function calSafeDate(val) {
+  if (!val) return null;
+  var s = String(val);
+  // ISO string e.g. "2026-08-15" or "2026-08-15T00:00:00.000Z"
+  if (s.includes('-')) return s.slice(0, 10);
+  // Numeric timestamp — Airtable formula fields sometimes return seconds or ms since epoch
+  var n = Number(s);
+  if (!isNaN(n) && n > 0) {
+    var ms = n > 1e10 ? n : n * 1000; // seconds → ms if small
+    return new Date(ms).toISOString().slice(0, 10);
+  }
+  return null;
+}
+
 function buildCalEvents(deliverables) {
   var evts = [];
   for (var i = 0; i < deliverables.length; i++) {
     var d = deliverables[i];
     var base = { talent: d.talent || '', type: d.type || '', code: d.code || d.type || '' };
-    if (d.shootDate)  evts.push(Object.assign({}, base, { date: d.shootDate.slice(0,10),  eventType: 'shoot'  }));
-    if (d.scriptDue)  evts.push(Object.assign({}, base, { date: d.scriptDue.slice(0,10),  eventType: 'script' }));
-    if (d.draftDue)   evts.push(Object.assign({}, base, { date: d.draftDue.slice(0,10),   eventType: 'draft'  }));
-    if (d.airDate)    evts.push(Object.assign({}, base, { date: d.airDate.slice(0,10),     eventType: 'post'   }));
+    var shoot  = calSafeDate(d.shootDate);
+    var script = calSafeDate(d.scriptDue);
+    var draft  = calSafeDate(d.draftDue);
+    var air    = calSafeDate(d.airDate);
+    if (shoot)  evts.push(Object.assign({}, base, { date: shoot,  eventType: 'shoot'  }));
+    if (script) evts.push(Object.assign({}, base, { date: script, eventType: 'script' }));
+    if (draft)  evts.push(Object.assign({}, base, { date: draft,  eventType: 'draft'  }));
+    if (air)    evts.push(Object.assign({}, base, { date: air,    eventType: 'post'   }));
   }
   return evts;
 }
