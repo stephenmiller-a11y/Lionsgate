@@ -894,7 +894,7 @@ function platformPill(type) {
   const t = (type || '').toLowerCase();
   if (t.includes('snap')) return `<span class="platform-pill">${SVG.snap} Snapchat</span>`;
   if (t.includes('tiktok') || t.includes('tik tok')) return `<span class="platform-pill">${SVG.tiktok} TikTok</span>`;
-  if (t.includes('instagram') || t.includes('insta') || t.startsWith('ig')) return `<span class="platform-pill">${SVG.insta} Instagram</span>`;
+  if (t.includes('instagram') || t.includes('insta') || /\big\b/.test(t)) return `<span class="platform-pill">${SVG.insta} Instagram</span>`;
   if (t.includes('youtube')) return `<span class="platform-pill">${SVG.youtube} YouTube</span>`;
   return `<span class="platform-pill">${type}</span>`;
 }
@@ -1497,7 +1497,7 @@ var CAL_MONTHS_SHORT = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','O
 function calPlatformSvg(type) {
   var t = (type || '').toLowerCase();
   if (t.includes('tiktok') || t.includes('tik tok')) return SVG.tiktok;
-  if (t.includes('instagram') || t.includes('insta') || t.startsWith('ig')) return SVG.insta;
+  if (t.includes('instagram') || t.includes('insta') || /\big\b/.test(t)) return SVG.insta;
   if (t.includes('youtube')) return SVG.youtube;
   if (t.includes('snap')) return SVG.snap;
   return '📱';
