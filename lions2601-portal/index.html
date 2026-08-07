@@ -609,6 +609,28 @@
     .cal-upcoming-pill { font-size: 11px; font-weight: 700; padding: 3px 11px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
     .cal-empty { color: #bbb; font-style: italic; text-align: center; padding: 32px 0; font-size: 14px; }
 
+    /* ── CALENDAR CHIP TOOLTIP ───────────────────────────────────────────── */
+    #cal-tooltip {
+      position: fixed; z-index: 9000; pointer-events: none;
+      background: #fff; border-radius: 14px; border: 1px solid #e8e8e8;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.14); padding: 16px;
+      width: 270px; opacity: 0; transition: opacity 0.12s ease;
+    }
+    #cal-tooltip.visible { opacity: 1; }
+    .cal-tt-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .cal-tt-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; background: #e8e8e8; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #7b2d8b; flex-shrink: 0; overflow: hidden; }
+    .cal-tt-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .cal-tt-name { font-size: 13px; font-weight: 700; color: #1a1a1a; margin-bottom: 3px; }
+    .cal-tt-sub { font-size: 11px; color: #888; }
+    .cal-tt-event-row { display: flex; align-items: center; gap: 8px; padding: 9px 0; border-top: 1px solid #f0f0f0; margin-bottom: 2px; }
+    .cal-tt-event-pill { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+    .cal-tt-date { font-size: 12px; color: #555; }
+    .cal-tt-code { font-size: 11px; color: #aaa; margin-top: 2px; }
+    .cal-tt-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; border-top: 1px solid #f0f0f0; padding-top: 10px; }
+    .cal-tt-stat { text-align: center; }
+    .cal-tt-stat-val { font-size: 16px; font-weight: 700; color: #1a1a1a; }
+    .cal-tt-stat-lbl { font-size: 10px; color: #aaa; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
     /* ── FOOTER ──────────────────────────────────────────────────────────── */
     .footer { text-align: center; padding: 24px; font-size: 12px; color: #bbb; border-top: 1px solid #eee; }
 
@@ -812,6 +834,9 @@
   <div class="reporting-main" id="reporting-main"></div>
 </div>
 
+<!-- ── CALENDAR CHIP TOOLTIP ─────────────────────────────────────────────────── -->
+<div id="cal-tooltip"></div>
+
 <!-- ── FOOTER ────────────────────────────────────────────────────────────────── -->
 <div class="footer" id="footer">
   ZATV Partner Portal · Confidential
@@ -828,6 +853,7 @@ const SVG = {
   insta: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:13px;height:13px;flex-shrink:0"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" fill="currentColor"/></svg>`,
   tiktok: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:13px;height:13px;flex-shrink:0"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.16 8.16 0 004.77 1.52V6.75a4.85 4.85 0 01-1-.06z" fill="currentColor"/></svg>`,
   youtube: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:13px;height:13px;flex-shrink:0"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" fill="currentColor"/></svg>`,
+  snap: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:13px;height:13px;flex-shrink:0"><path d="M12.166.5c.756 0 4.039.231 5.63 3.877.415.943.316 2.543.235 3.898l-.013.22c-.007.12.08.232.198.253.34.062.977-.149 1.348-.279.15-.053.332-.06.49-.008.176.062.323.189.396.382.076.198.069.405-.039.574-.181.284-.72.54-1.025.652-.16.057-.285.18-.34.337-.058.165-.019.342.1.462.127.128.278.302.38.535.065.147.136.432-.058.664-.218.25-.643.403-.936.403-.049 0-.097-.005-.142-.014-.154-.03-.37-.058-.627-.016-.168.026-.487.134-.746.371-.387.352-.742.919-.882 1.785-.014.085-.006.168.02.248.096.293.387.688.976 1.112 1.138.816 2.023 1.25 2.3 1.568.208.24.203.52.11.688-.156.283-.527.465-.93.584-.207.062-.425.116-.647.166-.358.08-.573.153-.62.313-.035.12-.084.271-.142.375-.043.08-.11.137-.196.165-.226.074-.474-.06-.739-.173-.367-.155-.834-.351-1.562-.351-.079 0-.158.002-.236.008-.438.029-.85.156-1.298.292-.565.173-1.148.352-1.918.352s-1.354-.18-1.918-.352c-.449-.137-.861-.263-1.299-.292-.078-.006-.157-.008-.236-.008-.728 0-1.195.196-1.562.35-.265.113-.513.247-.74.173-.085-.028-.152-.084-.195-.165-.058-.104-.107-.255-.142-.375-.048-.16-.262-.233-.62-.312-.222-.05-.44-.104-.648-.167-.403-.118-.773-.3-.929-.584-.093-.167-.099-.447.11-.688.277-.318 1.162-.752 2.3-1.568.589-.424.88-.819.976-1.112.026-.08.034-.163.02-.248-.14-.866-.495-1.433-.882-1.785-.259-.237-.578-.345-.746-.371-.257-.042-.473-.014-.627.016-.045.009-.093.014-.142.014-.293 0-.718-.153-.936-.403-.194-.232-.123-.517-.058-.664.102-.233.253-.407.38-.535.119-.12.158-.297.1-.462-.055-.157-.18-.28-.34-.337-.305-.112-.844-.368-1.025-.652-.108-.169-.115-.376-.039-.574.073-.193.22-.32.396-.382.158-.052.34-.045.49.008.37.13 1.008.341 1.348.279.118-.021.205-.133.198-.254l-.013-.219c-.081-1.355-.18-2.955.235-3.898C8.127.731 11.41.5 12.166.5z" fill="currentColor"/></svg>`,
 };
 
 // ── UTILITY FUNCTIONS ─────────────────────────────────────────────────────────
@@ -862,10 +888,10 @@ function initials(name) {
 
 function platformPill(type) {
   const t = (type || '').toLowerCase();
-  if (t.includes('snap')) return '<span class="platform-pill">👻 Snapchat</span>';
-  if (t.includes('tiktok') || t.includes('tik tok')) return '<span class="platform-pill">♪ TikTok</span>';
-  if (t.includes('instagram') || t.includes('insta')) return '<span class="platform-pill">📸 Instagram</span>';
-  if (t.includes('youtube')) return '<span class="platform-pill">▶ YouTube</span>';
+  if (t.includes('snap')) return `<span class="platform-pill">${SVG.snap} Snapchat</span>`;
+  if (t.includes('tiktok') || t.includes('tik tok')) return `<span class="platform-pill">${SVG.tiktok} TikTok</span>`;
+  if (t.includes('instagram') || t.includes('insta') || t.startsWith('ig')) return `<span class="platform-pill">${SVG.insta} Instagram</span>`;
+  if (t.includes('youtube')) return `<span class="platform-pill">${SVG.youtube} YouTube</span>`;
   return `<span class="platform-pill">${type}</span>`;
 }
 
@@ -1467,8 +1493,9 @@ var CAL_MONTHS_SHORT = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','O
 function calPlatformSvg(type) {
   var t = (type || '').toLowerCase();
   if (t.includes('tiktok') || t.includes('tik tok')) return SVG.tiktok;
-  if (t.includes('instagram') || t.includes('insta')) return SVG.insta;
+  if (t.includes('instagram') || t.includes('insta') || t.startsWith('ig')) return SVG.insta;
   if (t.includes('youtube')) return SVG.youtube;
+  if (t.includes('snap')) return SVG.snap;
   return '📱';
 }
 
@@ -1548,7 +1575,13 @@ function renderCalendarMonth() {
     for (var ei = 0; ei < Math.min(evts.length, MAX_CHIPS); ei++) {
       var ev = evts[ei];
       var ct = CAL_TYPES[ev.eventType];
-      chips += '<div class="cal-chip" style="background:' + ct.bg + ';border-left:3px solid ' + ct.border + ';color:' + ct.text + '">' +
+      chips += '<div class="cal-chip" style="background:' + ct.bg + ';border-left:3px solid ' + ct.border + ';color:' + ct.text + '"' +
+        ' data-code="' + ev.code.replace(/"/g,'&quot;') + '"' +
+        ' data-talent="' + ev.talent.replace(/"/g,'&quot;') + '"' +
+        ' data-type="' + ev.type.replace(/"/g,'&quot;') + '"' +
+        ' data-date="' + ev.date + '"' +
+        ' data-event-type="' + ev.eventType + '"' +
+        ' onmouseenter="calChipEnter(event,this)" onmouseleave="calChipLeave()">' +
         '<span class="cal-chip-icon">' + calPlatformSvg(ev.type) + '</span>' +
         '<span class="cal-chip-name">' + (ev.talent || ev.code) + '</span>' +
         '</div>';
@@ -1599,6 +1632,93 @@ function renderCalendarMonth() {
   }).join('');
 
   comingUp.innerHTML = '<div class="cal-coming-up-title">Coming Up</div><div class="cal-upcoming-list">' + items + '</div>';
+}
+
+// ── CALENDAR CHIP TOOLTIP ──────────────────────────────────────────────────────
+
+var _calTtTimer = null;
+
+function calChipEnter(evt, chip) {
+  clearTimeout(_calTtTimer);
+  var code      = chip.dataset.code;
+  var talent    = chip.dataset.talent;
+  var type      = chip.dataset.type;
+  var date      = chip.dataset.date;
+  var eventType = chip.dataset.eventType;
+  var ct        = CAL_TYPES[eventType] || CAL_TYPES.post;
+
+  // Look up full deliverable record
+  var del = null;
+  for (var i = 0; i < _deliverables.length; i++) {
+    if (_deliverables[i].code === code && _deliverables[i].talent === talent) { del = _deliverables[i]; break; }
+  }
+  if (!del) {
+    for (var j = 0; j < _deliverables.length; j++) {
+      if (_deliverables[j].talent === talent && _deliverables[j].type === type) { del = _deliverables[j]; break; }
+    }
+  }
+
+  // Avatar
+  var headshotUrl = _headshotMap[talent] || null;
+  var avatarHtml = headshotUrl
+    ? '<div class="cal-tt-avatar"><img src="' + headshotUrl + '" alt="" onerror="this.parentNode.textContent=\'' + initials(talent) + '\'"></div>'
+    : '<div class="cal-tt-avatar">' + initials(talent) + '</div>';
+
+  // Event pill + date
+  var eventRow = '<div class="cal-tt-event-row">' +
+    '<span class="cal-tt-event-pill" style="background:' + ct.bg + ';color:' + ct.text + ';border:1px solid ' + ct.border + '">' + ct.label + '</span>' +
+    '<span class="cal-tt-date">' + fmtDate(date) + '</span>' +
+    '</div>';
+
+  // Deliverable code line
+  var codeHtml = (del && del.code) ? '<div class="cal-tt-code">' + del.code + '</div>' : '';
+
+  // Stats (only for post event type and when data exists)
+  var statsHtml = '';
+  if (eventType === 'post' && del) {
+    var hasStats = del.views != null || del.likes != null || del.comments != null || del.shares != null;
+    if (hasStats) {
+      var metrics = [
+        { icon: '👁', label: 'Views',    val: del.views    },
+        { icon: '❤️', label: 'Likes',    val: del.likes    },
+        { icon: '💬', label: 'Comments', val: del.comments },
+        { icon: '🔁', label: 'Shares',   val: del.shares   },
+      ];
+      statsHtml = '<div class="cal-tt-stats">' + metrics.map(function(m) {
+        return '<div class="cal-tt-stat">' +
+          '<div class="cal-tt-stat-val">' + fmtNum(m.val) + '</div>' +
+          '<div class="cal-tt-stat-lbl">' + m.icon + ' ' + m.label + '</div>' +
+          '</div>';
+      }).join('') + '</div>';
+    }
+  }
+
+  var tt = document.getElementById('cal-tooltip');
+  tt.innerHTML =
+    '<div class="cal-tt-head">' + avatarHtml +
+      '<div><div class="cal-tt-name">' + talent + '</div>' +
+        '<div class="cal-tt-sub">' + type + '</div>' +
+      '</div>' +
+    '</div>' +
+    eventRow + codeHtml + statsHtml;
+
+  // Position tooltip — prefer above the chip, keep on screen
+  var rect = chip.getBoundingClientRect();
+  var ttW = 270, ttH = tt.offsetHeight || 180;
+  var left = Math.min(rect.left, window.innerWidth - ttW - 12);
+  left = Math.max(left, 8);
+  var top = rect.top - ttH - 8;
+  if (top < 8) top = rect.bottom + 8;
+  tt.style.left = left + 'px';
+  tt.style.top  = top + 'px';
+  tt.classList.add('visible');
+}
+
+function calChipLeave() {
+  _calTtTimer = setTimeout(function() {
+    var tt = document.getElementById('cal-tooltip');
+    if (tt) tt.classList.remove('visible');
+  }, 120);
 }
 
 // ── REPORTING TAB ─────────────────────────────────────────────────────────────
