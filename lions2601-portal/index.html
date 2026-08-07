@@ -1770,7 +1770,7 @@ function buildRptCardHtml(d) {
           : `<div class="rpt-del-avatar">${initials(d.talent)}</div>`}
         <div>
           <div class="rpt-del-name">${d.talent}</div>
-          <div class="rpt-del-code">${fmtDate(d.airDate)} · ${d.type || '👻 Snap Video'}</div>
+          <div class="rpt-del-code">${fmtDate(d.airDate)} · ${calPlatformSvg(d.type || '')} ${d.type || '👻 Snap Video'}</div>
         </div>
       </div>
       ${statusPill(d.status)}
