@@ -358,6 +358,7 @@
     .talent-section-chevron { font-size: 14px; transition: transform 0.2s; display: inline-block; }
     .talent-section.collapsed .talent-section-chevron { transform: rotate(-90deg); }
     .talent-section.collapsed .talent-section-body { display: none; }
+    .talent-section-count { font-size: 11px; font-weight: 700; color: #aaa; letter-spacing: 0; text-transform: none; }
     .talent-section-empty { font-size: 13px; color: #bbb; font-style: italic; padding: 4px 0 8px; }
 
     /* Badge dropdown */
@@ -681,19 +682,19 @@
   <div class="talent-main">
     <div class="talent-section" id="section-approved">
       <div class="talent-section-heading" onclick="toggleTalentSection('section-approved')">
-        <span class="talent-section-chevron">▾</span> Approved
+        <span class="talent-section-chevron">▾</span> Approved <span class="talent-section-count" id="count-approved"></span>
       </div>
       <div class="talent-section-body" id="approved-cards"></div>
     </div>
     <div class="talent-section" id="section-pending">
       <div class="talent-section-heading" onclick="toggleTalentSection('section-pending')">
-        <span class="talent-section-chevron">▾</span> Pending
+        <span class="talent-section-chevron">▾</span> Pending <span class="talent-section-count" id="count-pending"></span>
       </div>
       <div class="talent-section-body" id="pending-cards"></div>
     </div>
     <div class="talent-section collapsed" id="section-not-approved">
       <div class="talent-section-heading" onclick="toggleTalentSection('section-not-approved')">
-        <span class="talent-section-chevron">▾</span> Not Approved
+        <span class="talent-section-chevron">▾</span> Not Approved <span class="talent-section-count" id="count-not-approved"></span>
       </div>
       <div class="talent-section-body" id="not-approved-cards"></div>
     </div>
@@ -1790,12 +1791,14 @@ function syncBadge(sel) {
 }
 
 function updateSectionEmptyStates() {
-  [['section-pending','pending-cards'],['section-approved','approved-cards'],['section-not-approved','not-approved-cards']].forEach(([sectionId, cardsId]) => {
+  [['section-pending','pending-cards','count-pending'],['section-approved','approved-cards','count-approved'],['section-not-approved','not-approved-cards','count-not-approved']].forEach(([sectionId, cardsId, countId]) => {
     const section   = document.getElementById(sectionId);
     const container = document.getElementById(cardsId);
     if (!section || !container) return;
-    const hasCards = container.querySelectorAll('.talent-offer-card').length > 0;
-    section.style.display = hasCards ? '' : 'none';
+    const count = container.querySelectorAll('.talent-offer-card').length;
+    section.style.display = count > 0 ? '' : 'none';
+    const countEl = document.getElementById(countId);
+    if (countEl) countEl.textContent = count > 0 ? `(${count})` : '';
   });
 }
 
