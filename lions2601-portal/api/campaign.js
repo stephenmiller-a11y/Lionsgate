@@ -32,6 +32,7 @@ const DELIVERABLE_FIELDS = [
   'fld3BhTWQ1IdTe6um', // Likes
   'fldTm8YrIhRvRCQUr', // Comments
   'fldqqQzTtUl6k5crI', // Shares
+  'flds3ZtOYpN6eTur5', // Post Thumbnail (multipleAttachments — populated by stats pull)
 ];
 
 // Offers table — accessed by field ID (returnFieldsByFieldId=true)
@@ -215,10 +216,11 @@ module.exports = async function handler(req, res) {
           status:   f['fld9R7BcRAKciybge'] || '',  // Status (singleSelect string)
           airDate:  f['fldgonVo2oC1R483t'] || null,
           postLink: f['fldoSvBFD45ZdpYHJ'] || null,
-          views:    f['fldliR0ZyX2OzMkvs'] ?? null,
-          likes:    f['fld3BhTWQ1IdTe6um'] ?? null,
-          comments: f['fldTm8YrIhRvRCQUr'] ?? null,
-          shares:   f['fldqqQzTtUl6k5crI'] ?? null,
+          views:        f['fldliR0ZyX2OzMkvs'] ?? null,
+          likes:        f['fld3BhTWQ1IdTe6um'] ?? null,
+          comments:     f['fldTm8YrIhRvRCQUr'] ?? null,
+          shares:       f['fldqqQzTtUl6k5crI'] ?? null,
+          hasThumbnail: !!(f['flds3ZtOYpN6eTur5'] && f['flds3ZtOYpN6eTur5'].length > 0),
         };
       })
       .sort((a, b) => a.code.localeCompare(b.code));
