@@ -24,7 +24,8 @@ const TABLES = {
 const DELIVERABLE_FIELDS = [
   'fldrNfr3G8KgviLkR', // Deliverable Code
   'fldDiP9NLIgCSUPkA', // Talent Name (formula — resolves to talent's name)
-  'fldDjtURDzrqQqT8O', // Type (singleSelect)
+  'fldBJfxWjMxQKmotU', // zPost Type for Portal (formula)
+  'fldDjtURDzrqQqT8O', // Type (singleSelect — kept for platform detection fallback)
   'fld9R7BcRAKciybge', // Status (singleSelect)
   'fldgonVo2oC1R483t', // Air Date
   'fldoSvBFD45ZdpYHJ', // Post Link
@@ -215,7 +216,7 @@ module.exports = async function handler(req, res) {
           id:       r.id,
           code:     f['fldrNfr3G8KgviLkR'] || '',  // Deliverable Code
           talent:   f['fldDiP9NLIgCSUPkA'] || '',  // Talent Name (formula)
-          type:     f['fldDjtURDzrqQqT8O'] || '',  // Type (singleSelect string)
+          type:     f['fldBJfxWjMxQKmotU'] || f['fldDjtURDzrqQqT8O'] || '',  // zPost Type for Portal (formula), fallback to Type
           status:   f['fld9R7BcRAKciybge'] || '',  // Status (singleSelect string)
           airDate:  f['fldgonVo2oC1R483t'] || null,
           postLink: f['fldoSvBFD45ZdpYHJ'] || null,
