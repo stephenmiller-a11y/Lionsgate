@@ -22,6 +22,7 @@ const F_LIKES       = 'fld3BhTWQ1IdTe6um';
 const F_COMMENTS    = 'fldTm8YrIhRvRCQUr';
 const F_SHARES      = 'fldqqQzTtUl6k5crI';
 const F_SOCIAL_POST = 'fldHkJxRyOoTrXvHc';
+const F_THUMBNAIL   = 'flds3ZtOYpN6eTur5';
 
 // ── Platform detection ────────────────────────────────────────────────────────
 
@@ -131,6 +132,8 @@ async function fetchInstagramStatsApify(deliverables, apiToken) {
       comments:    m.comment_count  ?? null,
       shares:      m.share_count    ?? null,
       publishedAt: item.taken_at_date || null,
+      coverUrl:    item.thumbnail_url || item.display_url || item.image_url
+                   || item.image_versions?.[0]?.url || null,
     };
   }
   return byShortCode;
@@ -256,6 +259,7 @@ async function fetchTikTokStatsApify(deliverables, apiToken) {
       shares:      item.shareCount   ?? item.stats?.shareCount   ?? null,
       publishedAt: item.createTimeISO
         || (item.createTime ? new Date(item.createTime * 1000).toISOString() : null),
+      coverUrl:    item.coverUrl || item.covers?.[0] || item.video?.cover || null,
     };
   }
   return byVideoId;
@@ -273,13 +277,15 @@ async function patchDeliverable(recordId, fields, token) {
   return res.json();
 }
 
-function buildFields(stats) {
+// thumbnailUrl: only passed when the deliverable doesn't already have one (one-time).
+function buildFields(stats, thumbnailUrl) {
   const fields = {};
   if (stats.views       != null) fields[F_VIEWS]       = stats.views;
   if (stats.likes       != null) fields[F_LIKES]       = stats.likes;
   if (stats.comments    != null) fields[F_COMMENTS]    = stats.comments;
   if (stats.shares      != null) fields[F_SHARES]      = stats.shares;
   if (stats.publishedAt != null) fields[F_SOCIAL_POST] = stats.publishedAt;
+  if (thumbnailUrl)               fields[F_THUMBNAIL]   = [{ url: thumbnailUrl }];
   return fields;
 }
 
@@ -345,7 +351,7 @@ module.exports = async function handler(req, res) {
         await Promise.all(Object.entries(idMap).map(async ([vid, d]) => {
           const stats = statsMap[vid];
           if (!stats) { results.push({ id: d.id, platform: 'youtube', status: 'not_found' }); return; }
-          await patchDeliverable(d.id, buildFields(stats), airtableToken);
+          await patchDeliverable(d.id, buildFields(stats, null), airtableToken);
           results.push({ id: d.id, platform: 'youtube', status: 'updated', ...stats });
         }));
       }
@@ -373,7 +379,8 @@ module.exports = async function handler(req, res) {
                 results.push({ id: d.id, platform: 'instagram', status: 'not_found' });
                 continue;
               }
-              await patchDeliverable(d.id, buildFields(stats), airtableToken);
+              const igThumb = d.hasThumbnail ? null : (stats.coverUrl || null);
+              await patchDeliverable(d.id, buildFields(stats, igThumb), airtableToken);
               results.push({ id: d.id, platform: 'instagram', status: 'updated', ...stats });
             }
           }
@@ -413,7 +420,8 @@ module.exports = async function handler(req, res) {
                   results.push({ id: d.id, platform: 'tiktok', status: 'not_found' });
                   continue;
                 }
-                await patchDeliverable(d.id, buildFields(stats), airtableToken);
+                const ttThumb = d.hasThumbnail ? null : (stats.coverUrl || null);
+                await patchDeliverable(d.id, buildFields(stats, ttThumb), airtableToken);
                 results.push({ id: d.id, platform: 'tiktok', status: 'updated', ...stats });
               }
             }
@@ -431,7 +439,8 @@ module.exports = async function handler(req, res) {
                 continue;
               }
               const stats = byVideoId[ids[0]];
-              await patchDeliverable(d.id, buildFields(stats), airtableToken);
+              const ttShortThumb = d.hasThumbnail ? null : (stats.coverUrl || null);
+              await patchDeliverable(d.id, buildFields(stats, ttShortThumb), airtableToken);
               results.push({ id: d.id, platform: 'tiktok', status: 'updated', ...stats });
             } catch (err) {
               warnings.push(`TikTok (${d.postLink}): ${err.message}`);
