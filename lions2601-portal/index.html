@@ -1632,9 +1632,10 @@ function renderCalendarMonth() {
   upcoming = upcoming.slice(0, 20);
 
   if (upcoming.length === 0) {
-    comingUp.innerHTML = '';
+    comingUp.style.display = 'none';
     return;
   }
+  comingUp.style.display = '';
 
   var items = upcoming.map(function(e) {
     var parts = e.date.split('-');
@@ -1814,7 +1815,7 @@ function renderRptPage(sorted) {
 }
 
 function rptMonthLabel(ym) {
-  var parts = ym.split('-');
+  var parts = String(ym).split('-');
   var names = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   return names[parseInt(parts[1], 10) - 1] + ' ' + parts[0];
 }
@@ -1880,7 +1881,7 @@ function renderReporting(campaign, deliverables) {
       </div>
     </div>`;
 
-  var allMonths = [...new Set(deliverables.map(d => d.airDate && d.airDate.slice(0,7)).filter(Boolean))].sort();
+  var allMonths = [...new Set(deliverables.map(function(d) { var s = calSafeDate(d.airDate); return s ? s.slice(0,7) : null; }).filter(Boolean))].sort();
   var monthDropdown = allMonths.length > 1
     ? `<select class="rpt-month-select" onchange="filterReporting(this.value)">
         <option value="">All Months</option>
