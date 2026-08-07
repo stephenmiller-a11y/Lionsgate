@@ -1600,7 +1600,7 @@ async function updateStats() {
     var resp = await fetch('/api/stats', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ deliverables: batch.map(function(d) { return { id: d.id, postLink: d.postLink, type: d.type }; }) }),
+      body: JSON.stringify({ deliverables: batch.map(function(d) { return { id: d.id, postLink: d.postLink, type: d.type, hasThumbnail: !!d.hasThumbnail }; }) }),
     });
     var text = await resp.text();
     var result;
