@@ -147,12 +147,6 @@
       padding: 10px 16px; border-top: 1px solid #f0f0f0; background: #fafafa;
     }
     .kpi-save-status { font-size: 12px; color: #999; }
-    .kpi-save-btn {
-      padding: 6px 18px; border-radius: 20px; border: 1.5px solid #7b2d8b;
-      background: #fff; color: #7b2d8b; font-size: 13px; font-weight: 600;
-      cursor: pointer; transition: background 0.15s, color 0.15s;
-    }
-    .kpi-save-btn:hover { background: #7b2d8b; color: #fff; }
 
     /* ── DELIVERABLES TABLE ──────────────────────────────────────────────── */
     .deliverables-card {
@@ -358,7 +352,12 @@
       font-size: 12px; font-weight: 800; letter-spacing: 1.4px;
       text-transform: uppercase; color: #5a5a72;
       padding-bottom: 12px; border-bottom: 2px solid #e2e2ea; margin-bottom: 24px;
+      cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px;
     }
+    .talent-section-heading:hover { color: #7b2d8b; }
+    .talent-section-chevron { font-size: 14px; transition: transform 0.2s; display: inline-block; }
+    .talent-section.collapsed .talent-section-chevron { transform: rotate(-90deg); }
+    .talent-section.collapsed .talent-section-body { display: none; }
     .talent-section-empty { font-size: 13px; color: #bbb; font-style: italic; padding: 4px 0 8px; }
 
     /* Badge dropdown */
@@ -637,10 +636,9 @@
       </div>
       <div class="section-body">
         <div class="kpi-card">
-          <textarea id="kpi-textarea" class="kpi-textarea" placeholder="No KPIs set for this campaign yet."></textarea>
+          <textarea id="kpi-textarea" class="kpi-textarea" placeholder="No KPIs set for this campaign yet." oninput="kpiAutoSave(this)"></textarea>
           <div class="kpi-footer">
             <span class="kpi-save-status" id="kpi-save-status"></span>
-            <button class="kpi-save-btn" onclick="saveKPIs()">Save</button>
           </div>
         </div>
       </div>
@@ -681,17 +679,23 @@
 <!-- ── TALENT PANEL ─────────────────────────────────────────────────────────── -->
 <div class="tab-panel" id="panel-talent">
   <div class="talent-main">
-    <div class="talent-section" id="section-pending">
-      <div class="talent-section-heading">Pending</div>
-      <div id="pending-cards"></div>
-    </div>
     <div class="talent-section" id="section-approved">
-      <div class="talent-section-heading">Approved</div>
-      <div id="approved-cards"></div>
+      <div class="talent-section-heading" onclick="toggleTalentSection('section-approved')">
+        <span class="talent-section-chevron">▾</span> Approved
+      </div>
+      <div class="talent-section-body" id="approved-cards"></div>
     </div>
-    <div class="talent-section" id="section-not-approved">
-      <div class="talent-section-heading">Not Approved</div>
-      <div id="not-approved-cards"></div>
+    <div class="talent-section" id="section-pending">
+      <div class="talent-section-heading" onclick="toggleTalentSection('section-pending')">
+        <span class="talent-section-chevron">▾</span> Pending
+      </div>
+      <div class="talent-section-body" id="pending-cards"></div>
+    </div>
+    <div class="talent-section collapsed" id="section-not-approved">
+      <div class="talent-section-heading" onclick="toggleTalentSection('section-not-approved')">
+        <span class="talent-section-chevron">▾</span> Not Approved
+      </div>
+      <div class="talent-section-body" id="not-approved-cards"></div>
     </div>
   </div>
 </div>
@@ -859,31 +863,35 @@ function toggleSection(id) {
   document.getElementById(id).classList.toggle('collapsed');
 }
 
+function toggleTalentSection(id) {
+  document.getElementById(id).classList.toggle('collapsed');
+}
+
 // ── KPIs ──────────────────────────────────────────────────────────────────────
 function renderKPIs(campaign) {
   const ta = document.getElementById('kpi-textarea');
   if (ta) ta.value = campaign.kpis || '';
 }
 
-function saveKPIs() {
-  const ta     = document.getElementById('kpi-textarea');
+function kpiAutoSave(ta) {
   const status = document.getElementById('kpi-save-status');
-  if (!ta) return;
-  status.textContent = 'Saving…';
-  fetch('/api/patch-campaign', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ campaignId: _campaignId, kpis: ta.value }),
-  })
-  .then(r => r.json())
-  .then(d => {
-    status.textContent = d.ok ? '✓ Saved' : '✗ Error';
-    setTimeout(() => { status.textContent = ''; }, 3000);
-  })
-  .catch(() => {
-    status.textContent = '✗ Error';
-    setTimeout(() => { status.textContent = ''; }, 3000);
-  });
+  if (status) status.textContent = 'Saving…';
+  clearTimeout(ta._saveTimer);
+  ta._saveTimer = setTimeout(async () => {
+    try {
+      const resp = await fetch('/api/patch-campaign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ campaignId: _campaignId, kpis: ta.value }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || `HTTP ${resp.status}`);
+      if (status) status.textContent = 'Saved ✓';
+    } catch (err) {
+      if (status) status.textContent = `⚠️ ${err.message}`;
+      console.error('[kpi]', err);
+    }
+  }, 1000);
 }
 
 function renderHero(campaign) {
