@@ -426,6 +426,8 @@
     .talent-section.collapsed .talent-section-body { display: none; }
     .talent-section-count { font-size: 11px; font-weight: 700; color: #aaa; letter-spacing: 0; text-transform: none; }
     .talent-section-empty { font-size: 13px; color: #bbb; font-style: italic; padding: 4px 0 8px; }
+    .drop-sentinel { height: 48px; border-radius: 12px; border: 2px dashed transparent; transition: border-color 0.15s, background 0.15s; margin-bottom: 4px; }
+    .drop-sentinel.drag-over { border-color: #7b2d8b; background: rgba(123,45,139,0.05); }
 
     /* Badge dropdown */
     .badge-select-wrap { position: relative; display: inline-block; }
@@ -2455,14 +2457,33 @@ function initDragAndDrop() {
       }
     });
   });
-  // Allow dropping into the empty space below the last card.
-  // Remove old listeners first (initDragAndDrop is called on every card move).
-  if (section._dndDragover) section.removeEventListener('dragover', section._dndDragover);
-  if (section._dndDrop)     section.removeEventListener('drop',     section._dndDrop);
-  section._dndDragover = function(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; };
-  section._dndDrop     = function(e) { e.preventDefault(); if (draggedCard) { section.appendChild(draggedCard); draggedCard.dispatchEvent(new Event('dragend')); } };
-  section.addEventListener('dragover', section._dndDragover);
-  section.addEventListener('drop',     section._dndDrop);
+  // Sentinel drop zone — always kept as the last child so you can drop below all cards.
+  var sentinel = section.querySelector('.drop-sentinel');
+  if (!sentinel) {
+    sentinel = document.createElement('div');
+    sentinel.className = 'drop-sentinel';
+  }
+  section.appendChild(sentinel); // ensure it stays last
+  // Re-wire (clone to clear old listeners)
+  var newSentinel = sentinel.cloneNode(true);
+  sentinel.parentNode.replaceChild(newSentinel, sentinel);
+  sentinel = newSentinel;
+  sentinel.addEventListener('dragover', function(e) {
+    e.preventDefault(); e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+    sentinel.classList.add('drag-over');
+  });
+  sentinel.addEventListener('dragleave', function() { sentinel.classList.remove('drag-over'); });
+  sentinel.addEventListener('drop', function(e) {
+    e.preventDefault(); e.stopPropagation();
+    sentinel.classList.remove('drag-over');
+    if (draggedCard) {
+      section.insertBefore(draggedCard, sentinel);
+      updateRankBadges(); updateRankDropdowns(); saveRanking();
+      draggedCard.classList.remove('dragging');
+      draggedCard = null;
+    }
+  });
   updateRankBadges();
   updateRankDropdowns();
   syncAllBadges();
