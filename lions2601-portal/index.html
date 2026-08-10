@@ -379,8 +379,11 @@
     .talent-offer-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; }
     .talent-offer-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
     .talent-offer-name { font-size: 18px; font-weight: 700; color: #1a1a1a; }
-    .talent-offer-bio  { font-size: 13px; color: #555; line-height: 1.6; }
-    .talent-offer-bio.empty { color: #ccc; font-style: italic; }
+    .talent-offer-bio { font-size: 13px; color: #555; line-height: 1.6; display: flex; align-items: baseline; gap: 4px; }
+    .talent-offer-bio-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; }
+    .talent-offer-bio-more { flex-shrink: 0; font-size: 12px; font-weight: 700; color: #7b2d8b; cursor: default; position: relative; white-space: nowrap; }
+    .talent-offer-bio-more .bio-tooltip { display: none; position: absolute; left: 0; top: calc(100% + 6px); background: #1c1c1e; color: #fff; border-radius: 10px; padding: 10px 14px; font-size: 12px; line-height: 1.55; font-weight: 400; width: 280px; white-space: normal; z-index: 500; box-shadow: 0 8px 24px rgba(0,0,0,0.25); }
+    .talent-offer-bio-more:hover .bio-tooltip { display: block; }
     .follower-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
     .follower-btn {
       display: inline-flex; align-items: center; gap: 6px;
@@ -1475,8 +1478,11 @@ function buildOfferCard(offer, section) {
   }).join('');
 
   const bio = offer.biography
-    ? `<div class="talent-offer-bio">${offer.biography}</div>`
-    : `<div class="talent-offer-bio empty">No biography on file.</div>`;
+    ? `<div class="talent-offer-bio">
+        <span class="talent-offer-bio-text">${offer.biography}</span>
+        <span class="talent-offer-bio-more">…MORE<span class="bio-tooltip">${offer.biography}</span></span>
+       </div>`
+    : '';
 
   const social = socialButtons(offer);
   const us = offer.usAudience || '—';
