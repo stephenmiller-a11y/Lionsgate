@@ -98,6 +98,10 @@
     .hero-stat-value { font-size: 16px; font-weight: 700; color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,0.12); }
 
     /* ── GRADIENT STAT CARDS ─────────────────────────────────────────────── */
+    .summary-grad { border-radius: 12px; padding: 22px 24px 24px; color: #fff; background: linear-gradient(135deg, #16123a 0%, #33246e 55%, #4c37a8 100%); box-shadow: 0 4px 14px rgba(76,55,168,0.25); margin-bottom: 14px; }
+    .summary-grad-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.65); display: flex; align-items: center; gap: 7px; margin-bottom: 12px; }
+    .summary-grad-label svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .summary-text { font-size: 15px; font-weight: 500; line-height: 1.6; color: rgba(255,255,255,0.92); max-width: 820px; }
     .grad-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
     .grad-card { border-radius: 12px; padding: 20px 22px; color: #fff; display: flex; flex-direction: column; gap: 7px; }
     .grad-views        { background: linear-gradient(135deg, #191243 0%, #3a2f9e 55%, #5348d4 100%); box-shadow: 0 4px 14px rgba(83,72,212,0.25); }
@@ -780,6 +784,7 @@
 <!-- ── OVERVIEW PANEL ───────────────────────────────────────────────────────── -->
 <div class="tab-panel active" id="panel-overview">
   <div class="main">
+    <div id="summary-card"></div>
     <div class="grad-row" id="stats-row-main"></div>
     <div id="stats-row-metrics" style="display:none"></div>
     <div id="progress-card"></div>
@@ -1132,6 +1137,20 @@ function renderHero(campaign) {
 
 // ── OVERVIEW STATS ────────────────────────────────────────────────────────────
 function renderOverviewStats(campaign, deliverables, offers) {
+  // Summary card
+  const summaryEl = document.getElementById('summary-card');
+  if (summaryEl) {
+    summaryEl.innerHTML = campaign.campaignOverview
+      ? `<div class="summary-grad">
+           <div class="summary-grad-label">
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+             Summary
+           </div>
+           <div class="summary-text">${campaign.campaignOverview}</div>
+         </div>`
+      : '';
+  }
+
   const total     = deliverables.length;
   const completed = deliverables.filter(isCompleted).length;
   const accepted  = offers.filter(o => offerSection(o) === 'approved').length;
@@ -1166,8 +1185,8 @@ function renderOverviewStats(campaign, deliverables, offers) {
 // ── PROGRESS BAR ─────────────────────────────────────────────────────────────
 // Platform colour palette — each type string maps to a hex colour for the stacked bar
 var PLAT_COLORS = [
-  { test: function(t){ return /\big\b|insta|instagram/i.test(t) && /reel/i.test(t); },    color: '#ef5db4', label: 'Reels'   },
-  { test: function(t){ return /\big\b|insta|instagram/i.test(t) && /stor/i.test(t); },    color: '#f0b429', label: 'Stories' },
+  { test: function(t){ return /\big\b|insta|instagram/i.test(t) && /reel/i.test(t); },    color: '#ef5db4', label: 'IG Reels'   },
+  { test: function(t){ return /\big\b|insta|instagram/i.test(t) && /stor/i.test(t); },    color: '#f0b429', label: 'IG Stories' },
   { test: function(t){ return /\big\b|insta|instagram/i.test(t); },                       color: '#e9399a', label: 'IG Post' },
   { test: function(t){ return /tiktok|tik tok/i.test(t); },                               color: '#3ecfdf', label: 'TikTok'  },
   { test: function(t){ return /youtube/i.test(t); },                                      color: '#ff7a6b', label: 'YouTube' },
