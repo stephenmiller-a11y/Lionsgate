@@ -91,26 +91,82 @@
     /* ── MAIN ────────────────────────────────────────────────────────────── */
     .main { max-width: 960px; margin: 0 auto; padding: 32px 32px 64px; }
 
-    /* ── STAT CARDS ──────────────────────────────────────────────────────── */
-    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
-    .stat-card {
-      background: #fff; border-radius: 12px; padding: 20px 22px;
-      border: 1px solid #e8e8e8; border-left: 3px solid #7b2d8b;
-    }
+    /* ── HERO STATS (budget + dates in hero) ────────────────────────────── */
+    .hero-stats { display: flex; align-items: center; gap: 36px; flex-wrap: wrap; }
+    .hero-stat-item { }
+    .hero-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: rgba(255,255,255,0.6); margin-bottom: 4px; }
+    .hero-stat-value { font-size: 16px; font-weight: 700; color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,0.12); }
+
+    /* ── GRADIENT STAT CARDS ─────────────────────────────────────────────── */
+    .grad-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+    .grad-card { border-radius: 12px; padding: 20px 22px; color: #fff; display: flex; flex-direction: column; gap: 7px; }
+    .grad-views        { background: linear-gradient(135deg, #191243 0%, #3a2f9e 55%, #5348d4 100%); box-shadow: 0 4px 14px rgba(83,72,212,0.25); }
+    .grad-engagements  { background: linear-gradient(135deg, #43092e 0%, #8f1f66 55%, #c23a8c 100%); box-shadow: 0 4px 14px rgba(194,58,140,0.25); }
+    .grad-deliverables { background: linear-gradient(135deg, #2a0e33 0%, #5b1d6e 55%, #7b2d8b 100%); box-shadow: 0 4px 14px rgba(123,45,139,0.25); }
+    .grad-talent       { background: linear-gradient(135deg, #501a4a 0%, #8f3f95 55%, #b264c9 100%); box-shadow: 0 4px 14px rgba(178,100,201,0.25); }
+    .grad-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.65); display: flex; align-items: center; gap: 7px; }
+    .grad-label svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .grad-value { font-size: 26px; font-weight: 800; line-height: 1.1; }
+    .grad-value .denom { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.45); }
+
+    /* ── GRADIENT PROGRESS BAR ───────────────────────────────────────────── */
+    .progress-grad { border-radius: 12px; padding: 22px 24px 20px; color: #fff; background: linear-gradient(135deg, #2a0e33 0%, #4a1758 55%, #6b2380 100%); box-shadow: 0 4px 14px rgba(107,35,128,0.2); margin-bottom: 28px; }
+    .progress-grad-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .progress-grad-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.65); display: flex; align-items: center; gap: 7px; }
+    .progress-grad-label svg { width: 14px; height: 14px; }
+    .progress-grad-total { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.8); }
+    .stacked-bar { display: flex; gap: 3px; height: 26px; border-radius: 9px; overflow: hidden; margin-bottom: 14px; }
+    .stacked-bar-seg { height: 100%; transition: filter 0.15s; cursor: default; }
+    .stacked-bar-seg.seg-remaining { background: rgba(255,255,255,0.22); }
+    .bar-legend { display: flex; gap: 18px; flex-wrap: wrap; }
+    .bar-legend-item { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.75); }
+    .bar-legend-item b { color: #fff; font-weight: 800; }
+    .legend-swatch { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
+
+    /* Keep .progress-card for any legacy references */
+    .progress-card { margin-bottom: 28px; }
+
+    /* ── STAT CARDS (kept for any remaining uses) ───────────────────────── */
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 0; }
+    .stat-card { background: #fff; border-radius: 12px; padding: 20px 22px; border: 1px solid #e8e8e8; border-left: 3px solid #7b2d8b; }
     .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 8px; }
     .stat-value { font-size: 28px; font-weight: 700; color: #1a1a1a; line-height: 1; }
     .stat-value .stat-denom { font-size: 16px; color: #ccc; font-weight: 400; }
     .stat-value .stat-unit  { font-size: 14px; color: #bbb; font-weight: 400; margin-left: 4px; }
 
-    /* ── PROGRESS ────────────────────────────────────────────────────────── */
-    .progress-card {
-      background: #fff; border-radius: 12px; padding: 24px;
-      border: 1px solid #e8e8e8; margin-bottom: 32px;
-    }
-    .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-    .progress-title { font-size: 14px; font-weight: 600; }
-    .progress-pct   { font-size: 14px; font-weight: 700; }
-    .progress-bar-bg { height: 10px; background: #f0f0f0; border-radius: 10px; overflow: hidden; }
+    /* ── DELIVERABLES DONUT ──────────────────────────────────────────────── */
+    .plat-badge { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .plat-badge svg { width: 15px; height: 15px; display: block; }
+    .badge-instagram { background: radial-gradient(circle at 30% 110%, #ffd776 0%, #f24f5a 45%, #c62b90 70%, #8a3ab9 100%); }
+    .badge-tiktok    { background: #0a0a0a; }
+    .badge-youtube   { background: #ff0000; }
+    .badge-snap      { background: #fffc00; }
+    .badge-snap svg  { color: #1a1a1a; }
+    .plat-group { border-bottom: 1px solid #f0f0f0; }
+    .plat-group:last-of-type { border-bottom: none; }
+    .plat-head { display: flex; align-items: center; gap: 12px; padding: 14px 24px 8px; }
+    .plat-name { font-size: 13.5px; font-weight: 700; flex: 1; }
+    .plat-total { font-size: 15px; font-weight: 800; }
+    .del-type-subrow { display: flex; align-items: center; gap: 10px; padding: 7px 24px 7px 66px; }
+    .del-type-subrow:last-child { padding-bottom: 14px; }
+    .type-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .type-name-text { font-size: 13px; font-weight: 600; color: #555; flex: 1; }
+    .type-count-num { font-size: 14px; font-weight: 700; }
+    .type-pct-text { font-size: 11.5px; font-weight: 600; color: #aaa; width: 34px; text-align: right; }
+    .donut-block { display: flex; align-items: center; justify-content: center; padding: 28px 24px 30px; }
+    .donut-inner { position: relative; }
+    .donut-inner svg { overflow: visible; }
+    .donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+    .donut-center .dc-num { font-size: 28px; font-weight: 800; line-height: 1; }
+    .donut-center .dc-label { font-size: 10px; font-weight: 600; color: #aaa; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+    .donut-seg { transition: stroke-width 0.18s ease, opacity 0.18s ease; cursor: pointer; }
+    .donut-inner.hovering .donut-seg { opacity: 0.35; }
+    .donut-inner.hovering .donut-seg.active { opacity: 1; stroke-width: 23; }
+    .donut-tip { position: fixed; z-index: 300; background: #1c1c1e; color: #fff; border-radius: 9px; padding: 9px 12px; font-size: 12px; line-height: 1.45; pointer-events: none; opacity: 0; transform: translate(-50%, calc(-100% - 12px)); transition: opacity 0.12s ease; box-shadow: 0 8px 24px rgba(0,0,0,0.25); white-space: nowrap; }
+    .donut-tip.show { opacity: 1; }
+    .donut-tip .dt-head { display: flex; align-items: center; gap: 7px; font-weight: 700; margin-bottom: 2px; }
+    .donut-tip .dt-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .donut-tip .dt-sub { color: rgba(255,255,255,0.65); font-size: 11.5px; }
     .progress-bar-fill { height: 100%; border-radius: 10px; transition: width 0.6s ease; }
     .progress-legend { display: flex; gap: 20px; margin-top: 12px; }
     .progress-legend-item { font-size: 12px; color: #888; display: flex; align-items: center; gap: 6px; }
@@ -671,10 +727,7 @@
 <!-- ── TOP BAR ──────────────────────────────────────────────────────────────── -->
 <nav class="topbar">
   <div class="zatv-logo">
-    <svg viewBox="0 0 130 48" xmlns="http://www.w3.org/2000/svg">
-      <text x="0"  y="42" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-weight="900" font-size="50" fill="#7b2d8b">ZA</text>
-      <text x="66" y="42" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-weight="900" font-size="50" fill="#b39ddb">TV</text>
-    </svg>
+    <img src="https://images.squarespace-cdn.com/content/672e2de400256d1b0af4db8d/151e76b2-f6eb-42a0-9848-cd23df0bbab2/1-Horizontal-ZATV.ai%20(1).png?content-type=image%2Fpng" alt="ZATV" style="height:26px;width:auto;display:block">
   </div>
   <div class="topbar-divider"></div>
   <div class="topbar-brand" id="topbar-brand"></div>
@@ -688,7 +741,7 @@
     </div>
     <div class="hero-text">
       <h1 class="hero-title" id="hero-title">Loading…</h1>
-      <div class="hero-meta" id="hero-meta"></div>
+      <div class="hero-stats" id="hero-meta"></div>
     </div>
   </div>
 </div>
@@ -710,9 +763,9 @@
 <!-- ── OVERVIEW PANEL ───────────────────────────────────────────────────────── -->
 <div class="tab-panel active" id="panel-overview">
   <div class="main">
-    <div class="stats-row" id="stats-row-main"></div>
-    <div class="stats-row stats-row-metrics" id="stats-row-metrics"></div>
-    <div class="progress-card" id="progress-card"></div>
+    <div class="grad-row" id="stats-row-main"></div>
+    <div id="stats-row-metrics" style="display:none"></div>
+    <div id="progress-card"></div>
 
     <!-- KPIs -->
     <div class="collapsible-section" id="section-kpis">
@@ -840,6 +893,12 @@
 
 <!-- ── CALENDAR CHIP TOOLTIP ─────────────────────────────────────────────────── -->
 <div id="cal-tooltip" onmouseenter="clearTimeout(_calTtTimer)" onmouseleave="calChipLeave()"></div>
+
+<!-- ── DONUT TOOLTIP ─────────────────────────────────────────────────────────── -->
+<div class="donut-tip" id="del-donut-tip">
+  <div class="dt-head"><span class="dt-dot" id="del-tt-dot"></span><span id="del-tt-name"></span></div>
+  <div class="dt-sub" id="del-tt-sub"></div>
+</div>
 
 <!-- ── FOOTER ────────────────────────────────────────────────────────────────── -->
 <div class="footer" id="footer">
@@ -1025,8 +1084,10 @@ function kpiAutoSave(ta) {
 function renderHero(campaign) {
   document.getElementById('hero-title').textContent = campaign.name;
   const dates = [campaign.startDate, campaign.endDate].filter(Boolean).map(fmtDate).join(' – ');
-  document.getElementById('hero-meta').innerHTML =
-    dates ? `<div class="hero-meta-item">📅 ${dates}</div>` : '';
+  const items = [];
+  if (campaign.budget) items.push(`<div class="hero-stat-item"><div class="hero-stat-label">Budget</div><div class="hero-stat-value">${fmtCurrency(campaign.budget)}</div></div>`);
+  if (dates)           items.push(`<div class="hero-stat-item"><div class="hero-stat-label">Flight Dates</div><div class="hero-stat-value">${dates}</div></div>`);
+  document.getElementById('hero-meta').innerHTML = items.join('');
 
   // Logo: use brand logo attachment if available, otherwise show brand name as text
   const brand = campaign.brandName || campaign.name;
@@ -1050,105 +1111,219 @@ function renderOverviewStats(campaign, deliverables, offers) {
   const completed = deliverables.filter(isCompleted).length;
   const accepted  = offers.filter(o => offerSection(o) === 'approved').length;
 
-  document.getElementById('stats-row-main').innerHTML = `
-    <div class="stat-card">
-      <div class="stat-label">Campaign Budget</div>
-      <div class="stat-value">${fmtCurrency(campaign.budget)}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Completed Deliverables</div>
-      <div class="stat-value">${completed} <span class="stat-denom">/ ${total}</span></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Talent</div>
-      <div class="stat-value" id="stat-talent-count">${accepted} <span class="stat-unit">Creators</span></div>
-    </div>`;
-
-  // Compute totals from deliverable metrics
   let totalViews = 0, totalEng = 0, hasMetrics = false;
   deliverables.forEach(d => {
-    if (d.views != null)    { totalViews += d.views; hasMetrics = true; }
-    if (d.likes != null)    { totalEng += d.likes; hasMetrics = true; }
-    if (d.comments != null) { totalEng += d.comments; hasMetrics = true; }
-    if (d.shares != null)   { totalEng += d.shares; hasMetrics = true; }
+    if (d.views    != null) { totalViews += d.views;    hasMetrics = true; }
+    if (d.likes    != null) { totalEng   += d.likes;    hasMetrics = true; }
+    if (d.comments != null) { totalEng   += d.comments; hasMetrics = true; }
+    if (d.shares   != null) { totalEng   += d.shares;   hasMetrics = true; }
   });
 
-  document.getElementById('stats-row-metrics').innerHTML = `
-    <div class="stat-card stat-card-metric">
-      <div class="stat-label">Campaign Views</div>
-      <div class="stat-value stat-value-metric">${hasMetrics ? fmtNum(totalViews) : '—'}</div>
-      <div class="stat-sub">Across all posts</div>
+  document.getElementById('stats-row-main').innerHTML = `
+    <div class="grad-card grad-views">
+      <div class="grad-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/></svg>Views</div>
+      <div class="grad-value">${hasMetrics ? fmtNum(totalViews) : '—'}</div>
     </div>
-    <div class="stat-card stat-card-metric">
-      <div class="stat-label">Campaign Engagements</div>
-      <div class="stat-value stat-value-metric">${hasMetrics ? fmtNum(totalEng) : '—'}</div>
-      <div class="stat-sub">Likes, comments &amp; shares</div>
+    <div class="grad-card grad-engagements">
+      <div class="grad-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 8.6c0 5-8.8 11-8.8 11s-8.8-6-8.8-11a4.9 4.9 0 0 1 8.8-3 4.9 4.9 0 0 1 8.8 3z"/></svg>Engagements</div>
+      <div class="grad-value">${hasMetrics ? fmtNum(totalEng) : '—'}</div>
+    </div>
+    <div class="grad-card grad-deliverables">
+      <div class="grad-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>Deliverables</div>
+      <div class="grad-value">${completed} <span class="denom">/ ${total}</span></div>
+    </div>
+    <div class="grad-card grad-talent">
+      <div class="grad-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6L12 16.8 6.6 19.6l1.1-6L3.2 9.4l6.1-.8L12 3z"/></svg>Talent</div>
+      <div class="grad-value">${accepted}</div>
     </div>`;
 }
 
 // ── PROGRESS BAR ─────────────────────────────────────────────────────────────
+// Platform colour palette — each type string maps to a hex colour for the stacked bar
+var PLAT_COLORS = [
+  { test: function(t){ return /\big\b|insta|instagram/i.test(t) && /reel/i.test(t); },    color: '#ef5db4', label: 'Reels'   },
+  { test: function(t){ return /\big\b|insta|instagram/i.test(t) && /stor/i.test(t); },    color: '#f0b429', label: 'Stories' },
+  { test: function(t){ return /\big\b|insta|instagram/i.test(t); },                       color: '#e9399a', label: 'IG Post' },
+  { test: function(t){ return /tiktok|tik tok/i.test(t); },                               color: '#3ecfdf', label: 'TikTok'  },
+  { test: function(t){ return /youtube/i.test(t); },                                      color: '#ff7a6b', label: 'YouTube' },
+  { test: function(t){ return /snap/i.test(t); },                                         color: '#ffde00', label: 'Snap'    },
+];
+
+function platColorFor(type) {
+  for (var i = 0; i < PLAT_COLORS.length; i++) {
+    if (PLAT_COLORS[i].test(type)) return PLAT_COLORS[i];
+  }
+  return { color: '#b39ddb', label: type };
+}
+
 function renderProgressBar(deliverables) {
   const total     = deliverables.length;
   const completed = deliverables.filter(isCompleted).length;
+  const remaining = total - completed;
   const pct       = total ? Math.round((completed / total) * 100) : 0;
 
-  let fillBg, labelColor, dotStyle;
-  if (pct === 0) {
-    fillBg = '#ffb3c1'; labelColor = '#c0392b';
-    dotStyle = 'background:#ffb3c1;border:1px solid #ff6b8a';
-  } else if (pct === 100) {
-    fillBg = 'linear-gradient(90deg,#34c759,#30d158)'; labelColor = '#1a7a3a';
-    dotStyle = 'background:#34c759;border:none';
-  } else {
-    fillBg = 'linear-gradient(90deg,#f5a623,#f7c948)'; labelColor = '#92600a';
-    dotStyle = 'background:#f5a623;border:none';
+  // Group completed deliverables by type for the stacked bar
+  const typeCounts = {};
+  deliverables.filter(isCompleted).forEach(d => {
+    const key = d.type || 'Other';
+    typeCounts[key] = (typeCounts[key] || 0) + 1;
+  });
+
+  // Build bar segments and legend
+  let segs = '', legend = '';
+  Object.entries(typeCounts).sort((a,b) => b[1]-a[1]).forEach(([type, count]) => {
+    const pc = platColorFor(type);
+    const w  = (count / total * 100).toFixed(1);
+    segs   += `<div class="stacked-bar-seg" style="width:${w}%;background:${pc.color}" title="${pc.label} · ${count} posted"></div>`;
+    legend += `<div class="bar-legend-item"><span class="legend-swatch" style="background:${pc.color}"></span>${pc.label} <b>${count}</b></div>`;
+  });
+  if (remaining > 0) {
+    const w = (remaining / total * 100).toFixed(1);
+    segs   += `<div class="stacked-bar-seg seg-remaining" style="width:${w}%" title="Not posted yet · ${remaining}"></div>`;
+    legend += `<div class="bar-legend-item"><span class="legend-swatch" style="background:rgba(255,255,255,0.22)"></span>Not posted <b>${remaining}</b></div>`;
   }
-  const fillWidth = pct === 0 ? '4px' : pct + '%';
 
   document.getElementById('progress-card').innerHTML = `
-    <div class="progress-header">
-      <span class="progress-title">Campaign Progress</span>
-      <span class="progress-pct" style="color:${labelColor}">${pct}% Complete</span>
-    </div>
-    <div class="progress-bar-bg">
-      <div class="progress-bar-fill" style="width:${fillWidth};background:${fillBg}"></div>
-    </div>
-    <div class="progress-legend">
-      <div class="progress-legend-item">
-        <span class="legend-dot" style="${dotStyle}"></span>
-        ${completed} Completed
+    <div class="progress-grad">
+      <div class="progress-grad-head">
+        <div class="progress-grad-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+          Progress
+        </div>
+        <div class="progress-grad-total">${pct}% complete</div>
       </div>
-      <div class="progress-legend-item">
-        <span class="legend-dot" style="background:#e0e0e0;border:1px solid #ccc"></span>
-        ${total - completed} Remaining
-      </div>
+      <div class="stacked-bar">${segs}</div>
+      <div class="bar-legend">${legend}</div>
     </div>`;
 }
 
 // ── DELIVERABLES TABLE ────────────────────────────────────────────────────────
+// Platform definitions for the grouped deliverables view
+var PLAT_DEFS = [
+  { key: 'instagram', label: 'Instagram', test: function(t){ return /\big\b|insta|instagram/i.test(t); },
+    badgeClass: 'badge-instagram',
+    badgeSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.4"/><circle cx="17.4" cy="6.6" r="1.4" fill="#fff" stroke="none"/></svg>',
+    subColors: ['#c62b90','#cf8b12','#e9399a','#a0379d'] },
+  { key: 'tiktok', label: 'TikTok', test: function(t){ return /tiktok|tik tok/i.test(t); },
+    badgeClass: 'badge-tiktok',
+    badgeSvg: '<svg viewBox="0 0 24 24" fill="#fff"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>',
+    subColors: ['#0f97a6','#00c2d1','#0077a8'] },
+  { key: 'youtube', label: 'YouTube', test: function(t){ return /youtube/i.test(t); },
+    badgeClass: 'badge-youtube',
+    badgeSvg: '<svg viewBox="0 0 24 24" fill="#fff"><path d="M23 7.8c-.26-1.4-1.06-2.2-2.4-2.46C18.5 5 12 5 12 5s-6.5 0-8.6.34C2.06 5.6 1.26 6.4 1 7.8.66 9.9.66 12 .66 12s0 2.1.34 4.2c.26 1.4 1.06 2.2 2.4 2.46C5.5 19 12 19 12 19s6.5 0 8.6-.34c1.34-.26 2.14-1.06 2.4-2.46.34-2.1.34-4.2.34-4.2s0-2.1-.34-4.2zM9.8 15.3V8.7L15.9 12l-6.1 3.3z"/></svg>',
+    subColors: ['#e60000','#ff4444','#cc0000'] },
+  { key: 'snap', label: 'Snapchat', test: function(t){ return /snap/i.test(t); },
+    badgeClass: 'badge-snap',
+    badgeSvg: '<svg viewBox="0 0 24 24" fill="#1a1a1a"><path d="M12.166.5c.756 0 4.039.231 5.63 3.877.415.943.316 2.543.235 3.898l-.013.22c-.007.12.08.232.198.253.34.062.977-.149 1.348-.279.15-.053.332-.06.49-.008.176.062.323.189.396.382.076.198.069.405-.039.574-.181.284-.72.54-1.025.652-.16.057-.285.18-.34.337-.058.165-.019.342.1.462.127.128.278.302.38.535.065.147.136.432-.058.664-.218.25-.643.403-.936.403-.049 0-.097-.005-.142-.014-.154-.03-.37-.058-.627-.016-.168.026-.487.134-.746.371-.387.352-.742.919-.882 1.785-.014.085-.006.168.02.248.096.293.387.688.976 1.112 1.138.816 2.023 1.25 2.3 1.568.208.24.203.52.11.688-.156.283-.527.465-.93.584-.207.062-.425.116-.647.166-.358.08-.573.153-.62.313-.035.12-.084.271-.142.375-.043.08-.11.137-.196.165-.226.074-.474-.06-.739-.173-.367-.155-.834-.351-1.562-.351-.079 0-.158.002-.236.008-.438.029-.85.156-1.298.292-.565.173-1.148.352-1.918.352s-1.354-.18-1.918-.352c-.449-.137-.861-.263-1.299-.292-.078-.006-.157-.008-.236-.008-.728 0-1.195.196-1.562.35-.265.113-.513.247-.74.173-.085-.028-.152-.084-.195-.165-.058-.104-.107-.255-.142-.375-.048-.16-.262-.233-.62-.312-.222-.05-.44-.104-.648-.167-.403-.118-.773-.3-.929-.584-.093-.167-.099-.447.11-.688.277-.318 1.162-.752 2.3-1.568.589-.424.88-.819.976-1.112.026-.08.034-.163.02-.248-.14-.866-.495-1.433-.882-1.785-.259-.237-.578-.345-.746-.371-.257-.042-.473-.014-.627.016-.045.009-.093.014-.142.014-.293 0-.718-.153-.936-.403-.194-.232-.123-.517-.058-.664.102-.233.253-.407.38-.535.119-.12.158-.297.1-.462-.055-.157-.18-.28-.34-.337-.305-.112-.844-.368-1.025-.652-.108-.169-.115-.376-.039-.574.073-.193.22-.32.396-.382.158-.052.34-.045.49.008.37.13 1.008.341 1.348.279.118-.021.205-.133.198-.254l-.013-.219c-.081-1.355-.18-2.955.235-3.898C8.127.731 11.41.5 12.166.5z"/></svg>',
+    subColors: ['#e6c800','#d4b800'] },
+];
+
 function renderDeliverablesTable(deliverables) {
   const total = deliverables.length;
   document.getElementById('deliverables-header-count').textContent =
     `${total} Deliverable${total !== 1 ? 's' : ''}`;
 
-  // Group by type and count
-  const counts = {};
-  deliverables.forEach(d => {
-    const key = d.type || '👻 Snap Video';
-    counts[key] = (counts[key] || 0) + 1;
+  if (!total) {
+    document.getElementById('deliverables-tbody').innerHTML =
+      '<div style="padding:24px;color:#bbb;font-style:italic;text-align:center">No deliverables found</div>';
+    return;
+  }
+
+  // Group by platform → sub-type
+  const platMap = {}; // platKey → { label, types: { typeName → count } }
+  const otherTypes = {};
+  deliverables.forEach(function(d) {
+    const t = d.type || '';
+    let matched = false;
+    for (var i = 0; i < PLAT_DEFS.length; i++) {
+      if (PLAT_DEFS[i].test(t)) {
+        const pk = PLAT_DEFS[i].key;
+        if (!platMap[pk]) platMap[pk] = { def: PLAT_DEFS[i], types: {} };
+        platMap[pk].types[t] = (platMap[pk].types[t] || 0) + 1;
+        matched = true; break;
+      }
+    }
+    if (!matched) { otherTypes[t || 'Other'] = (otherTypes[t || 'Other'] || 0) + 1; }
   });
 
-  const rows = Object.entries(counts)
-    .sort((a, b) => b[1] - a[1]) // most common first
-    .map(([type, count]) => `
-      <div class="del-type-row">
-        ${platformPill(type)}
-        <span class="del-type-count">${count}</span>
-      </div>`)
-    .join('');
+  // Build donut segments data
+  const C = 2 * Math.PI * 62; // circumference at r=62
+  const donutSegs = [];
+  let offset = 0;
 
-  document.getElementById('deliverables-tbody').innerHTML =
-    rows || '<div style="padding:24px;color:#bbb;font-style:italic;text-align:center">No deliverables found</div>';
+  // Build platform group HTML
+  let groupsHtml = '';
+  PLAT_DEFS.forEach(function(def) {
+    const pg = platMap[def.key];
+    if (!pg) return;
+    const platTotal = Object.values(pg.types).reduce(function(s,n){ return s+n; }, 0);
+    const subRows = Object.entries(pg.types).sort(function(a,b){ return b[1]-a[1]; }).map(function([tn, cnt], si) {
+      const pct = Math.round(cnt / total * 100);
+      const color = def.subColors[si % def.subColors.length];
+      const arc = cnt / total * C;
+      donutSegs.push({ name: tn, color: color, count: cnt, pct: pct, arc: arc, offset: offset });
+      offset += arc;
+      return `<div class="del-type-subrow">
+        <span class="type-dot" style="background:${color}"></span>
+        <span class="type-name-text">${tn}</span>
+        <span class="type-count-num">${cnt}</span>
+        <span class="type-pct-text">${pct}%</span>
+      </div>`;
+    }).join('');
+    groupsHtml += `<div class="plat-group">
+      <div class="plat-head">
+        <div class="plat-badge ${def.badgeClass}">${def.badgeSvg}</div>
+        <div class="plat-name">${def.label}</div>
+        <div class="plat-total">${platTotal}</div>
+      </div>
+      ${subRows}
+    </div>`;
+  });
+
+  // Build donut SVG
+  const segsHtml = donutSegs.map(function(s) {
+    return `<circle class="donut-seg"
+      data-name="${s.name}" data-color="${s.color}"
+      data-sub="${s.count} deliverable${s.count!==1?'s':''} · ${s.pct}% of total"
+      cx="80" cy="80" r="62" fill="none"
+      stroke="${s.color}" stroke-width="17"
+      stroke-dasharray="${s.arc.toFixed(2)} ${(C - s.arc).toFixed(2)}"
+      stroke-dashoffset="${(-s.offset).toFixed(2)}"/>`;
+  }).join('');
+
+  document.getElementById('deliverables-tbody').innerHTML = groupsHtml +
+    `<div class="donut-block">
+      <div class="donut-inner" id="del-donut-inner">
+        <svg width="176" height="176" viewBox="0 0 160 160">
+          <g transform="rotate(-90 80 80)">${segsHtml}</g>
+        </svg>
+        <div class="donut-center"><span class="dc-num">${total}</span><span class="dc-label">Total</span></div>
+      </div>
+    </div>`;
+
+  // Wire donut hover
+  const inner = document.getElementById('del-donut-inner');
+  const tip   = document.getElementById('del-donut-tip');
+  if (!inner || !tip) return;
+  const ttDot  = document.getElementById('del-tt-dot');
+  const ttName = document.getElementById('del-tt-name');
+  const ttSub  = document.getElementById('del-tt-sub');
+  inner.querySelectorAll('.donut-seg').forEach(function(seg) {
+    seg.addEventListener('mouseenter', function() {
+      inner.classList.add('hovering'); seg.classList.add('active');
+      ttDot.style.background = seg.dataset.color;
+      ttName.textContent = seg.dataset.name;
+      ttSub.textContent  = seg.dataset.sub;
+      tip.classList.add('show');
+    });
+    seg.addEventListener('mousemove', function(ev) {
+      tip.style.left = ev.clientX + 'px'; tip.style.top = ev.clientY + 'px';
+    });
+    seg.addEventListener('mouseleave', function() {
+      inner.classList.remove('hovering'); seg.classList.remove('active');
+      tip.classList.remove('show');
+    });
+  });
 }
 
 // ── OVERVIEW TALENT GRID ──────────────────────────────────────────────────────
