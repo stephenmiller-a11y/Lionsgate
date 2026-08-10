@@ -749,14 +749,14 @@
 <!-- ── TAB BAR ──────────────────────────────────────────────────────────────── -->
 <div class="tab-bar">
   <div class="tab-bar-inner">
-    <div class="tab active" onclick="switchTab('overview',this)">📊 Overview</div>
-    <div class="tab" onclick="switchTab('creative',this)">🎨 Creative</div>
-    <div class="tab" onclick="switchTab('talent',this)">⭐️ Talent</div>
-    <div class="tab" onclick="switchTab('timeline',this)">📅 Timeline</div>
-    <div class="tab" onclick="switchTab('calendar',this)">🗓️ Calendar</div>
-    <div class="tab" onclick="switchTab('concepts',this)">💡 Concepts</div>
-    <div class="tab" onclick="switchTab('approvals',this)">✍️ Drafts</div>
-    <div class="tab" onclick="switchTab('reporting',this)">📈 Reporting</div>
+    <div class="tab active" onclick="switchTab('overview',this)">Overview</div>
+    <div class="tab" onclick="switchTab('creative',this)">Creative</div>
+    <div class="tab" onclick="switchTab('talent',this)">Talent</div>
+    <div class="tab" onclick="switchTab('timeline',this)">Timeline</div>
+    <div class="tab" onclick="switchTab('calendar',this)">Calendar</div>
+    <div class="tab" onclick="switchTab('concepts',this)">Concepts</div>
+    <div class="tab" onclick="switchTab('approvals',this)">Drafts</div>
+    <div class="tab" onclick="switchTab('reporting',this)">Reporting</div>
   </div>
 </div>
 
@@ -1134,7 +1134,7 @@ function renderOverviewStats(campaign, deliverables, offers) {
     </div>
     <div class="grad-card grad-talent">
       <div class="grad-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6L12 16.8 6.6 19.6l1.1-6L3.2 9.4l6.1-.8L12 3z"/></svg>Talent</div>
-      <div class="grad-value">${accepted}</div>
+      <div class="grad-value">${accepted} <span class="denom">${accepted === 1 ? 'Creator' : 'Creators'}</span></div>
     </div>`;
 }
 
