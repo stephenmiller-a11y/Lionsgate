@@ -43,7 +43,10 @@ const DELIVERABLE_FIELDS = [
   'fldnhpz9O6tMtn7Nh', // Draft URL (url)
   'fldVrO3bQoqS3qqBv', // Second Draft URL (url)
   'fldOoolITOXf9NVS8', // Third Draft URL (url)
-  'fldnoNsaSQ4wJOX7L', // Pinned Comment (richText — brand notes)
+  'fldsMs0SjgU1UU8KI', // Concept Notes (richText)
+  'fldq0TUAznUzNHZIq', // Draft V1 Notes (richText)
+  'fldlp5I9siz7M2tR2', // Draft V2 Notes (richText)
+  'fld2ANvIsNG7G9c1g', // Draft V3 Notes (richText)
   'fldUdrMJAhL1Zey7q', // Duration (number in seconds)
 ];
 
@@ -243,7 +246,10 @@ module.exports = async function handler(req, res) {
           draft:          f['fldnhpz9O6tMtn7Nh'] || null,
           draft2:         f['fldVrO3bQoqS3qqBv'] || null,
           draft3:         f['fldOoolITOXf9NVS8'] || null,
-          pinnedComment:  f['fldnoNsaSQ4wJOX7L'] || null,
+          conceptNotes:   f['fldsMs0SjgU1UU8KI'] || null,
+          draftV1Notes:   f['fldq0TUAznUzNHZIq'] || null,
+          draftV2Notes:   f['fldlp5I9siz7M2tR2'] || null,
+          draftV3Notes:   f['fld2ANvIsNG7G9c1g'] || null,
           duration:       f['fldUdrMJAhL1Zey7q'] || null,
         };
       })
