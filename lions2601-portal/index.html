@@ -426,6 +426,11 @@
     .talent-section.collapsed .talent-section-body { display: none; }
     .talent-section-count { font-size: 11px; font-weight: 700; color: #aaa; letter-spacing: 0; text-transform: none; }
     .talent-section-empty { font-size: 13px; color: #bbb; font-style: italic; padding: 4px 0 8px; }
+    .talent-sort-bar { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+    .talent-sort-label { font-size: 11px; font-weight: 600; color: #aaa; }
+    .sort-btn { background: #f0f0f2; border: 1px solid #e0e0e2; border-radius: 7px; padding: 5px 13px; font-size: 12px; font-weight: 600; color: #555; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 4px; }
+    .sort-btn:hover { background: #ecdff5; border-color: #c9a8d8; color: #7b2d8b; }
+    .sort-btn.active { background: #7b2d8b; border-color: #6a2577; color: #fff; }
     .drop-sentinel { height: 48px; border-radius: 12px; border: 2px dashed transparent; transition: border-color 0.15s, background 0.15s; margin-bottom: 4px; }
     .drop-sentinel.drag-over { border-color: #7b2d8b; background: rgba(123,45,139,0.05); }
 
@@ -839,6 +844,11 @@
     <div class="talent-section" id="section-pending">
       <div class="talent-section-heading" onclick="toggleTalentSection('section-pending')">
         <span class="talent-section-chevron">▾</span> Pending <span class="talent-section-count" id="count-pending"></span>
+        <div class="talent-sort-bar" onclick="event.stopPropagation()">
+          <span class="talent-sort-label">Sort:</span>
+          <button class="sort-btn" id="sort-btn-name"      onclick="talentSort('name')">Name</button>
+          <button class="sort-btn" id="sort-btn-followers" onclick="talentSort('followers')">Followers</button>
+        </div>
       </div>
       <div class="talent-section-body" id="pending-cards"></div>
     </div>
@@ -1439,7 +1449,12 @@ async function saveBriefField(key, el, hint) {
 }
 
 // ── TALENT TAB ────────────────────────────────────────────────────────────────
+var _talentOffers   = [];
+var _talentSortKey  = null;
+var _talentSortDir  = 1;
+
 function renderTalentTab(offers) {
+  _talentOffers = offers; // store for sort
   const sections = {
     'approved':     document.getElementById('approved-cards'),
     'pending':      document.getElementById('pending-cards'),
@@ -1463,6 +1478,45 @@ function renderTalentTab(offers) {
 
   // Hide sections that have no cards
   updateSectionEmptyStates();
+}
+
+function talentSort(key) {
+  // Toggle direction on repeat click; natural default: name=A-Z(1), followers=desc(1→fb-fa)
+  if (_talentSortKey === key) { _talentSortDir *= -1; }
+  else { _talentSortKey = key; _talentSortDir = 1; }
+
+  // Update button appearance
+  var arrows = { name: ['↑','↓'], followers: ['↓','↑'] }; // natural dir arrows
+  ['name','followers'].forEach(function(k) {
+    var btn = document.getElementById('sort-btn-' + k);
+    if (!btn) return;
+    var isActive = k === key;
+    btn.classList.toggle('active', isActive);
+    var pair = arrows[k];
+    btn.textContent = (k === 'name' ? 'Name' : 'Followers') + (isActive ? ' ' + ((_talentSortDir === 1) ? pair[0] : pair[1]) : '');
+  });
+
+  // Build lookup map
+  var offerMap = {};
+  _talentOffers.forEach(function(o) { offerMap[o.id] = o; });
+
+  function totalFollowers(o) {
+    return (o.instagramFollowers || 0) + (o.tiktokFollowers || 0) + (o.youtubeFollowers || 0) + (o.snapchatFollowers || 0);
+  }
+
+  var container = document.getElementById('pending-cards');
+  if (container) {
+    var cards = Array.from(container.querySelectorAll('.talent-offer-card'));
+    cards.sort(function(a, b) {
+      var oa = offerMap[a.dataset.offerId];
+      var ob = offerMap[b.dataset.offerId];
+      if (!oa || !ob) return 0;
+      if (key === 'name') return _talentSortDir * (oa.name || '').localeCompare(ob.name || '');
+      if (key === 'followers') return _talentSortDir * (totalFollowers(ob) - totalFollowers(oa));
+      return 0;
+    });
+    cards.forEach(function(card) { container.appendChild(card); });
+  }
 }
 
 function approvalClass(offer) {
