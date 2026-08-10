@@ -202,6 +202,7 @@ module.exports = async function handler(req, res) {
       startDate:       cf['Start Date']                || null,
       endDate:         cf['End Date']                  || null,
       status:          cf['Status']                    || null,
+      campaignOverview: cf['Campaign Overview']         || null,
       briefBackground: cf['Brief Background']          || null,
       briefGuidelines: cf['Brief Creative Guidelines'] || null,
       briefCTA:        cf['Brief CTA']                 || null,
