@@ -1749,14 +1749,38 @@ function renderTimeline(campaign, timelines) {
 var _conceptState = 'pending';
 var _draftState   = 'pending';
 
+// Concept version: V1 = no v1 notes yet; V2 = v1 notes filled (creator revised)
+function conceptVersion(d) {
+  return (d.conceptV2 && d.conceptV2.trim()) ? 2 : 1;
+}
+
+function conceptNotesForVersion(d) {
+  return conceptVersion(d) === 2 ? (d.conceptV2Notes || null) : (d.conceptNotes || null);
+}
+
 function conceptStatusOf(d) {
   if (d.scriptApproval) return 'approved';
-  if (d.conceptNotes && d.conceptNotes.trim()) return 'revision';
+  var notes = conceptNotesForVersion(d);
+  if (notes && notes.trim()) return 'revision';
   return 'pending';
+}
+
+function draftVersion(d) {
+  if (d.draft5) return 5;
+  if (d.draft4) return 4;
+  if (d.draft3) return 3;
+  if (d.draft2) return 2;
+  return 1;
+}
+
+function latestDraftUrl(d) {
+  return d.draft5 || d.draft4 || d.draft3 || d.draft2 || d.draft || null;
 }
 
 function draftNotesForVersion(d) {
   var ver = draftVersion(d);
+  if (ver === 5) return d.draftV5Notes || null;
+  if (ver === 4) return d.draftV4Notes || null;
   if (ver === 3) return d.draftV3Notes || null;
   if (ver === 2) return d.draftV2Notes || null;
   return d.draftV1Notes || null;
@@ -1764,19 +1788,11 @@ function draftNotesForVersion(d) {
 
 function draftStatusOf(d) {
   if (d.cutApproval) return 'approved';
-  if (draftNotesForVersion(d) && draftNotesForVersion(d).trim()) return 'revision';
+  var notes = draftNotesForVersion(d);
+  if (notes && notes.trim()) return 'revision';
   return 'pending';
 }
 
-function latestDraftUrl(d) {
-  return d.draft3 || d.draft2 || d.draft || null;
-}
-
-function draftVersion(d) {
-  if (d.draft3) return 3;
-  if (d.draft2) return 2;
-  return 1;
-}
 
 function fmtDuration(seconds) {
   if (!seconds && seconds !== 0) return '';
@@ -1794,7 +1810,7 @@ function cptAvatarHtml(name, headshotUrl) {
 function buildConceptCard(d, headshotUrl, isPanel) {
   var status = conceptStatusOf(d);
   var safeid = d.id.replace(/[^a-z0-9]/gi, '');
-  var verNum = 1; // concepts are always V1 in Airtable (one concept field)
+  var verNum = conceptVersion(d); // 1 = no concept v2 yet; 2 = concept v2 field is filled
   var verClass = 'ver-' + verNum;
 
   var cardClass = 'cpt-card' +
@@ -1807,30 +1823,52 @@ function buildConceptCard(d, headshotUrl, isPanel) {
     ? '<span class="cpt-pill revision">✏️ In Revision</span>'
     : '<span class="cpt-pill pending" id="cpill-' + safeid + '">⏳ Awaiting Review</span>';
 
+  var currentNotes = conceptNotesForVersion(d);
   var noteHtml = '';
-  if ((status === 'revision' || status === 'approved') && d.conceptNotes && d.conceptNotes.trim()) {
-    noteHtml = '<div class="cpt-note"><b>Your notes:</b> ' + d.conceptNotes.trim().replace(/\n/g, '<br>') + '</div>';
+  if ((status === 'revision') && currentNotes && currentNotes.trim()) {
+    noteHtml = '<div class="cpt-note"><b>Your notes (V' + verNum + '):</b> ' + currentNotes.trim().replace(/\n/g, '<br>') + '</div>';
   }
+
+  // History: show V1 entry (with notes) when a V2 exists; show V2 entry when on V2
+  var histItems = '';
+  if (verNum >= 2) {
+    // V1 history entry
+    histItems += '<div class="hist-item">' +
+      '<div class="hist-head"><span class="ver-badge ver-1">V1</span></div>' +
+      '<div class="hist-text">' + (d.concept || '').replace(/\n/g, '<br>') + '</div>' +
+      (d.conceptNotes && d.conceptNotes.trim() ? '<div class="hist-note"><b>Your notes (V1):</b> ' + d.conceptNotes.trim().replace(/\n/g, '<br>') + '</div>' : '') +
+    '</div>';
+    // V2 history entry (only shown in approved history panel)
+    histItems += '<div class="hist-item' + (status === 'approved' ? ' hist-approved' : '') + '">' +
+      '<div class="hist-head"><span class="ver-badge ver-2">V2</span>' +
+      (status === 'approved' ? '<span class="hist-approved-tag">✅ Approved</span>' : '') +
+      '</div>' +
+      '<div class="hist-text">' + (d.conceptV2 || '').replace(/\n/g, '<br>') + '</div>' +
+      (d.conceptV2Notes ? '<div class="hist-note"><b>Your notes (V2):</b> ' + d.conceptV2Notes.trim().replace(/\n/g, '<br>') + '</div>' : '') +
+    '</div>';
+  } else if (status === 'approved') {
+    // V1-only approved
+    histItems += '<div class="hist-item hist-approved">' +
+      '<div class="hist-head"><span class="ver-badge ver-1">V1</span><span class="hist-approved-tag">✅ Approved</span></div>' +
+      '<div class="hist-text">' + (d.concept || '').replace(/\n/g, '<br>') + '</div>' +
+    '</div>';
+  }
+
+  var verNote = (status === 'revision' && verNum < 2) ? ' <span class="ver-note">V' + (verNum + 1) + ' in progress</span>' : '';
 
   var actionsHtml;
   if (status === 'approved') {
     actionsHtml = '<div class="cpt-actions">' +
       '<button class="btn-cpt-history" onclick="this.closest(\'.cpt-card\').classList.toggle(\'cpt-history-open\')">🕘 See History <span class="chev">▾</span></button>' +
       '</div>' +
-      '<div class="cpt-history-wrap">' +
-        '<div class="history-title">Version History</div>' +
-        '<div class="hist-item hist-approved">' +
-          '<div class="hist-head"><span class="ver-badge ver-1">V1</span><span class="hist-approved-tag">✅ Approved</span></div>' +
-          '<div class="hist-text">' + (d.concept || '').replace(/\n/g, '<br>') + '</div>' +
-        '</div>' +
-      '</div>';
+      '<div class="cpt-history-wrap"><div class="history-title">Version History</div>' + histItems + '</div>';
   } else {
     actionsHtml = '<div class="cpt-actions" id="cact-' + safeid + '">' +
       '<button class="btn-cpt-approve" onclick="conceptApprove(\'' + d.id + '\',\'' + safeid + '\')">✓ Approve</button>' +
       '<button class="btn-cpt-changes" onclick="conceptOpenFeedback(\'' + safeid + '\')">✎ Request Changes</button>' +
       '<div class="cpt-feedback-wrap">' +
         '<textarea class="cpt-feedback-input" id="cfb-' + safeid + '" placeholder="Add your notes…"></textarea>' +
-        '<button class="btn-cpt-send" onclick="conceptSendFeedback(\'' + d.id + '\',\'' + safeid + '\')">Send</button>' +
+        '<button class="btn-cpt-send" onclick="conceptSendFeedback(\'' + d.id + '\',\'' + safeid + '\',' + verNum + ')">Send</button>' +
       '</div>' +
       '</div>';
   }
@@ -1844,8 +1882,8 @@ function buildConceptCard(d, headshotUrl, isPanel) {
       pill +
     '</div>' +
     '<div class="cpt-body">' +
-      '<div class="cpt-concept-label"><span class="ver-badge ' + verClass + '">V' + verNum + '</span></div>' +
-      '<div class="cpt-text">' + (d.concept || '').replace(/\n/g, '<br>') + '</div>' +
+      '<div class="cpt-concept-label"><span class="ver-badge ' + verClass + '">V' + verNum + '</span>' + verNote + '</div>' +
+      '<div class="cpt-text">' + (verNum === 2 ? (d.conceptV2 || d.concept || '') : (d.concept || '')).replace(/\n/g, '<br>') + '</div>' +
       noteHtml +
     '</div>' +
     actionsHtml +
@@ -1891,7 +1929,7 @@ function buildDraftCard(d, headshotUrl) {
     var histItems = '';
     // V1 entry
     if (d.draft) {
-      var v1Approved = !d.draft2 && !d.draft3; // V1 was the approved one
+      var v1Approved = !d.draft2 && !d.draft3 && !d.draft4 && !d.draft5;
       histItems += '<div class="hist-item' + (v1Approved ? ' hist-approved' : '') + '">' +
         '<div class="hist-head"><span class="ver-badge ver-1">V1</span>' +
         (v1Approved ? '<span class="hist-approved-tag">✅ Approved</span>' : '') +
@@ -1903,28 +1941,26 @@ function buildDraftCard(d, headshotUrl) {
         (d.draft2 && d.draftV1Notes ? '<div class="hist-note"><b>Your notes (V1):</b> ' + d.draftV1Notes.trim() + '</div>' : '') +
       '</div>';
     }
-    if (d.draft2) {
-      var v2Approved = !d.draft3;
-      histItems += '<div class="hist-item' + (v2Approved ? ' hist-approved' : '') + '">' +
-        '<div class="hist-head"><span class="ver-badge ver-2">V2</span>' +
-        (v2Approved ? '<span class="hist-approved-tag">✅ Approved</span>' : '') +
+    // V2–V5 entries (V1 already added above)
+    var draftUrls  = [d.draft2, d.draft3, d.draft4, d.draft5];
+    var draftNotes = [d.draftV2Notes, d.draftV3Notes, d.draftV4Notes, d.draftV5Notes];
+    for (var vi = 0; vi < draftUrls.length; vi++) {
+      var vUrl = draftUrls[vi];
+      if (!vUrl) continue;
+      var vNum      = vi + 2; // V2 = index 0, V3 = index 1, ...
+      var vNotes    = draftNotes[vi];
+      var isLast    = (vi === draftUrls.length - 1) || !draftUrls[vi + 1];
+      var vApproved = isLast;
+      var vClass    = 'ver-' + Math.min(vNum, 3); // CSS caps at ver-3 for colour
+      histItems += '<div class="hist-item' + (vApproved ? ' hist-approved' : '') + '">' +
+        '<div class="hist-head"><span class="ver-badge ' + vClass + '">V' + vNum + '</span>' +
+        (vApproved ? '<span class="hist-approved-tag">✅ Approved</span>' : '') +
         '</div>' +
-        '<a class="watch-bar" style="margin-top:6px" href="' + d.draft2 + '" target="_blank">' +
+        '<a class="watch-bar" style="margin-top:6px" href="' + vUrl + '" target="_blank">' +
           '<span class="watch-play" style="width:28px;height:28px"><svg viewBox="0 0 24 24" style="width:10px;height:10px"><path d="M8 5v14l11-7z"/></svg></span>' +
-          '<span class="watch-label" style="font-size:13px">Watch V2</span>' +
+          '<span class="watch-label" style="font-size:13px">Watch V' + vNum + '</span>' +
         '</a>' +
-        (d.draft3 && d.draftV2Notes ? '<div class="hist-note"><b>Your notes (V2):</b> ' + d.draftV2Notes.trim() + '</div>' : '') +
-      '</div>';
-    }
-    if (d.draft3) {
-      histItems += '<div class="hist-item hist-approved">' +
-        '<div class="hist-head"><span class="ver-badge ver-3">V3</span>' +
-        '<span class="hist-approved-tag">✅ Approved</span>' +
-        '</div>' +
-        '<a class="watch-bar" style="margin-top:6px" href="' + d.draft3 + '" target="_blank">' +
-          '<span class="watch-play" style="width:28px;height:28px"><svg viewBox="0 0 24 24" style="width:10px;height:10px"><path d="M8 5v14l11-7z"/></svg></span>' +
-          '<span class="watch-label" style="font-size:13px">Watch V3</span>' +
-        '</a>' +
+        (!isLast && vNotes && vNotes.trim() ? '<div class="hist-note"><b>Your notes (V' + vNum + '):</b> ' + vNotes.trim() + '</div>' : '') +
       '</div>';
     }
     histHtml = '<div class="cpt-history-wrap"><div class="history-title">Version History</div>' + histItems + '</div>';
@@ -1967,7 +2003,7 @@ function renderConceptsTab(deliverables, offers) {
   var headshotMap = {};
   (offers || []).forEach(function(o) { if (o.name && o.headshotUrl) headshotMap[o.name] = o.headshotUrl; });
 
-  var concepts = (deliverables || []).filter(function(d) { return d.concept && d.concept.trim(); });
+  var concepts = (deliverables || []).filter(function(d) { return (d.concept && d.concept.trim()) || (d.conceptV2 && d.conceptV2.trim()); });
   var total = (deliverables || []).length;
 
   var nPending   = concepts.filter(function(d){ return conceptStatusOf(d) === 'pending'; }).length;
@@ -1978,16 +2014,16 @@ function renderConceptsTab(deliverables, offers) {
   _conceptState = 'pending';
 
   var summaryHtml = '<div class="cpt-summary">' +
-    '<div class="sum-cell"><div class="sum-label"><span class="sum-dot" style="background:#7b2d8b;"></span>Pending</div><div class="sum-value" style="color:#7b2d8b;">' + nPending + '</div></div>' +
-    '<div class="sum-cell"><div class="sum-label"><span class="sum-dot" style="background:#e8a80c;"></span>In Revision</div><div class="sum-value" style="color:#a36a00;">' + nRevision + '</div></div>' +
-    '<div class="sum-cell"><div class="sum-label"><span class="sum-dot" style="background:#34c759;"></span>Approved</div><div class="sum-value" style="color:#1a7a3a;">' + nApproved + '</div></div>' +
+    '<div class="sum-cell"><div class="sum-label"><span class="sum-dot" style="background:#7b2d8b;"></span>Pending</div><div class="sum-value" id="cpt-sum-pending" style="color:#7b2d8b;">' + nPending + '</div></div>' +
+    '<div class="sum-cell"><div class="sum-label"><span class="sum-dot" style="background:#e8a80c;"></span>In Revision</div><div class="sum-value" id="cpt-sum-revision" style="color:#a36a00;">' + nRevision + '</div></div>' +
+    '<div class="sum-cell"><div class="sum-label"><span class="sum-dot" style="background:#34c759;"></span>Approved</div><div class="sum-value" id="cpt-sum-approved" style="color:#1a7a3a;">' + nApproved + '</div></div>' +
     '<div class="sum-cell"><div class="sum-label"><span class="sum-dot" style="background:#c0c0c6;"></span>Remaining</div><div class="sum-value" style="color:#8a8a90;">' + nRemaining + '</div></div>' +
   '</div>';
 
   var stateTabsHtml = '<div class="state-tabs" id="concept-state-tabs">' +
-    '<button class="state-tab active" onclick="conceptSetState(\'pending\',this)">⏳ Pending <span class="state-count">' + nPending + '</span></button>' +
-    '<button class="state-tab" onclick="conceptSetState(\'revision\',this)">✏️ In Revision <span class="state-count">' + nRevision + '</span></button>' +
-    '<button class="state-tab" onclick="conceptSetState(\'approved\',this)">✅ Approved <span class="state-count">' + nApproved + '</span></button>' +
+    '<button class="state-tab active" onclick="conceptSetState(\'pending\',this)">⏳ Pending <span class="state-count" id="cpt-tab-pending">' + nPending + '</span></button>' +
+    '<button class="state-tab" onclick="conceptSetState(\'revision\',this)">✏️ In Revision <span class="state-count" id="cpt-tab-revision">' + nRevision + '</span></button>' +
+    '<button class="state-tab" onclick="conceptSetState(\'approved\',this)">✅ Approved <span class="state-count" id="cpt-tab-approved">' + nApproved + '</span></button>' +
   '</div>';
 
   var cardsHtml = concepts.map(function(d) {
@@ -2027,16 +2063,16 @@ function renderDraftsTab(deliverables, offers) {
   _draftState = 'pending';
 
   var summaryHtml = '<div class="cpt-summary">' +
-    '<div class="sum-cell"><div class="sum-label"><span class="sum-dot" style="background:#7b2d8b;"></span>Pending</div><div class="sum-value" style="color:#7b2d8b;">' + nPending + '</div></div>' +
-    '<div class="sum-cell"><div class="sum-label"><span class="sum-dot" style="background:#e8a80c;"></span>In Revision</div><div class="sum-value" style="color:#a36a00;">' + nRevision + '</div></div>' +
-    '<div class="sum-cell"><div class="sum-label"><span class="sum-dot" style="background:#34c759;"></span>Approved</div><div class="sum-value" style="color:#1a7a3a;">' + nApproved + '</div></div>' +
+    '<div class="sum-cell"><div class="sum-label"><span class="sum-dot" style="background:#7b2d8b;"></span>Pending</div><div class="sum-value" id="dft-sum-pending" style="color:#7b2d8b;">' + nPending + '</div></div>' +
+    '<div class="sum-cell"><div class="sum-label"><span class="sum-dot" style="background:#e8a80c;"></span>In Revision</div><div class="sum-value" id="dft-sum-revision" style="color:#a36a00;">' + nRevision + '</div></div>' +
+    '<div class="sum-cell"><div class="sum-label"><span class="sum-dot" style="background:#34c759;"></span>Approved</div><div class="sum-value" id="dft-sum-approved" style="color:#1a7a3a;">' + nApproved + '</div></div>' +
     '<div class="sum-cell"><div class="sum-label"><span class="sum-dot" style="background:#c0c0c6;"></span>Remaining</div><div class="sum-value" style="color:#8a8a90;">' + nRemaining + '</div></div>' +
   '</div>';
 
   var stateTabsHtml = '<div class="state-tabs" id="draft-state-tabs">' +
-    '<button class="state-tab active" onclick="draftSetState(\'pending\',this)">⏳ Pending <span class="state-count">' + nPending + '</span></button>' +
-    '<button class="state-tab" onclick="draftSetState(\'revision\',this)">✏️ In Revision <span class="state-count">' + nRevision + '</span></button>' +
-    '<button class="state-tab" onclick="draftSetState(\'approved\',this)">✅ Approved <span class="state-count">' + nApproved + '</span></button>' +
+    '<button class="state-tab active" onclick="draftSetState(\'pending\',this)">⏳ Pending <span class="state-count" id="dft-tab-pending">' + nPending + '</span></button>' +
+    '<button class="state-tab" onclick="draftSetState(\'revision\',this)">✏️ In Revision <span class="state-count" id="dft-tab-revision">' + nRevision + '</span></button>' +
+    '<button class="state-tab" onclick="draftSetState(\'approved\',this)">✅ Approved <span class="state-count" id="dft-tab-approved">' + nApproved + '</span></button>' +
   '</div>';
 
   var cardsHtml = drafts.map(function(d) {
@@ -2058,6 +2094,44 @@ function renderDraftsTab(deliverables, offers) {
     badge.textContent = needsAttention;
     badge.style.display = needsAttention > 0 ? '' : 'none';
   }
+}
+
+// ── COUNT UPDATERS ────────────────────────────────────────────────────────────
+
+function updateConceptCounts() {
+  var nP = 0, nR = 0, nA = 0;
+  document.querySelectorAll('#concept-cards .cpt-card').forEach(function(c) {
+    if      (c.dataset.cstate === 'pending')  nP++;
+    else if (c.dataset.cstate === 'revision') nR++;
+    else if (c.dataset.cstate === 'approved') nA++;
+  });
+  var el;
+  el = document.getElementById('cpt-sum-pending');  if (el) el.textContent = nP;
+  el = document.getElementById('cpt-sum-revision'); if (el) el.textContent = nR;
+  el = document.getElementById('cpt-sum-approved'); if (el) el.textContent = nA;
+  el = document.getElementById('cpt-tab-pending');  if (el) el.textContent = nP;
+  el = document.getElementById('cpt-tab-revision'); if (el) el.textContent = nR;
+  el = document.getElementById('cpt-tab-approved'); if (el) el.textContent = nA;
+  var badge = document.getElementById('tab-badge-concepts');
+  if (badge) { var n = nP + nR; badge.textContent = n; badge.style.display = n > 0 ? '' : 'none'; }
+}
+
+function updateDraftCounts() {
+  var nP = 0, nR = 0, nA = 0;
+  document.querySelectorAll('#draft-cards .cpt-card').forEach(function(c) {
+    if      (c.dataset.dstate === 'pending')  nP++;
+    else if (c.dataset.dstate === 'revision') nR++;
+    else if (c.dataset.dstate === 'approved') nA++;
+  });
+  var el;
+  el = document.getElementById('dft-sum-pending');  if (el) el.textContent = nP;
+  el = document.getElementById('dft-sum-revision'); if (el) el.textContent = nR;
+  el = document.getElementById('dft-sum-approved'); if (el) el.textContent = nA;
+  el = document.getElementById('dft-tab-pending');  if (el) el.textContent = nP;
+  el = document.getElementById('dft-tab-revision'); if (el) el.textContent = nR;
+  el = document.getElementById('dft-tab-approved'); if (el) el.textContent = nA;
+  var badge = document.getElementById('tab-badge-drafts');
+  if (badge) { var n = nP + nR; badge.textContent = n; badge.style.display = n > 0 ? '' : 'none'; }
 }
 
 // ── CONCEPT ACTIONS ───────────────────────────────────────────────────────────
@@ -2096,6 +2170,7 @@ function conceptApprove(delivId, safeid) {
   // Re-filter
   var activeTab = document.querySelector('#concept-state-tabs .state-tab.active');
   if (activeTab) conceptSetState(_conceptState, activeTab);
+  updateConceptCounts();
   // Write to Airtable
   fetch('/api/deliverable-update', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -2103,7 +2178,7 @@ function conceptApprove(delivId, safeid) {
   }).catch(function(e){ console.error('[conceptApprove]', e); });
 }
 
-function conceptSendFeedback(delivId, safeid) {
+function conceptSendFeedback(delivId, safeid, ver) {
   var textarea = document.getElementById('cfb-' + safeid);
   if (!textarea) return;
   var text = textarea.value.trim();
@@ -2127,10 +2202,11 @@ function conceptSendFeedback(delivId, safeid) {
     if (actions) actions.classList.remove('cpt-feedback-open');
     var activeTab = document.querySelector('#concept-state-tabs .state-tab.active');
     if (activeTab) conceptSetState(_conceptState, activeTab);
+    updateConceptCounts();
   }
   fetch('/api/deliverable-update', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ delivId: delivId, fields: { conceptNotes: text } }),
+    body: JSON.stringify({ delivId: delivId, fields: { [ver === 2 ? 'conceptV2Notes' : 'conceptNotes']: text } }),
   }).catch(function(e){ console.error('[conceptSendFeedback]', e); });
 }
 
@@ -2167,6 +2243,7 @@ function draftApprove(delivId, safeid) {
   if (actions) actions.classList.remove('cpt-feedback-open');
   var activeTab = document.querySelector('#draft-state-tabs .state-tab.active');
   if (activeTab) draftSetState(_draftState, activeTab);
+  updateDraftCounts();
   fetch('/api/deliverable-update', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ delivId: delivId, fields: { cutApproval: true } }),
@@ -2198,6 +2275,7 @@ function draftSendFeedback(delivId, safeid, ver) {
     if (actions) actions.classList.remove('cpt-feedback-open');
     var activeTab = document.querySelector('#draft-state-tabs .state-tab.active');
     if (activeTab) draftSetState(_draftState, activeTab);
+    updateDraftCounts();
   }
   fetch('/api/deliverable-update', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
