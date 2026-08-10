@@ -1747,13 +1747,20 @@ var _draftState   = 'pending';
 
 function conceptStatusOf(d) {
   if (d.scriptApproval) return 'approved';
-  if (d.pinnedComment && d.pinnedComment.trim()) return 'revision';
+  if (d.conceptNotes && d.conceptNotes.trim()) return 'revision';
   return 'pending';
+}
+
+function draftNotesForVersion(d) {
+  var ver = draftVersion(d);
+  if (ver === 3) return d.draftV3Notes || null;
+  if (ver === 2) return d.draftV2Notes || null;
+  return d.draftV1Notes || null;
 }
 
 function draftStatusOf(d) {
   if (d.cutApproval) return 'approved';
-  if (d.pinnedComment && d.pinnedComment.trim()) return 'revision';
+  if (draftNotesForVersion(d) && draftNotesForVersion(d).trim()) return 'revision';
   return 'pending';
 }
 
@@ -1797,8 +1804,8 @@ function buildConceptCard(d, headshotUrl, isPanel) {
     : '<span class="cpt-pill pending" id="cpill-' + safeid + '">⏳ Awaiting Review</span>';
 
   var noteHtml = '';
-  if ((status === 'revision' || status === 'approved') && d.pinnedComment && d.pinnedComment.trim()) {
-    noteHtml = '<div class="cpt-note"><b>Your notes:</b> ' + d.pinnedComment.trim().replace(/\n/g, '<br>') + '</div>';
+  if ((status === 'revision' || status === 'approved') && d.conceptNotes && d.conceptNotes.trim()) {
+    noteHtml = '<div class="cpt-note"><b>Your notes:</b> ' + d.conceptNotes.trim().replace(/\n/g, '<br>') + '</div>';
   }
 
   var actionsHtml;
@@ -1868,9 +1875,10 @@ function buildDraftCard(d, headshotUrl) {
       '</a>'
     : '';
 
+  var currentNotes = draftNotesForVersion(d);
   var noteHtml = '';
-  if ((status === 'revision') && d.pinnedComment && d.pinnedComment.trim()) {
-    noteHtml = '<div class="cpt-note"><b>Your notes:</b> ' + d.pinnedComment.trim().replace(/\n/g, '<br>') + '</div>';
+  if (status === 'revision' && currentNotes && currentNotes.trim()) {
+    noteHtml = '<div class="cpt-note"><b>Your notes:</b> ' + currentNotes.trim().replace(/\n/g, '<br>') + '</div>';
   }
 
   // Build version history for approved drafts
@@ -1888,7 +1896,7 @@ function buildDraftCard(d, headshotUrl) {
           '<span class="watch-play" style="width:28px;height:28px"><svg viewBox="0 0 24 24" style="width:10px;height:10px"><path d="M8 5v14l11-7z"/></svg></span>' +
           '<span class="watch-label" style="font-size:13px">Watch V1</span>' +
         '</a>' +
-        (d.draft2 && d.pinnedComment ? '<div class="hist-note"><b>Your notes:</b> ' + d.pinnedComment.trim() + '</div>' : '') +
+        (d.draft2 && d.draftV1Notes ? '<div class="hist-note"><b>Your notes (V1):</b> ' + d.draftV1Notes.trim() + '</div>' : '') +
       '</div>';
     }
     if (d.draft2) {
@@ -1901,6 +1909,7 @@ function buildDraftCard(d, headshotUrl) {
           '<span class="watch-play" style="width:28px;height:28px"><svg viewBox="0 0 24 24" style="width:10px;height:10px"><path d="M8 5v14l11-7z"/></svg></span>' +
           '<span class="watch-label" style="font-size:13px">Watch V2</span>' +
         '</a>' +
+        (d.draft3 && d.draftV2Notes ? '<div class="hist-note"><b>Your notes (V2):</b> ' + d.draftV2Notes.trim() + '</div>' : '') +
       '</div>';
     }
     if (d.draft3) {
@@ -1928,7 +1937,7 @@ function buildDraftCard(d, headshotUrl) {
       '<button class="btn-cpt-changes" onclick="draftOpenFeedback(\'' + safeid + '\')">✎ Request Changes</button>' +
       '<div class="cpt-feedback-wrap">' +
         '<textarea class="cpt-feedback-input" id="dfb-' + safeid + '" placeholder="Add your notes…"></textarea>' +
-        '<button class="btn-cpt-send" onclick="draftSendFeedback(\'' + d.id + '\',\'' + safeid + '\')">Send</button>' +
+        '<button class="btn-cpt-send" onclick="draftSendFeedback(\'' + d.id + '\',\'' + safeid + '\',' + ver + ')">Send</button>' +
       '</div>' +
       '</div>';
   }
@@ -2117,7 +2126,7 @@ function conceptSendFeedback(delivId, safeid) {
   }
   fetch('/api/deliverable-update', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ delivId: delivId, fields: { pinnedComment: text } }),
+    body: JSON.stringify({ delivId: delivId, fields: { conceptNotes: text } }),
   }).catch(function(e){ console.error('[conceptSendFeedback]', e); });
 }
 
@@ -2160,11 +2169,12 @@ function draftApprove(delivId, safeid) {
   }).catch(function(e){ console.error('[draftApprove]', e); });
 }
 
-function draftSendFeedback(delivId, safeid) {
+function draftSendFeedback(delivId, safeid, ver) {
   var textarea = document.getElementById('dfb-' + safeid);
   if (!textarea) return;
   var text = textarea.value.trim();
   if (!text) return;
+  var fieldName = ver === 3 ? 'draftV3Notes' : ver === 2 ? 'draftV2Notes' : 'draftV1Notes';
   var card = document.querySelector('#panel-approvals [data-deliv-id="' + delivId + '"]');
   if (card) {
     card.dataset.dstate = 'revision';
@@ -2187,7 +2197,7 @@ function draftSendFeedback(delivId, safeid) {
   }
   fetch('/api/deliverable-update', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ delivId: delivId, fields: { pinnedComment: text } }),
+    body: JSON.stringify({ delivId: delivId, fields: { [fieldName]: text } }),
   }).catch(function(e){ console.error('[draftSendFeedback]', e); });
 }
 
