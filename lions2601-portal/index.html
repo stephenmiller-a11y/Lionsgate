@@ -343,21 +343,27 @@
       background: #fff; border-radius: 14px; border: 1px solid #e8e8e8;
       margin-bottom: 20px; overflow: hidden; position: relative;
       transition: transform 0.15s, box-shadow 0.15s;
+      display: flex;
     }
     .talent-offer-card[draggable="true"] { cursor: grab; }
     .talent-offer-card[draggable="true"]:active { cursor: grabbing; }
     .talent-offer-card.dragging { opacity: 0.4; transform: scale(0.98); box-shadow: 0 8px 24px rgba(123,45,139,0.15); }
     .talent-offer-card.drag-over { border-top: 3px solid #7b2d8b; margin-top: -3px; }
     .talent-offer-card.passed { opacity: 0.6; }
+    .rank-side {
+      width: 46px; flex-shrink: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+      padding: 16px 0;
+      background: #f9f3fb; border-right: 1px solid #edd9f7;
+    }
     .rank-badge {
-      position: absolute; top: 12px; left: 12px;
       width: 28px; height: 28px; border-radius: 50%;
       background: #7b2d8b; color: #fff;
       font-size: 13px; font-weight: 700;
       display: flex; align-items: center; justify-content: center;
-      z-index: 5; box-shadow: 0 2px 6px rgba(123,45,139,0.3);
+      box-shadow: 0 2px 6px rgba(123,45,139,0.3);
     }
-    .drag-handle { position: absolute; top: 14px; right: 14px; font-size: 16px; color: #ccc; cursor: grab; z-index: 5; user-select: none; }
+    .drag-handle { font-size: 18px; color: #c4a0d0; cursor: grab; user-select: none; line-height: 1; }
     .drag-handle:hover { color: #7b2d8b; }
     .rank-dropdown-wrap { margin-top: -4px; margin-bottom: 4px; }
     .rank-dropdown {
@@ -368,7 +374,7 @@
       background-repeat: no-repeat; background-position: right 8px center; padding-right: 24px;
     }
     .rank-dropdown:hover { background-color: #6a2577; }
-    .talent-offer-inner { display: grid; grid-template-columns: 120px 1fr; gap: 0; }
+    .talent-offer-inner { display: grid; grid-template-columns: 120px 1fr; gap: 0; flex: 1; min-width: 0; }
     .talent-offer-photo { width: 120px; height: 160px; object-fit: cover; object-position: top; display: block; flex-shrink: 0; }
     .talent-offer-photo-fallback {
       width: 120px; height: 160px;
@@ -1471,8 +1477,9 @@ function buildOfferCard(offer, section) {
     ? `<img class="talent-offer-photo" src="${offer.headshotUrl}" alt="${offer.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
     : '';
   const fallback   = `<div class="talent-offer-photo-fallback" style="${offer.headshotUrl ? 'display:none' : ''}">${initials(offer.name)}</div>`;
-  const rankBadge  = section === 'approved' ? '<div class="rank-badge"></div>' : '';
-  const dragHandle = section === 'approved' ? '<div class="drag-handle">⠿</div>' : '';
+  const rankSide = section === 'approved'
+    ? '<div class="rank-side"><div class="rank-badge"></div><div class="drag-handle">⠿</div></div>'
+    : '';
   const rankDropdown = section === 'approved' ? `<div class="rank-dropdown-wrap"><select class="rank-dropdown" onchange="changeRankByDropdown(this)"></select></div>` : '';
 
   const badgeCls   = approvalClass(offer);
@@ -1494,7 +1501,7 @@ function buildOfferCard(offer, section) {
   const approvalKey = section === 'approved' ? 'approved' : section === 'not-approved' ? 'rejected' : 'pending';
 
   return `<div class="talent-offer-card ${passed}" ${draggable} data-offer-id="${offer.id}" data-approval="${approvalKey}">
-    ${rankBadge}${dragHandle}
+    ${rankSide}
     <div class="talent-offer-inner">
       ${imgHtml}${fallback}
       <div class="talent-offer-body">
@@ -2336,14 +2343,16 @@ function syncBadge(sel) {
   setTimeout(() => {
     if (sel.value === 'approved') {
       card.setAttribute('draggable', 'true');
-      // Show or create rank-badge
-      var existingBadge = card.querySelector('.rank-badge');
-      if (existingBadge) { existingBadge.style.display = ''; }
-      else { const b = document.createElement('div'); b.className='rank-badge'; card.insertBefore(b, card.firstChild); }
-      // Show or create drag-handle
-      var existingHandle = card.querySelector('.drag-handle');
-      if (existingHandle) { existingHandle.style.display = ''; }
-      else { const h = document.createElement('div'); h.className='drag-handle'; h.textContent='⠿'; card.insertBefore(h, card.children[1]); }
+      // Show or create rank-side (contains rank-badge + drag-handle)
+      var existingSide = card.querySelector('.rank-side');
+      if (existingSide) { existingSide.style.display = ''; }
+      else {
+        var side = document.createElement('div'); side.className = 'rank-side';
+        var b = document.createElement('div'); b.className = 'rank-badge';
+        var h = document.createElement('div'); h.className = 'drag-handle'; h.textContent = '⠿';
+        side.appendChild(b); side.appendChild(h);
+        card.insertBefore(side, card.firstChild);
+      }
       // Show or create rank-dropdown-wrap
       var existingWrap = card.querySelector('.rank-dropdown-wrap');
       if (existingWrap) {
@@ -2357,7 +2366,7 @@ function syncBadge(sel) {
       }
     } else {
       card.removeAttribute('draggable');
-      ['rank-badge','drag-handle','rank-dropdown-wrap'].forEach(cls => {
+      ['rank-side','rank-dropdown-wrap'].forEach(cls => {
         const el = card.querySelector('.' + cls);
         if (el) el.style.display = 'none';
       });
