@@ -37,6 +37,14 @@ const DELIVERABLE_FIELDS = [
   'fldlhbnzU71XhvOPN', // Script Due (formula)
   'fldt7DyDbsVthLa4U', // Draft Due (date)
   'fldJH1c8IzvodKKoo', // Shoot Date (formula)
+  'fldghQrxYo9LRooqt', // Concept (multilineText)
+  'fldVukxDJTU0q3zrZ', // Script Approval (checkbox)
+  'fldMlhJRn66OhYPIB', // Cut Approval (checkbox)
+  'fldnhpz9O6tMtn7Nh', // Draft URL (url)
+  'fldVrO3bQoqS3qqBv', // Second Draft URL (url)
+  'fldOoolITOXf9NVS8', // Third Draft URL (url)
+  'fldnoNsaSQ4wJOX7L', // Pinned Comment (richText — brand notes)
+  'fldUdrMJAhL1Zey7q', // Duration (number in seconds)
 ];
 
 // Offers table — accessed by field ID (returnFieldsByFieldId=true)
@@ -225,10 +233,18 @@ module.exports = async function handler(req, res) {
           likes:        f['fld3BhTWQ1IdTe6um'] ?? null,
           comments:     f['fldTm8YrIhRvRCQUr'] ?? null,
           shares:       f['fldqqQzTtUl6k5crI'] ?? null,
-          hasThumbnail: !!(f['flds3ZtOYpN6eTur5'] && f['flds3ZtOYpN6eTur5'].length > 0),
-          scriptDue:    f['fldlhbnzU71XhvOPN'] || null,
-          draftDue:     f['fldt7DyDbsVthLa4U'] || null,
-          shootDate:    f['fldJH1c8IzvodKKoo'] || null,
+          hasThumbnail:   !!(f['flds3ZtOYpN6eTur5'] && f['flds3ZtOYpN6eTur5'].length > 0),
+          scriptDue:      f['fldlhbnzU71XhvOPN'] || null,
+          draftDue:       f['fldt7DyDbsVthLa4U'] || null,
+          shootDate:      f['fldJH1c8IzvodKKoo'] || null,
+          concept:        f['fldghQrxYo9LRooqt'] || null,
+          scriptApproval: f['fldVukxDJTU0q3zrZ'] || false,
+          cutApproval:    f['fldMlhJRn66OhYPIB'] || false,
+          draft:          f['fldnhpz9O6tMtn7Nh'] || null,
+          draft2:         f['fldVrO3bQoqS3qqBv'] || null,
+          draft3:         f['fldOoolITOXf9NVS8'] || null,
+          pinnedComment:  f['fldnoNsaSQ4wJOX7L'] || null,
+          duration:       f['fldUdrMJAhL1Zey7q'] || null,
         };
       })
       .filter(d => {
