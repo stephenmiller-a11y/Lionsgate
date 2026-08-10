@@ -230,6 +230,10 @@ module.exports = async function handler(req, res) {
           shootDate:    f['fldJH1c8IzvodKKoo'] || null,
         };
       })
+      .filter(d => {
+        const t = (d.type || '').toLowerCase();
+        return !t.includes('paid media') && !t.includes('talent video creation');
+      })
       .sort((a, b) => a.code.localeCompare(b.code));
 
     // 5. Shape offers — fields keyed by field ID
