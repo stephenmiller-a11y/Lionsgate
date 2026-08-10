@@ -37,16 +37,22 @@ const DELIVERABLE_FIELDS = [
   'fldlhbnzU71XhvOPN', // Script Due (formula)
   'fldt7DyDbsVthLa4U', // Draft Due (date)
   'fldJH1c8IzvodKKoo', // Shoot Date (formula)
-  'fldghQrxYo9LRooqt', // Concept (multilineText)
+  'fldghQrxYo9LRooqt', // Concept v1 (multilineText)
+  'fldYQKlWzucq2dQmW', // Concept v2 (richText)
   'fldVukxDJTU0q3zrZ', // Script Approval (checkbox)
   'fldMlhJRn66OhYPIB', // Cut Approval (checkbox)
   'fldnhpz9O6tMtn7Nh', // Draft URL (url)
   'fldVrO3bQoqS3qqBv', // Second Draft URL (url)
   'fldOoolITOXf9NVS8', // Third Draft URL (url)
-  'fldsMs0SjgU1UU8KI', // Concept Notes (richText)
-  'fldq0TUAznUzNHZIq', // Draft V1 Notes (richText)
-  'fldlp5I9siz7M2tR2', // Draft V2 Notes (richText)
-  'fld2ANvIsNG7G9c1g', // Draft V3 Notes (richText)
+  'fldsMs0SjgU1UU8KI', // Concept v1 Notes (richText)
+  'fld1SrHxcP1VjJp9S', // Concept v2 Notes (richText)
+  'fldq0TUAznUzNHZIq', // Draft v1 Notes (richText)
+  'fldlp5I9siz7M2tR2', // Draft v2 Notes (richText)
+  'fld2ANvIsNG7G9c1g', // Draft v3 Notes (richText)
+  'flds7xbf1uu49Bp2V', // Draft v4 Notes (richText)
+  'fld06Yhzmk3dn8gdN', // Draft v5 Notes (richText)
+  'fldAJ64smous4Sum4', // Fourth Draft (url)
+  'fldKXUXRkHwkATQmc', // Fifth Draft (url)
   'fldUdrMJAhL1Zey7q', // Duration (number in seconds)
 ];
 
@@ -241,15 +247,21 @@ module.exports = async function handler(req, res) {
           draftDue:       f['fldt7DyDbsVthLa4U'] || null,
           shootDate:      f['fldJH1c8IzvodKKoo'] || null,
           concept:        f['fldghQrxYo9LRooqt'] || null,
+          conceptV2:      f['fldYQKlWzucq2dQmW'] || null,
           scriptApproval: f['fldVukxDJTU0q3zrZ'] || false,
           cutApproval:    f['fldMlhJRn66OhYPIB'] || false,
           draft:          f['fldnhpz9O6tMtn7Nh'] || null,
           draft2:         f['fldVrO3bQoqS3qqBv'] || null,
           draft3:         f['fldOoolITOXf9NVS8'] || null,
-          conceptNotes:   f['fldsMs0SjgU1UU8KI'] || null,
+          conceptNotes:   f['fldsMs0SjgU1UU8KI'] || null,  // v1 notes
+          conceptV2Notes: f['fld1SrHxcP1VjJp9S'] || null,  // v2 notes
           draftV1Notes:   f['fldq0TUAznUzNHZIq'] || null,
           draftV2Notes:   f['fldlp5I9siz7M2tR2'] || null,
           draftV3Notes:   f['fld2ANvIsNG7G9c1g'] || null,
+          draftV4Notes:   f['flds7xbf1uu49Bp2V'] || null,
+          draftV5Notes:   f['fld06Yhzmk3dn8gdN'] || null,
+          draft4:         f['fldAJ64smous4Sum4'] || null,
+          draft5:         f['fldKXUXRkHwkATQmc'] || null,
           duration:       f['fldUdrMJAhL1Zey7q'] || null,
         };
       })
