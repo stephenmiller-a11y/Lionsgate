@@ -381,9 +381,10 @@
     .talent-offer-name { font-size: 18px; font-weight: 700; color: #1a1a1a; }
     .talent-offer-bio { font-size: 13px; color: #555; line-height: 1.6; display: flex; align-items: baseline; gap: 0; min-width: 0; overflow: hidden; }
     .talent-offer-bio-text { white-space: nowrap; overflow: hidden; text-overflow: clip; min-width: 0; flex: 1; }
-    .talent-offer-bio-more { flex-shrink: 0; font-size: 12px; font-weight: 700; color: #7b2d8b; cursor: pointer; white-space: nowrap; padding-left: 2px; user-select: none; }
-    #bio-tooltip { position: fixed; z-index: 9001; background: #1c1c1e; color: #fff; border-radius: 10px; padding: 10px 14px; font-size: 12px; line-height: 1.55; width: 300px; white-space: normal; box-shadow: 0 8px 24px rgba(0,0,0,0.25); pointer-events: none; opacity: 0; transition: opacity 0.12s ease; }
-    #bio-tooltip.visible { opacity: 1; }
+    .talent-offer-bio-more { flex-shrink: 0; font-size: 12px; font-weight: 700; color: #7b2d8b; cursor: pointer; white-space: nowrap; padding-left: 4px; user-select: none; }
+    .talent-offer-bio.expanded { overflow: visible; flex-wrap: wrap; align-items: flex-start; }
+    .talent-offer-bio.expanded .talent-offer-bio-text { white-space: normal; overflow: visible; flex-basis: 100%; }
+    .talent-offer-bio.expanded .talent-offer-bio-more { flex-basis: 100%; padding-left: 0; margin-top: 2px; }
     .follower-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
     .follower-btn {
       display: inline-flex; align-items: center; gap: 6px;
@@ -896,9 +897,6 @@
 
 <!-- ── CALENDAR CHIP TOOLTIP ─────────────────────────────────────────────────── -->
 <div id="cal-tooltip" onmouseenter="clearTimeout(_calTtTimer)" onmouseleave="calChipLeave()"></div>
-
-<!-- ── BIO TOOLTIP ───────────────────────────────────────────────────────────── -->
-<div id="bio-tooltip"></div>
 
 <!-- ── DONUT TOOLTIP ─────────────────────────────────────────────────────────── -->
 <div class="donut-tip" id="del-donut-tip">
@@ -1486,7 +1484,7 @@ function buildOfferCard(offer, section) {
   const bio = offer.biography
     ? `<div class="talent-offer-bio">
         <span class="talent-offer-bio-text">${offer.biography}</span>
-        <span class="talent-offer-bio-more" data-bio="${offer.biography.replace(/"/g,'&quot;')}" onclick="bioTtToggle(event,this)">…MORE</span>
+        <span class="talent-offer-bio-more" onclick="bioToggle(this)">…MORE</span>
        </div>`
     : '';
 
@@ -1935,38 +1933,13 @@ function calChipLeave() {
   }, 120);
 }
 
-// ── BIO TOOLTIP ───────────────────────────────────────────────────────────────
+// ── BIO EXPAND/COLLAPSE ───────────────────────────────────────────────────────
 
-var _bioTtOpen = false;
-function bioTtToggle(evt, el) {
-  evt.stopPropagation();
-  var tt = document.getElementById('bio-tooltip');
-  if (!tt) return;
-  if (_bioTtOpen && tt.classList.contains('visible')) {
-    tt.classList.remove('visible');
-    _bioTtOpen = false;
-    return;
-  }
-  tt.textContent = el.dataset.bio || '';
-  tt.classList.add('visible');
-  _bioTtOpen = true;
-  // Position above/below the clicked element
-  var rect = el.getBoundingClientRect();
-  var tw = 300;
-  var th = tt.offsetHeight || 90;
-  var left = rect.left;
-  var top  = rect.top - th - 8;
-  if (left + tw > window.innerWidth - 8) left = window.innerWidth - tw - 8;
-  if (left < 8) left = 8;
-  if (top < 8) top = rect.bottom + 8;
-  tt.style.left = left + 'px';
-  tt.style.top  = top  + 'px';
+function bioToggle(btn) {
+  var bio = btn.parentNode;
+  var expanded = bio.classList.toggle('expanded');
+  btn.textContent = expanded ? '…LESS' : '…MORE';
 }
-document.addEventListener('click', function() {
-  var tt = document.getElementById('bio-tooltip');
-  if (tt) tt.classList.remove('visible');
-  _bioTtOpen = false;
-});
 
 // ── REPORTING TAB ─────────────────────────────────────────────────────────────
 
