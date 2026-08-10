@@ -1489,7 +1489,6 @@ function buildOfferCard(offer, section) {
     : '';
 
   const social = socialButtons(offer);
-  const us = offer.usAudience || '—';
 
   const savedFeedback = offer.brandFeedback || '';
   const approvalKey = section === 'approved' ? 'approved' : section === 'not-approved' ? 'rejected' : 'pending';
@@ -1508,11 +1507,8 @@ function buildOfferCard(offer, section) {
         ${rankDropdown}
         ${bio}
         <div class="follower-buttons">${social}</div>
-        <div class="talent-offer-meta">
-          <span>🇺🇸 US Audience: <span class="us-pct-label">${us}</span></span>
-        </div>
         <div class="feedback-wrap">
-          <div class="feedback-label">💬 Brand Feedback</div>
+          <div class="feedback-label">💬 Feedback</div>
           <div class="feedback-input" contenteditable="true"
                data-placeholder="Add your feedback here…"
                data-offer="${offer.id}"
@@ -1525,13 +1521,24 @@ function buildOfferCard(offer, section) {
 }
 
 function socialButtons(offer) {
-  let out = '';
-  const fc = n => n != null ? ` (${fmtNum(n)})` : '';
-  if (offer.snapchatUrl)  out += `<a class="follower-btn snap"    href="${offer.snapchatUrl}"  target="_blank">👻 Snapchat${fc(offer.snapchatFollowers)}</a>`;
-  if (offer.instagramUrl) out += `<a class="follower-btn insta"   href="${offer.instagramUrl}" target="_blank">📸 Instagram${fc(offer.instagramFollowers)}</a>`;
-  if (offer.tiktokUrl)    out += `<a class="follower-btn tiktok"  href="${offer.tiktokUrl}"    target="_blank">♪ TikTok${fc(offer.tiktokFollowers)}</a>`;
-  if (offer.youtubeUrl)   out += `<a class="follower-btn youtube" href="${offer.youtubeUrl}"   target="_blank">▶ YouTube${fc(offer.youtubeFollowers)}</a>`;
-  return out;
+  var platforms = [
+    { url: offer.snapchatUrl,  followers: offer.snapchatFollowers,  cls: 'snap',    icon: SVG.snap    },
+    { url: offer.instagramUrl, followers: offer.instagramFollowers, cls: 'insta',   icon: SVG.insta   },
+    { url: offer.tiktokUrl,    followers: offer.tiktokFollowers,    cls: 'tiktok',  icon: SVG.tiktok  },
+    { url: offer.youtubeUrl,   followers: offer.youtubeFollowers,   cls: 'youtube', icon: SVG.youtube },
+  ];
+  return platforms
+    .filter(function(p) { return !!p.url; })
+    .sort(function(a, b) {
+      var fa = a.followers != null ? a.followers : -1;
+      var fb = b.followers != null ? b.followers : -1;
+      return fb - fa;
+    })
+    .map(function(p) {
+      var count = p.followers != null ? ' ' + fmtNum(p.followers) : '';
+      return '<a class="follower-btn ' + p.cls + '" href="' + p.url + '" target="_blank">' + p.icon + count + '</a>';
+    })
+    .join('');
 }
 
 // ── TIMELINE TAB ──────────────────────────────────────────────────────────────
