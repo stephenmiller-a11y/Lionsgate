@@ -2,7 +2,7 @@
 // PATCHes writeable fields on a Deliverable record in Airtable.
 // Used by the Concepts and Drafts tabs for approve and request-changes actions.
 //
-// Expects JSON body: { delivId: "recXXXXXX", fields: { scriptApproval: true, pinnedComment: "..." } }
+// Expects JSON body: { delivId: "recXXXXXX", fields: { scriptApproval: true, conceptNotes: "..." } }
 
 const BASE_ID     = process.env.AIRTABLE_BASE_ID || 'appcKC14Om93O40QC';
 const DELIV_TABLE = 'tblNOrIcXwZ0R78LJ';
@@ -11,7 +11,10 @@ const DELIV_TABLE = 'tblNOrIcXwZ0R78LJ';
 const WRITABLE = {
   scriptApproval: 'fldVukxDJTU0q3zrZ', // checkbox
   cutApproval:    'fldMlhJRn66OhYPIB', // checkbox
-  pinnedComment:  'fldnoNsaSQ4wJOX7L', // richText
+  conceptNotes:   'fldsMs0SjgU1UU8KI', // richText
+  draftV1Notes:   'fldq0TUAznUzNHZIq', // richText
+  draftV2Notes:   'fldlp5I9siz7M2tR2', // richText
+  draftV3Notes:   'fld2ANvIsNG7G9c1g', // richText
 };
 
 module.exports = async function handler(req, res) {
