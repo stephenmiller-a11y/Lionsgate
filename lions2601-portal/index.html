@@ -539,6 +539,82 @@
     }
     .notes-input:focus { border-color: #7b2d8b; box-shadow: 0 0 0 3px rgba(123,45,139,0.12); }
 
+    /* ── CONCEPTS / DRAFTS TABS ──────────────────────────────────────────── */
+    .concepts-main { max-width: 960px; margin: 0 auto; padding: 32px 32px 64px; }
+    .cpt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .cpt-header h2 { font-size: 20px; font-weight: 700; }
+    .cpt-summary { display: flex; background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
+    .sum-cell { flex: 1; padding: 14px 20px; display: flex; flex-direction: column; gap: 2px; }
+    .sum-cell + .sum-cell { border-left: 1px solid #f2f2f2; }
+    .sum-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #999; display: flex; align-items: center; gap: 6px; }
+    .sum-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .sum-value { font-size: 21px; font-weight: 800; }
+    .state-tabs { display: flex; background: #ececef; border-radius: 12px; padding: 4px; gap: 3px; margin-bottom: 20px; }
+    .state-tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 12px; border: none; background: transparent; border-radius: 9px; font-size: 13px; font-weight: 700; color: #777; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+    .state-tab:hover { color: #333; }
+    .state-tab.active { background: #fff; color: #7b2d8b; box-shadow: 0 1px 5px rgba(0,0,0,0.12); }
+    .state-count { font-size: 11px; font-weight: 800; min-width: 20px; height: 20px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; padding: 0 6px; background: #ddd; color: #666; }
+    .state-tab.active .state-count { background: #7b2d8b; color: #fff; }
+    .cpt-card { background: #fff; border-radius: 14px; border: 1px solid #e8e8e8; margin-bottom: 14px; overflow: hidden; transition: border-color 0.2s; }
+    .cpt-card.hidden { display: none; }
+    .cpt-card.cpt-approved { border-color: #b8e6c6; }
+    .cpt-card.cpt-changes  { border-color: #f3dda0; }
+    .cpt-head { padding: 16px 22px 0; display: flex; align-items: center; justify-content: space-between; }
+    .cpt-head-left { display: flex; align-items: center; gap: 13px; }
+    .cpt-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #7b2d8b, #b39ddb); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
+    .cpt-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .cpt-name { font-size: 14.5px; font-weight: 700; }
+    .cpt-sub  { font-size: 12px; color: #999; margin-top: 2px; }
+    .cpt-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 11px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .cpt-pill.pending  { background: #f5eeff; color: #6b2d8b; }
+    .cpt-pill.approved { background: #e8f8ed; color: #1a7a3a; }
+    .cpt-pill.revision { background: #fff8e0; color: #92600a; }
+    .cpt-body { padding: 12px 22px 16px; }
+    .cpt-concept-label { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; flex-wrap: wrap; }
+    .ver-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 7px; font-size: 12.5px; font-weight: 800; letter-spacing: 0.03em; }
+    .ver-1 { background: #e8f1fd; color: #1d5fb8; }
+    .ver-2 { background: #fff3d6; color: #a36a00; }
+    .ver-3 { background: #fdeaf3; color: #c02466; }
+    .ver-date { font-size: 13px; font-weight: 700; color: #555; }
+    .ver-note { font-size: 12px; font-weight: 600; color: #aaa; }
+    .cpt-text { font-size: 13.5px; line-height: 1.6; color: #444; }
+    .cpt-note { margin-top: 12px; background: #fffbea; border: 1px solid #f3e5b3; border-radius: 10px; padding: 11px 14px; font-size: 12.5px; color: #7a5b10; line-height: 1.55; }
+    .cpt-note b { font-weight: 700; }
+    .cpt-actions { padding: 12px 22px 16px; border-top: 1px solid #f4f4f4; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .btn-cpt-approve { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 8px; font-size: 12.5px; font-weight: 700; border: none; cursor: pointer; background: #1a7a3a; color: #fff; transition: background 0.15s; font-family: inherit; }
+    .btn-cpt-approve:hover { background: #156630; }
+    .btn-cpt-changes { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; background: #fff; color: #92600a; border: 1.5px solid #ecd9a0; transition: background 0.15s; font-family: inherit; }
+    .btn-cpt-changes:hover { background: #fff8e0; }
+    .cpt-feedback-wrap { display: none; width: 100%; margin-top: 4px; }
+    .cpt-feedback-open .cpt-feedback-wrap { display: flex; gap: 8px; }
+    .cpt-feedback-input { flex: 1; min-height: 38px; border: 1.5px solid #e0e0e0; border-radius: 9px; padding: 9px 12px; font-size: 13px; font-family: inherit; color: #333; outline: none; resize: vertical; }
+    .cpt-feedback-input:focus { border-color: #7b2d8b; }
+    .btn-cpt-send { align-self: flex-start; padding: 9px 16px; border-radius: 8px; border: none; background: #7b2d8b; color: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .btn-cpt-send:hover { background: #6a2578; }
+    .cpt-empty { text-align: center; color: #bbb; font-size: 13.5px; padding: 48px 0; }
+    .btn-cpt-history { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; padding: 6px 13px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; background: #fff; color: #555; border: 1.5px solid #e0e0e0; transition: all 0.15s; font-family: inherit; }
+    .btn-cpt-history:hover { border-color: #bbb; color: #222; }
+    .btn-cpt-history .chev { transition: transform 0.2s; display: inline-block; font-size: 10px; }
+    .cpt-history-open .btn-cpt-history .chev { transform: rotate(180deg); }
+    .cpt-history-wrap { display: none; border-top: 1px solid #f0f0f0; background: #fafafa; padding: 18px 22px 20px; }
+    .cpt-history-open .cpt-history-wrap { display: block; }
+    .history-title { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #999; margin-bottom: 14px; }
+    .hist-item { position: relative; padding: 0 0 18px 26px; border-left: 2px solid #e4e4e8; margin-left: 6px; }
+    .hist-item:last-child { padding-bottom: 2px; border-left-color: transparent; }
+    .hist-item::before { content: ''; position: absolute; left: -6px; top: 2px; width: 10px; height: 10px; border-radius: 50%; background: #c9c9d0; border: 2px solid #fafafa; }
+    .hist-item.hist-approved::before { background: #34c759; }
+    .hist-head { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; flex-wrap: wrap; }
+    .hist-text { font-size: 13px; line-height: 1.55; color: #555; }
+    .hist-note { margin-top: 8px; background: #fffbea; border: 1px solid #f3e5b3; border-radius: 9px; padding: 9px 12px; font-size: 12px; color: #7a5b10; line-height: 1.5; }
+    .hist-approved-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; color: #1a7a3a; }
+    .watch-bar { display: flex; align-items: center; gap: 14px; margin-top: 12px; padding: 14px 18px; border-radius: 12px; background: linear-gradient(135deg, #f5eeff 0%, #ede2ff 100%); border: 1px solid #e0ccff; text-decoration: none; transition: box-shadow 0.15s, transform 0.15s; }
+    .watch-bar:hover { box-shadow: 0 4px 14px rgba(123,45,139,0.18); transform: translateY(-1px); }
+    .watch-play { width: 40px; height: 40px; border-radius: 50%; background: #7b2d8b; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 3px 10px rgba(123,45,139,0.35); }
+    .watch-play svg { width: 15px; height: 15px; fill: #fff; margin-left: 2px; }
+    .watch-label { font-size: 16.5px; font-weight: 800; color: #6b2d8b; }
+    .watch-duration { margin-left: auto; font-size: 12.5px; font-weight: 700; color: #8a63ab; background: rgba(255,255,255,0.7); padding: 4px 11px; border-radius: 20px; }
+    .tab-count-dot { background: #7b2d8b; color: #fff; font-size: 10.5px; font-weight: 800; min-width: 18px; height: 18px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; padding: 0 5px; margin-left: 4px; }
+
     /* ── REPORTING TAB ───────────────────────────────────────────────────── */
     .reporting-main { max-width: 960px; margin: 0 auto; padding: 32px 32px 64px; }
     .reporting-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
@@ -775,8 +851,8 @@
     <div class="tab" onclick="switchTab('talent',this)">Talent</div>
     <div class="tab" onclick="switchTab('timeline',this)">Timeline</div>
     <div class="tab" onclick="switchTab('calendar',this)">Calendar</div>
-    <div class="tab" onclick="switchTab('concepts',this)">Concepts</div>
-    <div class="tab" onclick="switchTab('approvals',this)">Drafts</div>
+    <div class="tab" onclick="switchTab('concepts',this)">Concepts <span class="tab-count-dot" id="tab-badge-concepts" style="display:none">0</span></div>
+    <div class="tab" onclick="switchTab('approvals',this)">Drafts <span class="tab-count-dot" id="tab-badge-drafts" style="display:none">0</span></div>
     <div class="tab" onclick="switchTab('reporting',this)">Reporting</div>
   </div>
 </div>
@@ -902,16 +978,11 @@
   </div>
 </div>
 
-<!-- ── APPROVALS PANEL ──────────────────────────────────────────────────────── -->
-<div class="tab-panel" id="panel-concepts">
-  <div class="approvals-main" id="concepts-main">
-    <div style="color:#bbb;font-style:italic;padding:40px 0;text-align:center">No concepts added yet.</div>
-  </div>
-</div>
+<!-- ── CONCEPTS PANEL ────────────────────────────────────────────────────────── -->
+<div class="tab-panel" id="panel-concepts"></div>
 
-<div class="tab-panel" id="panel-approvals">
-  <div class="approvals-main" id="approvals-main"></div>
-</div>
+<!-- ── DRAFTS PANEL ──────────────────────────────────────────────────────────── -->
+<div class="tab-panel" id="panel-approvals"></div>
 
 <!-- ── REPORTING PANEL ──────────────────────────────────────────────────────── -->
 <div class="tab-panel" id="panel-reporting">
@@ -1062,7 +1133,8 @@ function renderAll(data) {
   renderTalentTab(offers);
   renderTimeline(campaign, timelines);
   renderCalendar(deliverables);
-  renderApprovals(offers, deliverables);
+  renderConceptsTab(deliverables, offers);
+  renderDraftsTab(deliverables, offers);
   renderReporting(campaign, deliverables);
   // Restore saved states
   restoreFeedback(offers);
@@ -1668,7 +1740,458 @@ function renderTimeline(campaign, timelines) {
   document.getElementById('timeline-wrap').innerHTML = campaignBar + listHtml;
 }
 
-// ── APPROVALS TAB ─────────────────────────────────────────────────────────────
+// ── CONCEPTS TAB ──────────────────────────────────────────────────────────────
+
+var _conceptState = 'pending';
+var _draftState   = 'pending';
+
+function conceptStatusOf(d) {
+  if (d.scriptApproval) return 'approved';
+  if (d.pinnedComment && d.pinnedComment.trim()) return 'revision';
+  return 'pending';
+}
+
+function draftStatusOf(d) {
+  if (d.cutApproval) return 'approved';
+  if (d.pinnedComment && d.pinnedComment.trim()) return 'revision';
+  return 'pending';
+}
+
+function latestDraftUrl(d) {
+  return d.draft3 || d.draft2 || d.draft || null;
+}
+
+function draftVersion(d) {
+  if (d.draft3) return 3;
+  if (d.draft2) return 2;
+  return 1;
+}
+
+function fmtDuration(seconds) {
+  if (!seconds && seconds !== 0) return '';
+  var s = Math.round(Number(seconds));
+  var m = Math.floor(s / 60);
+  var r = s % 60;
+  return m + ':' + (r < 10 ? '0' : '') + r;
+}
+
+function cptAvatarHtml(name, headshotUrl) {
+  if (headshotUrl) return '<img src="' + headshotUrl + '" alt="' + name + '">';
+  return initials(name);
+}
+
+function buildConceptCard(d, headshotUrl, isPanel) {
+  var status = conceptStatusOf(d);
+  var safeid = d.id.replace(/[^a-z0-9]/gi, '');
+  var verNum = 1; // concepts are always V1 in Airtable (one concept field)
+  var verClass = 'ver-' + verNum;
+
+  var cardClass = 'cpt-card' +
+    (status === 'approved' ? ' cpt-approved' : status === 'revision' ? ' cpt-changes' : '') +
+    (status !== _conceptState ? ' hidden' : '');
+
+  var pill = status === 'approved'
+    ? '<span class="cpt-pill approved">✅ Approved</span>'
+    : status === 'revision'
+    ? '<span class="cpt-pill revision">✏️ In Revision</span>'
+    : '<span class="cpt-pill pending" id="cpill-' + safeid + '">⏳ Awaiting Review</span>';
+
+  var noteHtml = '';
+  if ((status === 'revision' || status === 'approved') && d.pinnedComment && d.pinnedComment.trim()) {
+    noteHtml = '<div class="cpt-note"><b>Your notes:</b> ' + d.pinnedComment.trim().replace(/\n/g, '<br>') + '</div>';
+  }
+
+  var actionsHtml;
+  if (status === 'approved') {
+    actionsHtml = '<div class="cpt-actions">' +
+      '<button class="btn-cpt-history" onclick="this.closest(\'.cpt-card\').classList.toggle(\'cpt-history-open\')">🕘 See History <span class="chev">▾</span></button>' +
+      '</div>' +
+      '<div class="cpt-history-wrap">' +
+        '<div class="history-title">Version History</div>' +
+        '<div class="hist-item hist-approved">' +
+          '<div class="hist-head"><span class="ver-badge ver-1">V1</span><span class="hist-approved-tag">✅ Approved</span></div>' +
+          '<div class="hist-text">' + (d.concept || '').replace(/\n/g, '<br>') + '</div>' +
+        '</div>' +
+      '</div>';
+  } else {
+    actionsHtml = '<div class="cpt-actions" id="cact-' + safeid + '">' +
+      '<button class="btn-cpt-approve" onclick="conceptApprove(\'' + d.id + '\',\'' + safeid + '\')">✓ Approve</button>' +
+      '<button class="btn-cpt-changes" onclick="conceptOpenFeedback(\'' + safeid + '\')">✎ Request Changes</button>' +
+      '<div class="cpt-feedback-wrap">' +
+        '<textarea class="cpt-feedback-input" id="cfb-' + safeid + '" placeholder="Add your notes…"></textarea>' +
+        '<button class="btn-cpt-send" onclick="conceptSendFeedback(\'' + d.id + '\',\'' + safeid + '\')">Send</button>' +
+      '</div>' +
+      '</div>';
+  }
+
+  return '<div class="' + cardClass + '" data-cstate="' + status + '" data-deliv-id="' + d.id + '">' +
+    '<div class="cpt-head">' +
+      '<div class="cpt-head-left">' +
+        '<div class="cpt-avatar">' + cptAvatarHtml(d.talent, headshotUrl) + '</div>' +
+        '<div><div class="cpt-name">' + d.talent + '</div><div class="cpt-sub">' + d.type + '</div></div>' +
+      '</div>' +
+      pill +
+    '</div>' +
+    '<div class="cpt-body">' +
+      '<div class="cpt-concept-label"><span class="ver-badge ' + verClass + '">V' + verNum + '</span></div>' +
+      '<div class="cpt-text">' + (d.concept || '').replace(/\n/g, '<br>') + '</div>' +
+      noteHtml +
+    '</div>' +
+    actionsHtml +
+  '</div>';
+}
+
+function buildDraftCard(d, headshotUrl) {
+  var status = draftStatusOf(d);
+  var safeid = d.id.replace(/[^a-z0-9]/gi, '');
+  var ver    = draftVersion(d);
+  var url    = latestDraftUrl(d);
+  var dur    = fmtDuration(d.duration);
+
+  var cardClass = 'cpt-card' +
+    (status === 'approved' ? ' cpt-approved' : status === 'revision' ? ' cpt-changes' : '') +
+    (status !== _draftState ? ' hidden' : '');
+
+  var pill = status === 'approved'
+    ? '<span class="cpt-pill approved">✅ Approved</span>'
+    : status === 'revision'
+    ? '<span class="cpt-pill revision">✏️ In Revision</span>'
+    : '<span class="cpt-pill pending">⏳ Awaiting Review</span>';
+
+  var verNote = (status === 'revision') ? ' <span class="ver-note">V' + (ver + 1) + ' in progress</span>' : '';
+
+  var watchBar = url
+    ? '<a class="watch-bar" href="' + url + '" target="_blank">' +
+        '<span class="watch-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>' +
+        '<span><span class="watch-label">Watch Draft</span></span>' +
+        (dur ? '<span class="watch-duration">' + dur + '</span>' : '') +
+      '</a>'
+    : '';
+
+  var noteHtml = '';
+  if ((status === 'revision') && d.pinnedComment && d.pinnedComment.trim()) {
+    noteHtml = '<div class="cpt-note"><b>Your notes:</b> ' + d.pinnedComment.trim().replace(/\n/g, '<br>') + '</div>';
+  }
+
+  // Build version history for approved drafts
+  var histHtml = '';
+  if (status === 'approved') {
+    var histItems = '';
+    // V1 entry
+    if (d.draft) {
+      var v1Approved = !d.draft2 && !d.draft3; // V1 was the approved one
+      histItems += '<div class="hist-item' + (v1Approved ? ' hist-approved' : '') + '">' +
+        '<div class="hist-head"><span class="ver-badge ver-1">V1</span>' +
+        (v1Approved ? '<span class="hist-approved-tag">✅ Approved</span>' : '') +
+        '</div>' +
+        '<a class="watch-bar" style="margin-top:6px" href="' + d.draft + '" target="_blank">' +
+          '<span class="watch-play" style="width:28px;height:28px"><svg viewBox="0 0 24 24" style="width:10px;height:10px"><path d="M8 5v14l11-7z"/></svg></span>' +
+          '<span class="watch-label" style="font-size:13px">Watch V1</span>' +
+        '</a>' +
+        (d.draft2 && d.pinnedComment ? '<div class="hist-note"><b>Your notes:</b> ' + d.pinnedComment.trim() + '</div>' : '') +
+      '</div>';
+    }
+    if (d.draft2) {
+      var v2Approved = !d.draft3;
+      histItems += '<div class="hist-item' + (v2Approved ? ' hist-approved' : '') + '">' +
+        '<div class="hist-head"><span class="ver-badge ver-2">V2</span>' +
+        (v2Approved ? '<span class="hist-approved-tag">✅ Approved</span>' : '') +
+        '</div>' +
+        '<a class="watch-bar" style="margin-top:6px" href="' + d.draft2 + '" target="_blank">' +
+          '<span class="watch-play" style="width:28px;height:28px"><svg viewBox="0 0 24 24" style="width:10px;height:10px"><path d="M8 5v14l11-7z"/></svg></span>' +
+          '<span class="watch-label" style="font-size:13px">Watch V2</span>' +
+        '</a>' +
+      '</div>';
+    }
+    if (d.draft3) {
+      histItems += '<div class="hist-item hist-approved">' +
+        '<div class="hist-head"><span class="ver-badge ver-3">V3</span>' +
+        '<span class="hist-approved-tag">✅ Approved</span>' +
+        '</div>' +
+        '<a class="watch-bar" style="margin-top:6px" href="' + d.draft3 + '" target="_blank">' +
+          '<span class="watch-play" style="width:28px;height:28px"><svg viewBox="0 0 24 24" style="width:10px;height:10px"><path d="M8 5v14l11-7z"/></svg></span>' +
+          '<span class="watch-label" style="font-size:13px">Watch V3</span>' +
+        '</a>' +
+      '</div>';
+    }
+    histHtml = '<div class="cpt-history-wrap"><div class="history-title">Version History</div>' + histItems + '</div>';
+  }
+
+  var actionsHtml;
+  if (status === 'approved') {
+    actionsHtml = '<div class="cpt-actions">' +
+      '<button class="btn-cpt-history" onclick="this.closest(\'.cpt-card\').classList.toggle(\'cpt-history-open\')">🕘 See History <span class="chev">▾</span></button>' +
+      '</div>' + histHtml;
+  } else {
+    actionsHtml = '<div class="cpt-actions" id="dact-' + safeid + '">' +
+      '<button class="btn-cpt-approve" onclick="draftApprove(\'' + d.id + '\',\'' + safeid + '\')">✓ Approve</button>' +
+      '<button class="btn-cpt-changes" onclick="draftOpenFeedback(\'' + safeid + '\')">✎ Request Changes</button>' +
+      '<div class="cpt-feedback-wrap">' +
+        '<textarea class="cpt-feedback-input" id="dfb-' + safeid + '" placeholder="Add your notes…"></textarea>' +
+        '<button class="btn-cpt-send" onclick="draftSendFeedback(\'' + d.id + '\',\'' + safeid + '\')">Send</button>' +
+      '</div>' +
+      '</div>';
+  }
+
+  return '<div class="' + cardClass + '" data-dstate="' + status + '" data-deliv-id="' + d.id + '">' +
+    '<div class="cpt-head">' +
+      '<div class="cpt-head-left">' +
+        '<div class="cpt-avatar">' + cptAvatarHtml(d.talent, headshotUrl) + '</div>' +
+        '<div><div class="cpt-name">' + d.talent + '</div><div class="cpt-sub">' + d.type + '</div></div>' +
+      '</div>' +
+      pill +
+    '</div>' +
+    '<div class="cpt-body">' +
+      '<div class="cpt-concept-label"><span class="ver-badge ver-' + ver + '">V' + ver + '</span>' + verNote + '</div>' +
+      watchBar +
+      noteHtml +
+    '</div>' +
+    actionsHtml +
+  '</div>';
+}
+
+function renderConceptsTab(deliverables, offers) {
+  var headshotMap = {};
+  (offers || []).forEach(function(o) { if (o.name && o.headshotUrl) headshotMap[o.name] = o.headshotUrl; });
+
+  var concepts = (deliverables || []).filter(function(d) { return d.concept && d.concept.trim(); });
+  var total = (deliverables || []).length;
+
+  var nPending   = concepts.filter(function(d){ return conceptStatusOf(d) === 'pending'; }).length;
+  var nRevision  = concepts.filter(function(d){ return conceptStatusOf(d) === 'revision'; }).length;
+  var nApproved  = concepts.filter(function(d){ return conceptStatusOf(d) === 'approved'; }).length;
+  var nRemaining = Math.max(0, total - concepts.length);
+
+  _conceptState = 'pending';
+
+  var summaryHtml = '<div class="cpt-summary">' +
+    '<div class="sum-cell"><div class="sum-label"><span class="sum-dot" style="background:#7b2d8b;"></span>Pending</div><div class="sum-value" style="color:#7b2d8b;">' + nPending + '</div></div>' +
+    '<div class="sum-cell"><div class="sum-label"><span class="sum-dot" style="background:#e8a80c;"></span>In Revision</div><div class="sum-value" style="color:#a36a00;">' + nRevision + '</div></div>' +
+    '<div class="sum-cell"><div class="sum-label"><span class="sum-dot" style="background:#34c759;"></span>Approved</div><div class="sum-value" style="color:#1a7a3a;">' + nApproved + '</div></div>' +
+    '<div class="sum-cell"><div class="sum-label"><span class="sum-dot" style="background:#c0c0c6;"></span>Remaining</div><div class="sum-value" style="color:#8a8a90;">' + nRemaining + '</div></div>' +
+  '</div>';
+
+  var stateTabsHtml = '<div class="state-tabs" id="concept-state-tabs">' +
+    '<button class="state-tab active" onclick="conceptSetState(\'pending\',this)">⏳ Pending <span class="state-count">' + nPending + '</span></button>' +
+    '<button class="state-tab" onclick="conceptSetState(\'revision\',this)">✏️ In Revision <span class="state-count">' + nRevision + '</span></button>' +
+    '<button class="state-tab" onclick="conceptSetState(\'approved\',this)">✅ Approved <span class="state-count">' + nApproved + '</span></button>' +
+  '</div>';
+
+  var cardsHtml = concepts.map(function(d) {
+    return buildConceptCard(d, headshotMap[d.talent] || null);
+  }).join('');
+
+  var isEmpty = (nPending === 0);
+  document.getElementById('panel-concepts').innerHTML =
+    '<div class="concepts-main">' +
+      '<div class="cpt-header"><div><h2>Concepts</h2></div></div>' +
+      summaryHtml + stateTabsHtml +
+      '<div id="concept-cards">' + cardsHtml + '</div>' +
+      '<div class="cpt-empty" id="concept-empty"' + (isEmpty ? '' : ' style="display:none"') + '>No pending concepts yet.</div>' +
+    '</div>';
+
+  // Update tab badge (pending + revision = needs attention)
+  var badge = document.getElementById('tab-badge-concepts');
+  if (badge) {
+    var needsAttention = nPending + nRevision;
+    badge.textContent = needsAttention;
+    badge.style.display = needsAttention > 0 ? '' : 'none';
+  }
+}
+
+function renderDraftsTab(deliverables, offers) {
+  var headshotMap = {};
+  (offers || []).forEach(function(o) { if (o.name && o.headshotUrl) headshotMap[o.name] = o.headshotUrl; });
+
+  var drafts = (deliverables || []).filter(function(d) { return d.draft; });
+  var total  = (deliverables || []).length;
+
+  var nPending   = drafts.filter(function(d){ return draftStatusOf(d) === 'pending'; }).length;
+  var nRevision  = drafts.filter(function(d){ return draftStatusOf(d) === 'revision'; }).length;
+  var nApproved  = drafts.filter(function(d){ return draftStatusOf(d) === 'approved'; }).length;
+  var nRemaining = Math.max(0, total - drafts.length);
+
+  _draftState = 'pending';
+
+  var summaryHtml = '<div class="cpt-summary">' +
+    '<div class="sum-cell"><div class="sum-label"><span class="sum-dot" style="background:#7b2d8b;"></span>Pending</div><div class="sum-value" style="color:#7b2d8b;">' + nPending + '</div></div>' +
+    '<div class="sum-cell"><div class="sum-label"><span class="sum-dot" style="background:#e8a80c;"></span>In Revision</div><div class="sum-value" style="color:#a36a00;">' + nRevision + '</div></div>' +
+    '<div class="sum-cell"><div class="sum-label"><span class="sum-dot" style="background:#34c759;"></span>Approved</div><div class="sum-value" style="color:#1a7a3a;">' + nApproved + '</div></div>' +
+    '<div class="sum-cell"><div class="sum-label"><span class="sum-dot" style="background:#c0c0c6;"></span>Remaining</div><div class="sum-value" style="color:#8a8a90;">' + nRemaining + '</div></div>' +
+  '</div>';
+
+  var stateTabsHtml = '<div class="state-tabs" id="draft-state-tabs">' +
+    '<button class="state-tab active" onclick="draftSetState(\'pending\',this)">⏳ Pending <span class="state-count">' + nPending + '</span></button>' +
+    '<button class="state-tab" onclick="draftSetState(\'revision\',this)">✏️ In Revision <span class="state-count">' + nRevision + '</span></button>' +
+    '<button class="state-tab" onclick="draftSetState(\'approved\',this)">✅ Approved <span class="state-count">' + nApproved + '</span></button>' +
+  '</div>';
+
+  var cardsHtml = drafts.map(function(d) {
+    return buildDraftCard(d, headshotMap[d.talent] || null);
+  }).join('');
+
+  var isEmpty = (nPending === 0);
+  document.getElementById('panel-approvals').innerHTML =
+    '<div class="concepts-main">' +
+      '<div class="cpt-header"><div><h2>Drafts</h2></div></div>' +
+      summaryHtml + stateTabsHtml +
+      '<div id="draft-cards">' + cardsHtml + '</div>' +
+      '<div class="cpt-empty" id="draft-empty"' + (isEmpty ? '' : ' style="display:none"') + '>No pending drafts yet.</div>' +
+    '</div>';
+
+  var badge = document.getElementById('tab-badge-drafts');
+  if (badge) {
+    var needsAttention = nPending + nRevision;
+    badge.textContent = needsAttention;
+    badge.style.display = needsAttention > 0 ? '' : 'none';
+  }
+}
+
+// ── CONCEPT ACTIONS ───────────────────────────────────────────────────────────
+
+function conceptSetState(state, btn) {
+  _conceptState = state;
+  var tabs = document.querySelectorAll('#concept-state-tabs .state-tab');
+  tabs.forEach(function(b) { b.classList.toggle('active', b === btn); });
+  var visible = 0;
+  document.querySelectorAll('#concept-cards .cpt-card').forEach(function(card) {
+    var hidden = card.dataset.cstate !== state;
+    card.classList.toggle('hidden', hidden);
+    if (!hidden) visible++;
+  });
+  var empty = document.getElementById('concept-empty');
+  if (empty) empty.style.display = visible === 0 ? '' : 'none';
+}
+
+function conceptOpenFeedback(safeid) {
+  var actions = document.getElementById('cact-' + safeid);
+  if (actions) actions.classList.toggle('cpt-feedback-open');
+}
+
+function conceptApprove(delivId, safeid) {
+  var card = document.querySelector('#panel-concepts [data-deliv-id="' + delivId + '"]');
+  if (!card) return;
+  // Update DOM
+  card.dataset.cstate = 'approved';
+  card.classList.remove('cpt-changes');
+  card.classList.add('cpt-approved');
+  var pill = card.querySelector('.cpt-pill');
+  if (pill) { pill.className = 'cpt-pill approved'; pill.textContent = '✅ Approved'; }
+  // Collapse feedback if open
+  var actions = document.getElementById('cact-' + safeid);
+  if (actions) actions.classList.remove('cpt-feedback-open');
+  // Re-filter
+  var activeTab = document.querySelector('#concept-state-tabs .state-tab.active');
+  if (activeTab) conceptSetState(_conceptState, activeTab);
+  // Write to Airtable
+  fetch('/api/deliverable-update', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ delivId: delivId, fields: { scriptApproval: true } }),
+  }).catch(function(e){ console.error('[conceptApprove]', e); });
+}
+
+function conceptSendFeedback(delivId, safeid) {
+  var textarea = document.getElementById('cfb-' + safeid);
+  if (!textarea) return;
+  var text = textarea.value.trim();
+  if (!text) return;
+  var card = document.querySelector('#panel-concepts [data-deliv-id="' + delivId + '"]');
+  if (card) {
+    card.dataset.cstate = 'revision';
+    card.classList.add('cpt-changes');
+    var pill = card.querySelector('.cpt-pill');
+    if (pill) { pill.className = 'cpt-pill revision'; pill.textContent = '✏️ In Revision'; }
+    var body = card.querySelector('.cpt-body');
+    if (body) {
+      var ex = body.querySelector('.cpt-note');
+      if (ex) ex.remove();
+      var nd = document.createElement('div');
+      nd.className = 'cpt-note';
+      nd.innerHTML = '<b>Your notes:</b> ' + text.replace(/\n/g, '<br>');
+      body.appendChild(nd);
+    }
+    var actions = document.getElementById('cact-' + safeid);
+    if (actions) actions.classList.remove('cpt-feedback-open');
+    var activeTab = document.querySelector('#concept-state-tabs .state-tab.active');
+    if (activeTab) conceptSetState(_conceptState, activeTab);
+  }
+  fetch('/api/deliverable-update', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ delivId: delivId, fields: { pinnedComment: text } }),
+  }).catch(function(e){ console.error('[conceptSendFeedback]', e); });
+}
+
+// ── DRAFT ACTIONS ─────────────────────────────────────────────────────────────
+
+function draftSetState(state, btn) {
+  _draftState = state;
+  var tabs = document.querySelectorAll('#draft-state-tabs .state-tab');
+  tabs.forEach(function(b) { b.classList.toggle('active', b === btn); });
+  var visible = 0;
+  document.querySelectorAll('#draft-cards .cpt-card').forEach(function(card) {
+    var hidden = card.dataset.dstate !== state;
+    card.classList.toggle('hidden', hidden);
+    if (!hidden) visible++;
+  });
+  var empty = document.getElementById('draft-empty');
+  if (empty) empty.style.display = visible === 0 ? '' : 'none';
+}
+
+function draftOpenFeedback(safeid) {
+  var actions = document.getElementById('dact-' + safeid);
+  if (actions) actions.classList.toggle('cpt-feedback-open');
+}
+
+function draftApprove(delivId, safeid) {
+  var card = document.querySelector('#panel-approvals [data-deliv-id="' + delivId + '"]');
+  if (!card) return;
+  card.dataset.dstate = 'approved';
+  card.classList.remove('cpt-changes');
+  card.classList.add('cpt-approved');
+  var pill = card.querySelector('.cpt-pill');
+  if (pill) { pill.className = 'cpt-pill approved'; pill.textContent = '✅ Approved'; }
+  var actions = document.getElementById('dact-' + safeid);
+  if (actions) actions.classList.remove('cpt-feedback-open');
+  var activeTab = document.querySelector('#draft-state-tabs .state-tab.active');
+  if (activeTab) draftSetState(_draftState, activeTab);
+  fetch('/api/deliverable-update', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ delivId: delivId, fields: { cutApproval: true } }),
+  }).catch(function(e){ console.error('[draftApprove]', e); });
+}
+
+function draftSendFeedback(delivId, safeid) {
+  var textarea = document.getElementById('dfb-' + safeid);
+  if (!textarea) return;
+  var text = textarea.value.trim();
+  if (!text) return;
+  var card = document.querySelector('#panel-approvals [data-deliv-id="' + delivId + '"]');
+  if (card) {
+    card.dataset.dstate = 'revision';
+    card.classList.add('cpt-changes');
+    var pill = card.querySelector('.cpt-pill');
+    if (pill) { pill.className = 'cpt-pill revision'; pill.textContent = '✏️ In Revision'; }
+    var body = card.querySelector('.cpt-body');
+    if (body) {
+      var ex = body.querySelector('.cpt-note');
+      if (ex) ex.remove();
+      var nd = document.createElement('div');
+      nd.className = 'cpt-note';
+      nd.innerHTML = '<b>Your notes:</b> ' + text.replace(/\n/g, '<br>');
+      body.appendChild(nd);
+    }
+    var actions = document.getElementById('dact-' + safeid);
+    if (actions) actions.classList.remove('cpt-feedback-open');
+    var activeTab = document.querySelector('#draft-state-tabs .state-tab.active');
+    if (activeTab) draftSetState(_draftState, activeTab);
+  }
+  fetch('/api/deliverable-update', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ delivId: delivId, fields: { pinnedComment: text } }),
+  }).catch(function(e){ console.error('[draftSendFeedback]', e); });
+}
+
+// ── APPROVALS TAB (legacy — kept for reference) ───────────────────────────────
 function renderApprovals(offers, deliverables) {
   const accepted = offers.filter(o => offerSection(o) === 'approved');
   const blocks   = accepted.map(offer => {
