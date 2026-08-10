@@ -2444,10 +2444,10 @@ function initDragAndDrop() {
   section.querySelectorAll('.talent-offer-card[draggable]').forEach(function(card) {
     card.addEventListener('dragstart', function(e) { draggedCard = card; card.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
     card.addEventListener('dragend',   function()  { card.classList.remove('dragging'); section.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over')); draggedCard=null; updateRankBadges(); updateRankDropdowns(); saveRanking(); });
-    card.addEventListener('dragover',  function(e) { e.preventDefault(); e.dataTransfer.dropEffect='move'; if (card!==draggedCard&&draggedCard) card.classList.add('drag-over'); });
+    card.addEventListener('dragover',  function(e) { e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect='move'; if (card!==draggedCard&&draggedCard) card.classList.add('drag-over'); });
     card.addEventListener('dragleave', function()  { card.classList.remove('drag-over'); });
     card.addEventListener('drop',      function(e) {
-      e.preventDefault(); card.classList.remove('drag-over');
+      e.preventDefault(); e.stopPropagation(); card.classList.remove('drag-over');
       if (draggedCard && draggedCard!==card) {
         var all = Array.from(section.querySelectorAll('.talent-offer-card'));
         if (all.indexOf(draggedCard) < all.indexOf(card)) section.insertBefore(draggedCard, card.nextSibling);
@@ -2455,6 +2455,14 @@ function initDragAndDrop() {
       }
     });
   });
+  // Allow dropping into the empty space below the last card.
+  // Remove old listeners first (initDragAndDrop is called on every card move).
+  if (section._dndDragover) section.removeEventListener('dragover', section._dndDragover);
+  if (section._dndDrop)     section.removeEventListener('drop',     section._dndDrop);
+  section._dndDragover = function(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; };
+  section._dndDrop     = function(e) { e.preventDefault(); if (draggedCard) { section.appendChild(draggedCard); draggedCard.dispatchEvent(new Event('dragend')); } };
+  section.addEventListener('dragover', section._dndDragover);
+  section.addEventListener('drop',     section._dndDrop);
   updateRankBadges();
   updateRankDropdowns();
   syncAllBadges();
