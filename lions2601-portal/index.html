@@ -1359,13 +1359,12 @@ function renderOverviewTalentGrid(offers) {
       ? `<img class="talent-headshot" src="${offer.headshotUrl}" alt="${offer.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
       : '';
     const fallback = `<div class="talent-headshot-fallback" style="${offer.headshotUrl ? 'display:none' : ''}">${initials(offer.name)}</div>`;
-    const links = socialLinks(offer, 'talent-link');
+    const btns = socialButtons(offer);
     return `<div class="talent-card">
       ${img}${fallback}
       <div class="talent-info">
         <div class="talent-name">${offer.name}</div>
-        <div class="talent-platform">👻 Snapchat Creator</div>
-        <div class="talent-links">${links}</div>
+        <div class="follower-buttons">${btns}</div>
       </div>
     </div>`;
   }).join('');
