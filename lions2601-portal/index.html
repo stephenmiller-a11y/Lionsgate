@@ -1228,6 +1228,7 @@ function showLoading(on) {
 
 // ── GLOBAL STATE ─────────────────────────────────────────────────────────────
 var _deliverables  = []; // cached for updateStats()
+var _offers        = []; // cached for roster updates after approval actions
 var _headshotMap   = {}; // talent name → headshotUrl, built from offers
 var _campaignId    = new URLSearchParams(window.location.search).get('campaign') || '';
 
@@ -1235,6 +1236,7 @@ var _campaignId    = new URLSearchParams(window.location.search).get('campaign')
 function renderAll(data) {
   const { campaign, deliverables, offers, timelines } = data;
   _deliverables = deliverables; // cache for updateStats()
+  _offers       = offers;       // cache for roster updates
   // Build headshot lookup: talent name → headshotUrl
   _headshotMap = {};
   (offers || []).forEach(function(o) { if (o.name && o.headshotUrl) _headshotMap[o.name] = o.headshotUrl; });
@@ -1827,7 +1829,7 @@ function buildOfferCard(offer, section, confirmed) {
     '</div>';
   }
 
-  return '<div class="' + cardCls + '" data-offer-id="' + offer.id + '" data-tstate="' + tstate + '" data-rank="' + (offer.brandRanking||99) + '">' +
+  return '<div class="' + cardCls + '" data-offer-id="' + offer.id + '" data-tstate="' + tstate + '" data-rank="' + (offer.brandRanking||99) + '" data-talent-status="' + (offer.status||'').toLowerCase() + '">' +
     '<div class="offer-inner">' +
       img + fallback +
       '<div class="offer-body">' +
@@ -1920,6 +1922,14 @@ function confirmTalentRank() {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ offerId: offerId, approval: 'Approved', ranking: rank }),
   }).catch(function(e){ console.error('[confirmTalentRank]', e); });
+
+  // Update cached offer so roster reflects new approval + ranking immediately
+  var cached = _offers.find(function(o){ return o.id === offerId; });
+  if (cached) {
+    cached.brandApproval = '✅ Brand Approved';
+    cached.brandRanking  = rank;
+    renderTalentRoster(_offers);
+  }
 
   refreshTalentCounts();
   setTalentState(_talentState, document.querySelector('.state-tab[data-tstate="' + _talentState + '"]'));
