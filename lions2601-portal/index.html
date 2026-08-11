@@ -1670,6 +1670,22 @@ var _talentSortDir  = 1;
 var _talentState = 'pending'; // current filter tab
 var _talentRankTarget = null; // offer id being ranked
 
+// Re-sort #talent-cards in DOM: approved (by rank) → pending → not-approved
+function sortTalentCardsDom() {
+  var container = document.getElementById('talent-cards');
+  if (!container) return;
+  var stateOrder = { 'approved': 0, 'pending': 1, 'not-approved': 2 };
+  var cards = Array.from(container.querySelectorAll('.offer-card'));
+  cards.sort(function(a, b) {
+    var sa = a.dataset.tstate || 'pending', sb = b.dataset.tstate || 'pending';
+    var groupDiff = (stateOrder[sa] ?? 1) - (stateOrder[sb] ?? 1);
+    if (groupDiff !== 0) return groupDiff;
+    if (sa === 'approved') return (parseInt(a.dataset.rank)||9999) - (parseInt(b.dataset.rank)||9999);
+    return 0;
+  });
+  cards.forEach(function(c) { container.appendChild(c); });
+}
+
 function isConfirmedOffer(offer) {
   // "Confirmed" = brand approved AND the offer status indicates contract signed
   var s = (offer.status || '').toLowerCase();
@@ -1682,11 +1698,13 @@ function renderTalentTab(offers) {
   if (!container) return;
   container.innerHTML = '';
 
-  // Sort approved by brandRanking ascending
+  // Group: approved (by rank) → pending → not-approved
+  var sectionOrder = { 'approved': 0, 'pending': 1, 'not-approved': 2 };
   var sorted = [...offers].sort(function(a, b) {
-    if (offerSection(a) === 'approved' && offerSection(b) === 'approved') {
-      return (a.brandRanking ?? 9999) - (b.brandRanking ?? 9999);
-    }
+    var sa = offerSection(a), sb = offerSection(b);
+    var groupDiff = (sectionOrder[sa] ?? 1) - (sectionOrder[sb] ?? 1);
+    if (groupDiff !== 0) return groupDiff;
+    if (sa === 'approved') return (a.brandRanking ?? 9999) - (b.brandRanking ?? 9999);
     return 0;
   });
 
@@ -1922,6 +1940,9 @@ function confirmTalentRank() {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ offerId: offerId, approval: 'Approved', ranking: rank }),
   }).catch(function(e){ console.error('[confirmTalentRank]', e); });
+
+  // Re-sort cards so approved section stays ranked
+  sortTalentCardsDom();
 
   // Update cached offer so roster reflects new approval + ranking immediately
   var cached = _offers.find(function(o){ return o.id === offerId; });
