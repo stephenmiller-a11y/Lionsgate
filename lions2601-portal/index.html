@@ -421,26 +421,104 @@
     }
     .feedback-input:empty:before { content: attr(data-placeholder); color: #ccc; font-style: italic; pointer-events: none; }
     .feedback-save-hint { font-size: 10px; color: #ccc; margin-top: 4px; text-align: right; }
-    .talent-section { margin-bottom: 44px; }
-    .talent-section-heading {
-      font-size: 12px; font-weight: 800; letter-spacing: 1.4px;
-      text-transform: uppercase; color: #5a5a72;
-      padding-bottom: 12px; border-bottom: 2px solid #e2e2ea; margin-bottom: 24px;
-      cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px;
-    }
-    .talent-section-heading:hover { color: #7b2d8b; }
-    .talent-section-chevron { font-size: 14px; transition: transform 0.2s; display: inline-block; }
-    .talent-section.collapsed .talent-section-chevron { transform: rotate(-90deg); }
-    .talent-section.collapsed .talent-section-body { display: none; }
-    .talent-section-count { font-size: 11px; font-weight: 700; color: #aaa; letter-spacing: 0; text-transform: none; }
-    .talent-section-empty { font-size: 13px; color: #bbb; font-style: italic; padding: 4px 0 8px; }
-    .talent-sort-bar { display: flex; align-items: center; gap: 6px; margin-left: auto; }
-    .talent-sort-label { font-size: 11px; font-weight: 600; color: #aaa; }
-    .sort-btn { background: #f0f0f2; border: 1px solid #e0e0e2; border-radius: 7px; padding: 5px 13px; font-size: 12px; font-weight: 600; color: #555; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 4px; }
-    .sort-btn:hover { background: #ecdff5; border-color: #c9a8d8; color: #7b2d8b; }
-    .sort-btn.active { background: #7b2d8b; border-color: #6a2577; color: #fff; }
-    .drop-sentinel { height: 48px; border-radius: 12px; border: 2px dashed transparent; transition: border-color 0.15s, background 0.15s; margin-bottom: 4px; }
-    .drop-sentinel.drag-over { border-color: #7b2d8b; background: rgba(123,45,139,0.05); }
+    /* ── TALENT TAB (redesign) ───────────────────────────────────────────── */
+    .talent-summary-strip { display: flex; background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+    .sum-cell { flex: 1; padding: 14px 20px; display: flex; flex-direction: column; gap: 2px; }
+    .sum-cell + .sum-cell { border-left: 1px solid #f2f2f2; }
+    .sum-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #999; display: flex; align-items: center; gap: 6px; }
+    .sum-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .sum-value { font-size: 21px; font-weight: 800; }
+    .talent-section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+    .section-title-sm { font-size: 16px; font-weight: 700; }
+    .slots-label-sm { font-size: 13px; font-weight: 600; color: #999; }
+    .slots-label-sm b { color: #1a7a3a; font-weight: 800; }
+    /* Shelf (shared with overview) */
+    .shelf-wrap { position: relative; margin-bottom: 28px; }
+    .shelf { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; padding: 2px 2px 10px; scrollbar-width: thin; scrollbar-color: #d8d8de transparent; }
+    .shelf::-webkit-scrollbar { height: 6px; }
+    .shelf::-webkit-scrollbar-thumb { background: #d8d8de; border-radius: 6px; }
+    .shelf-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border-radius: 50%; background: #fff; border: 1px solid #e0e0e0; box-shadow: 0 3px 10px rgba(0,0,0,0.12); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 5; font-size: 16px; color: #555; user-select: none; }
+    .shelf-arrow:hover { background: #f7f7f9; }
+    .shelf-arrow.prev { left: -16px; }
+    .shelf-arrow.next { right: -16px; }
+    .roster-card { flex: 0 0 186px; scroll-snap-align: start; background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: 22px 16px 18px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; }
+    .roster-headshot-img { width: 68px; height: 68px; border-radius: 50%; object-fit: cover; background: #f0f0f2; }
+    .roster-headshot { width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg, #7b2d8b, #b39ddb); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 22px; font-weight: 700; }
+    .roster-name { font-size: 14px; font-weight: 700; }
+    .roster-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 10.5px; font-weight: 700; background: #e8f8ed; color: #1a7a3a; }
+    .roster-card.empty { border: 1.5px dashed #d8d8de; background: #fbfbfc; justify-content: center; }
+    .roster-empty-icon { width: 68px; height: 68px; border-radius: 50%; background: #f0f0f2; display: flex; align-items: center; justify-content: center; }
+    .roster-empty-icon svg { width: 30px; height: 30px; stroke: #c2c2c8; }
+    .roster-empty-title { font-size: 13px; font-weight: 700; color: #b5b5bb; }
+    /* State tabs */
+    .talent-state-tabs { display: flex; background: #ececef; border-radius: 12px; padding: 4px; gap: 3px; margin-bottom: 20px; }
+    .state-tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 12px; border: none; background: transparent; border-radius: 9px; font-size: 13px; font-weight: 700; color: #777; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+    .state-tab:hover { color: #333; }
+    .state-tab.active { background: #fff; color: #7b2d8b; box-shadow: 0 1px 5px rgba(0,0,0,0.12); }
+    .state-count { font-size: 11px; font-weight: 800; min-width: 20px; height: 20px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; padding: 0 6px; background: #ddd; color: #666; }
+    .state-tab.active .state-count { background: #7b2d8b; color: #fff; }
+    /* Offer cards */
+    .offer-card { background: #fff; border-radius: 14px; border: 1px solid #e8e8e8; margin-bottom: 14px; overflow: hidden; }
+    .offer-card.hidden { display: none; }
+    .offer-card.approved { border-color: #b8e6c6; }
+    .offer-card.passed   { border-color: #f0c9c9; }
+    .offer-inner { display: flex; gap: 20px; padding: 18px 22px; }
+    .offer-photo { width: 96px; height: 120px; border-radius: 12px; object-fit: cover; background: #f0f0f2; flex-shrink: 0; }
+    .offer-photo-fallback { width: 96px; height: 120px; border-radius: 12px; background: linear-gradient(135deg, #7b2d8b, #b39ddb); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 26px; font-weight: 700; flex-shrink: 0; }
+    .offer-body { flex: 1; min-width: 0; }
+    .offer-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .offer-name { font-size: 15.5px; font-weight: 700; display: flex; align-items: center; gap: 0; flex-wrap: wrap; }
+    .offer-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 11px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .pill-pending  { background: #f5eeff; color: #6b2d8b; }
+    .pill-approved { background: #e8f8ed; color: #1a7a3a; }
+    .pill-passed   { background: #fdeaea; color: #b03030; }
+    .offer-bio { font-size: 13px; line-height: 1.55; color: #555; margin-bottom: 10px; }
+    .follower-chips { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 8px; }
+    .f-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border-radius: 8px; font-size: 11.5px; font-weight: 700; }
+    .f-chip svg { width: 12px; height: 12px; }
+    .f-insta  { background: #fdeaf3; color: #c02466; }
+    .f-tiktok { background: #eef7f8; color: #0f6b76; }
+    .f-youtube { background: #fdeaea; color: #b03030; }
+    .f-snap   { background: #fffbea; color: #8a6f00; }
+    .offer-actions { padding: 12px 22px 16px; border-top: 1px solid #f4f4f4; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .btn-approve { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 8px; font-size: 12.5px; font-weight: 700; border: none; cursor: pointer; background: #1a7a3a; color: #fff; }
+    .btn-approve:hover { background: #156630; }
+    .btn-pass { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; background: #fff; color: #b03030; border: 1.5px solid #eec4c4; }
+    .btn-pass:hover { background: #fdf1f1; }
+    .btn-offer-feedback { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; background: #fff; color: #6b2d8b; border: 1.5px solid #e0ccff; }
+    .btn-offer-feedback:hover { background: #f5eeff; }
+    .offer-feedback-wrap { display: none; width: 100%; margin-top: 4px; }
+    .offer-card.offer-fb-open .offer-feedback-wrap { display: flex; gap: 8px; }
+    .offer-feedback-input { flex: 1; min-height: 38px; border: 1.5px solid #e0e0e0; border-radius: 9px; padding: 9px 12px; font-size: 13px; font-family: inherit; color: #333; outline: none; resize: vertical; }
+    .offer-feedback-input:focus { border-color: #7b2d8b; }
+    .btn-send-offer-feedback { align-self: flex-start; padding: 9px 16px; border-radius: 8px; border: none; background: #7b2d8b; color: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+    .offer-note { margin-top: 10px; background: #fffbea; border: 1px solid #f3e5b3; border-radius: 10px; padding: 10px 14px; font-size: 12.5px; color: #7a5b10; line-height: 1.55; }
+    .offer-note b { font-weight: 700; }
+    .offer-rank-select { appearance: none; -webkit-appearance: none; font-family: inherit; cursor: pointer; margin-left: 10px; padding: 3px 24px 3px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; background-color: #f5eeff; color: #6b2d8b; border: 1.5px solid #e0ccff; outline: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%236b2d8b'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; }
+    .offer-rank-select:hover { background-color: #ede0ff; }
+    .talent-empty-state { text-align: center; color: #bbb; font-size: 13.5px; padding: 48px 0; }
+    /* Rank modal */
+    .rank-modal-overlay { position: fixed; inset: 0; background: rgba(10,10,10,0.45); display: none; align-items: center; justify-content: center; z-index: 500; padding: 24px; }
+    .rank-modal-overlay.open { display: flex; }
+    .rank-modal { background: #fff; border-radius: 16px; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); padding: 26px 28px; }
+    .rank-modal h3 { font-size: 17px; font-weight: 800; margin-bottom: 6px; }
+    .rank-modal p { font-size: 13px; color: #777; line-height: 1.5; margin-bottom: 16px; }
+    .rank-input-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .rank-input-row label { font-size: 13px; font-weight: 700; color: #555; }
+    .rank-modal-input { width: 76px; height: 42px; border: 1.5px solid #ddd; border-radius: 10px; font-size: 18px; font-weight: 800; text-align: center; outline: none; font-family: inherit; }
+    .rank-modal-input:focus { border-color: #7b2d8b; }
+    .rank-list-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #999; margin-bottom: 8px; }
+    .rank-list { border: 1px solid #f0f0f0; border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
+    .rank-row { display: flex; align-items: center; gap: 11px; padding: 9px 14px; border-bottom: 1px solid #f6f6f6; }
+    .rank-row:last-child { border-bottom: none; }
+    .rank-num { width: 24px; height: 24px; border-radius: 50%; background: #f5eeff; color: #6b2d8b; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .rank-row-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #7b2d8b, #b39ddb); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .rank-row-name { font-size: 13px; font-weight: 700; color: #333; }
+    .rank-empty-msg { padding: 14px; font-size: 12.5px; color: #bbb; font-style: italic; }
+    .rank-modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .btn-rank-cancel { padding: 8px 18px; border-radius: 8px; border: 1px solid #e0e0e0; background: #fff; font-size: 13px; font-weight: 700; color: #555; cursor: pointer; }
+    .btn-rank-confirm { padding: 8px 18px; border-radius: 8px; border: none; background: #1a7a3a; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-rank-confirm:hover { background: #156630; }
 
     /* Badge dropdown */
     .badge-select-wrap { position: relative; display: inline-block; }
@@ -920,28 +998,68 @@
 <!-- ── TALENT PANEL ─────────────────────────────────────────────────────────── -->
 <div class="tab-panel" id="panel-talent">
   <div class="talent-main">
-    <div class="talent-section" id="section-approved">
-      <div class="talent-section-heading" onclick="toggleTalentSection('section-approved')">
-        <span class="talent-section-chevron">▾</span> Approved <span class="talent-section-count" id="count-approved"></span>
+
+    <!-- Summary strip -->
+    <div class="talent-summary-strip">
+      <div class="sum-cell">
+        <div class="sum-label"><span class="sum-dot" style="background:#7b2d8b;"></span>Pending</div>
+        <div class="sum-value" id="tsum-pending" style="color:#7b2d8b;">0</div>
       </div>
-      <div class="talent-section-body" id="approved-cards"></div>
+      <div class="sum-cell">
+        <div class="sum-label"><span class="sum-dot" style="background:#e05c5c;"></span>Not Approved</div>
+        <div class="sum-value" id="tsum-passed" style="color:#b03030;">0</div>
+      </div>
+      <div class="sum-cell">
+        <div class="sum-label"><span class="sum-dot" style="background:#34c759;"></span>Approved</div>
+        <div class="sum-value" id="tsum-approved" style="color:#1a7a3a;">0</div>
+      </div>
+      <div class="sum-cell">
+        <div class="sum-label"><span class="sum-dot" style="background:#7b2d8b;"></span>Confirmed</div>
+        <div class="sum-value" id="tsum-confirmed" style="color:#7b2d8b;">0 <span style="font-size:13px;color:#b5b5b8;">/ 0</span></div>
+      </div>
     </div>
-    <div class="talent-section" id="section-pending">
-      <div class="talent-section-heading" onclick="toggleTalentSection('section-pending')">
-        <span class="talent-section-chevron">▾</span> Pending <span class="talent-section-count" id="count-pending"></span>
-        <div class="talent-sort-bar" onclick="event.stopPropagation()">
-          <span class="talent-sort-label">Sort:</span>
-          <button class="sort-btn" id="sort-btn-name"      onclick="talentSort('name')">Name</button>
-          <button class="sort-btn" id="sort-btn-followers" onclick="talentSort('followers')">Followers</button>
-        </div>
-      </div>
-      <div class="talent-section-body" id="pending-cards"></div>
+
+    <!-- Confirmed roster shelf -->
+    <div class="talent-section-head" id="talent-roster-head">
+      <div class="section-title-sm">Confirmed</div>
+      <div class="slots-label-sm" id="talent-slots-label"></div>
     </div>
-    <div class="talent-section collapsed" id="section-not-approved">
-      <div class="talent-section-heading" onclick="toggleTalentSection('section-not-approved')">
-        <span class="talent-section-chevron">▾</span> Not Approved <span class="talent-section-count" id="count-not-approved"></span>
-      </div>
-      <div class="talent-section-body" id="not-approved-cards"></div>
+    <div class="shelf-wrap" id="talent-shelf-wrap">
+      <div class="shelf-arrow prev" onclick="document.getElementById('talent-shelf').scrollBy({left:-400,behavior:'smooth'})">‹</div>
+      <div class="shelf-arrow next" onclick="document.getElementById('talent-shelf').scrollBy({left:400,behavior:'smooth'})">›</div>
+      <div class="shelf" id="talent-shelf"></div>
+    </div>
+
+    <!-- Approvals section -->
+    <div class="talent-section-head">
+      <div class="section-title-sm">Approvals</div>
+    </div>
+    <div class="talent-state-tabs">
+      <button class="state-tab active" data-tstate="pending"      onclick="setTalentState('pending',this)">⏳ Pending <span class="state-count" id="count-pending">0</span></button>
+      <button class="state-tab"        data-tstate="not-approved" onclick="setTalentState('not-approved',this)">🚫 Not Approved <span class="state-count" id="count-not-approved">0</span></button>
+      <button class="state-tab"        data-tstate="approved"     onclick="setTalentState('approved',this)">✅ Approved <span class="state-count" id="count-approved">0</span></button>
+    </div>
+
+    <div id="talent-cards"></div>
+    <div class="talent-empty-state" id="talent-empty" style="display:none;">Nothing here yet.</div>
+
+  </div>
+</div>
+
+<!-- Rank modal -->
+<div class="rank-modal-overlay" id="rank-overlay" onclick="if(event.target===this)closeTalentRankModal()">
+  <div class="rank-modal">
+    <h3 id="rank-modal-title">Rank this creator</h3>
+    <p>Where should they rank among your approved creators? ZATV works down your ranking as slots are contracted.</p>
+    <div class="rank-input-row">
+      <label for="rank-modal-input">Rank</label>
+      <input class="rank-modal-input" id="rank-modal-input" type="number" min="1" value="1">
+    </div>
+    <div class="rank-list-label">Approved · Not Yet Confirmed</div>
+    <div class="rank-list" id="rank-modal-list"></div>
+    <div class="rank-modal-actions">
+      <button class="btn-rank-cancel" onclick="closeTalentRankModal()">Cancel</button>
+      <button class="btn-rank-confirm" onclick="confirmTalentRank()">Approve &amp; Rank</button>
     </div>
   </div>
 </div>
@@ -1143,8 +1261,6 @@ function renderAll(data) {
   // Restore saved states
   restoreFeedback(offers);
   restoreApprovalState();
-  initDragAndDrop();
-  syncAllBadges();
 }
 
 // ── HERO ──────────────────────────────────────────────────────────────────────
@@ -1547,70 +1663,104 @@ var _talentOffers   = [];
 var _talentSortKey  = null;
 var _talentSortDir  = 1;
 
-function renderTalentTab(offers) {
-  _talentOffers = offers; // store for sort
-  const sections = {
-    'approved':     document.getElementById('approved-cards'),
-    'pending':      document.getElementById('pending-cards'),
-    'not-approved': document.getElementById('not-approved-cards'),
-  };
-  Object.values(sections).forEach(el => { el.innerHTML = ''; });
+// ── TALENT TAB ────────────────────────────────────────────────────────────────
 
-  // Sort approved offers by brandRanking so Airtable order is respected on load
-  const sortedOffers = [...offers].sort((a, b) => {
+var _talentState = 'pending'; // current filter tab
+var _talentRankTarget = null; // offer id being ranked
+
+function isConfirmedOffer(offer) {
+  // "Confirmed" = brand approved AND the offer status indicates contract signed
+  var s = (offer.status || '').toLowerCase();
+  return offerSection(offer) === 'approved' &&
+    (s.includes('contract') || s.includes('confirmed') || s.includes('active') || s.includes('signed') || s.includes('booked'));
+}
+
+function renderTalentTab(offers) {
+  var container = document.getElementById('talent-cards');
+  if (!container) return;
+  container.innerHTML = '';
+
+  // Sort approved by brandRanking ascending
+  var sorted = [...offers].sort(function(a, b) {
     if (offerSection(a) === 'approved' && offerSection(b) === 'approved') {
       return (a.brandRanking ?? 9999) - (b.brandRanking ?? 9999);
     }
     return 0;
   });
 
-  sortedOffers.forEach(offer => {
-    const section = offerSection(offer);
-    const card    = buildOfferCard(offer, section);
-    sections[section].insertAdjacentHTML('beforeend', card);
+  sorted.forEach(function(offer) {
+    var sec = offerSection(offer);
+    var confirmed = isConfirmedOffer(offer);
+    container.insertAdjacentHTML('beforeend', buildOfferCard(offer, sec, confirmed));
   });
 
-  // Hide sections that have no cards
-  updateSectionEmptyStates();
+  // Roster shelf
+  renderTalentRoster(offers);
+  // Counts + filter
+  refreshTalentCounts();
+  setTalentState(_talentState, document.querySelector('.state-tab.active'));
 }
 
-function talentSort(key) {
-  // Toggle direction on repeat click; natural default: name=A-Z(1), followers=desc(1→fb-fa)
-  if (_talentSortKey === key) { _talentSortDir *= -1; }
-  else { _talentSortKey = key; _talentSortDir = 1; }
+function renderTalentRoster(offers) {
+  var shelf = document.getElementById('talent-shelf');
+  if (!shelf) return;
+  shelf.innerHTML = '';
+  var approved = offers.filter(function(o) { return offerSection(o) === 'approved'; });
+  var confirmed = approved.filter(isConfirmedOffer);
+  var pending   = approved.length - confirmed.length; // approved but not yet contracted
 
-  // Update button appearance
-  var arrows = { name: ['↑','↓'], followers: ['↓','↑'] }; // natural dir arrows
-  ['name','followers'].forEach(function(k) {
-    var btn = document.getElementById('sort-btn-' + k);
-    if (!btn) return;
-    var isActive = k === key;
-    btn.classList.toggle('active', isActive);
-    var pair = arrows[k];
-    btn.textContent = (k === 'name' ? 'Name' : 'Followers') + (isActive ? ' ' + ((_talentSortDir === 1) ? pair[0] : pair[1]) : '');
+  // Update header
+  var slotsEl = document.getElementById('talent-slots-label');
+  if (slotsEl) slotsEl.innerHTML = '<b>' + confirmed.length + '</b> of ' + offers.length + ' creators confirmed';
+  var summaryEl = document.getElementById('tsum-confirmed');
+  if (summaryEl) summaryEl.innerHTML = confirmed.length + ' <span style="font-size:13px;color:#b5b5b8;">/ ' + offers.length + '</span>';
+
+  // Confirmed cards
+  confirmed.sort(function(a,b){ return (a.brandRanking??9999)-(b.brandRanking??9999); }).forEach(function(offer) {
+    var img = offer.headshotUrl
+      ? '<img class="roster-headshot-img" src="' + offer.headshotUrl + '" alt="' + offer.name + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+      : '';
+    var fallback = '<div class="roster-headshot" style="' + (offer.headshotUrl ? 'display:none' : '') + '">' + initials(offer.name) + '</div>';
+    shelf.insertAdjacentHTML('beforeend',
+      '<div class="roster-card">' + img + fallback +
+      '<div class="roster-name">' + offer.name + '</div>' +
+      '<span class="roster-badge">✓ Confirmed</span></div>');
   });
 
-  // Build lookup map
-  var offerMap = {};
-  _talentOffers.forEach(function(o) { offerMap[o.id] = o; });
-
-  function totalFollowers(o) {
-    return (o.instagramFollowers || 0) + (o.tiktokFollowers || 0) + (o.youtubeFollowers || 0) + (o.snapchatFollowers || 0);
+  // Empty slots for remaining
+  for (var i = 0; i < (offers.length - confirmed.length); i++) {
+    shelf.insertAdjacentHTML('beforeend',
+      '<div class="roster-card empty">' +
+      '<div class="roster-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg></div>' +
+      '<div class="roster-empty-title">Pending</div></div>');
   }
+}
 
-  var container = document.getElementById('pending-cards');
-  if (container) {
-    var cards = Array.from(container.querySelectorAll('.talent-offer-card'));
-    cards.sort(function(a, b) {
-      var oa = offerMap[a.dataset.offerId];
-      var ob = offerMap[b.dataset.offerId];
-      if (!oa || !ob) return 0;
-      if (key === 'name') return _talentSortDir * (oa.name || '').localeCompare(ob.name || '');
-      if (key === 'followers') return _talentSortDir * (totalFollowers(ob) - totalFollowers(oa));
-      return 0;
-    });
-    cards.forEach(function(card) { container.appendChild(card); });
-  }
+function refreshTalentCounts() {
+  var cards = document.querySelectorAll('#talent-cards .offer-card');
+  var c = { pending: 0, approved: 0, 'not-approved': 0 };
+  cards.forEach(function(card) { var s = card.dataset.tstate; if (c[s] !== undefined) c[s]++; });
+  var set = function(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; };
+  set('count-pending', c.pending);
+  set('count-approved', c.approved);
+  set('count-not-approved', c['not-approved']);
+  set('tsum-pending', c.pending);
+  set('tsum-passed', c['not-approved']);
+  set('tsum-approved', c.approved);
+}
+
+function setTalentState(state, btn) {
+  _talentState = state;
+  document.querySelectorAll('.state-tab').forEach(function(t) { t.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  var visible = 0;
+  document.querySelectorAll('#talent-cards .offer-card').forEach(function(card) {
+    var show = card.dataset.tstate === state;
+    card.classList.toggle('hidden', !show);
+    if (show) visible++;
+  });
+  var empty = document.getElementById('talent-empty');
+  if (empty) empty.style.display = visible ? 'none' : 'block';
 }
 
 function approvalClass(offer) {
@@ -1620,61 +1770,216 @@ function approvalClass(offer) {
   return 'pending';
 }
 
-function buildOfferCard(offer, section) {
-  const draggable  = section === 'approved' ? 'draggable="true"' : '';
-  const passed     = section === 'not-approved' ? 'passed' : '';
-  const imgHtml    = offer.headshotUrl
-    ? `<img class="talent-offer-photo" src="${offer.headshotUrl}" alt="${offer.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+function buildOfferCard(offer, section, confirmed) {
+  var safeid   = offer.id.replace(/[^a-z0-9]/gi, '');
+  var passed   = section === 'not-approved';
+  var approved = section === 'approved';
+  var tstate   = passed ? 'not-approved' : approved ? 'approved' : 'pending';
+
+  var cardCls  = 'offer-card' + (approved ? ' approved' : passed ? ' passed' : '');
+  var pill     = approved
+    ? '<span class="offer-pill pill-approved">✅ Approved</span>'
+    : passed
+    ? '<span class="offer-pill pill-passed">🚫 Not Approved</span>'
+    : '<span class="offer-pill pill-pending" id="opill-' + safeid + '">⏳ Awaiting Your Review</span>';
+
+  var img = offer.headshotUrl
+    ? '<img class="offer-photo" src="' + offer.headshotUrl + '" alt="' + offer.name + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
     : '';
-  const fallback   = `<div class="talent-offer-photo-fallback" style="${offer.headshotUrl ? 'display:none' : ''}">${initials(offer.name)}</div>`;
-  const rankSide = section === 'approved'
-    ? '<div class="rank-side"><div class="rank-badge"></div><div class="drag-handle">⠿</div></div>'
+  var fallback = '<div class="offer-photo-fallback" style="' + (offer.headshotUrl ? 'display:none' : '') + '">' + initials(offer.name) + '</div>';
+
+  var bio = offer.biography ? '<div class="offer-bio">' + offer.biography + '</div>' : '';
+
+  // Follower chips
+  var chips = '';
+  if (offer.instagramFollowers != null) chips += '<span class="f-chip f-insta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.4"/></svg>' + fmtNum(offer.instagramFollowers) + '</span>';
+  if (offer.tiktokFollowers   != null) chips += '<span class="f-chip f-tiktok"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>' + fmtNum(offer.tiktokFollowers) + '</span>';
+  if (offer.youtubeFollowers  != null) chips += '<span class="f-chip f-youtube"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 7.8c-.26-1.4-1.06-2.2-2.4-2.46C18.5 5 12 5 12 5s-6.5 0-8.6.34C2.06 5.6 1.26 6.4 1 7.8.66 9.9.66 12 .66 12s0 2.1.34 4.2c.26 1.4 1.06 2.2 2.4 2.46C5.5 19 12 19 12 19s6.5 0 8.6-.34c1.34-.26 2.14-1.06 2.4-2.46.34-2.1.34-4.2.34-4.2s0-2.1-.34-4.2zM9.8 15.3V8.7L15.9 12l-6.1 3.3z"/></svg>' + fmtNum(offer.youtubeFollowers) + '</span>';
+  if (offer.snapchatFollowers != null) chips += '<span class="f-chip f-snap">👻 ' + fmtNum(offer.snapchatFollowers) + '</span>';
+
+  // Rank select for approved
+  var rankOpts = '';
+  if (approved) {
+    for (var i = 1; i <= 10; i++) {
+      rankOpts += '<option value="' + i + '"' + (i === (offer.brandRanking||1) ? ' selected' : '') + '>Ranked ' + i + '</option>';
+    }
+  }
+  var rankSelect = approved
+    ? '<select class="offer-rank-select" onchange="changeTalentRank(this)">' + rankOpts + '</select>'
     : '';
-  const rankDropdown = section === 'approved' ? `<div class="rank-dropdown-wrap"><select class="rank-dropdown" onchange="changeRankByDropdown(this)"></select></div>` : '';
 
-  const badgeCls   = approvalClass(offer);
-  const badgeSel   = ['approved','pending','not-approved'].map(v => {
-    const label = v === 'approved' ? '✓ Approved' : v === 'pending' ? '● Pending' : '✗ Not Approved';
-    return `<option value="${v}" ${badgeCls === v ? 'selected' : ''}>${label}</option>`;
-  }).join('');
-
-  const bio = offer.biography
-    ? `<div class="talent-offer-bio">
-        <span class="talent-offer-bio-text">${offer.biography}</span>
-        <span class="talent-offer-bio-more" onclick="bioToggle(this)">…MORE</span>
-       </div>`
+  // Feedback note (pre-loaded from Airtable)
+  var feedbackNote = offer.brandFeedback
+    ? '<div class="offer-note"><b>Feedback:</b> ' + offer.brandFeedback + '</div>'
     : '';
 
-  const social = socialButtons(offer);
+  // Actions
+  var actionsHtml = '';
+  if (!approved && !passed) {
+    actionsHtml = '<div class="offer-actions" id="oact-' + safeid + '">' +
+      '<button class="btn-approve" onclick="openTalentRankModal(\'' + offer.id + '\')">✓ Approve</button>' +
+      '<button class="btn-pass" onclick="passTalentOffer(\'' + offer.id + '\')">✗ Pass</button>' +
+      '<button class="btn-offer-feedback" onclick="toggleOfferFeedback(\'' + offer.id + '\')">💬 Feedback</button>' +
+      '<div class="offer-feedback-wrap">' +
+        '<textarea class="offer-feedback-input" id="ofb-' + safeid + '" placeholder="Add your feedback..."></textarea>' +
+        '<button class="btn-send-offer-feedback" onclick="sendOfferFeedback(\'' + offer.id + '\')">Send</button>' +
+      '</div>' +
+    '</div>';
+  }
 
-  const savedFeedback = offer.brandFeedback || '';
-  const approvalKey = section === 'approved' ? 'approved' : section === 'not-approved' ? 'rejected' : 'pending';
+  return '<div class="' + cardCls + '" data-offer-id="' + offer.id + '" data-tstate="' + tstate + '" data-rank="' + (offer.brandRanking||99) + '">' +
+    '<div class="offer-inner">' +
+      img + fallback +
+      '<div class="offer-body">' +
+        '<div class="offer-top">' +
+          '<div class="offer-name">' + offer.name + rankSelect + '</div>' +
+          pill +
+        '</div>' +
+        bio +
+        (chips ? '<div class="follower-chips">' + chips + '</div>' : '') +
+        feedbackNote +
+      '</div>' +
+    '</div>' +
+    actionsHtml +
+  '</div>';
+}
 
-  return `<div class="talent-offer-card ${passed}" ${draggable} data-offer-id="${offer.id}" data-approval="${approvalKey}">
-    ${rankSide}
-    <div class="talent-offer-inner">
-      ${imgHtml}${fallback}
-      <div class="talent-offer-body">
-        <div class="talent-offer-top">
-          <div class="talent-offer-name">${offer.name}</div>
-          <div class="badge-select-wrap">
-            <select class="badge-select ${badgeCls}" onchange="syncBadge(this)">${badgeSel}</select>
-          </div>
-        </div>
-        ${rankDropdown}
-        ${bio}
-        <div class="follower-buttons">${social}</div>
-        <div class="feedback-wrap">
-          <div class="feedback-label">💬 Feedback</div>
-          <div class="feedback-input" contenteditable="true"
-               data-placeholder="Add your feedback here…"
-               data-offer="${offer.id}"
-               oninput="markUnsaved(this)">${savedFeedback}</div>
-          <div class="feedback-save-hint" id="hint-${offer.id}">${savedFeedback ? 'Loaded from Airtable' : ''}</div>
-        </div>
-      </div>
-    </div>
-  </div>`;
+// ── TALENT ACTIONS ────────────────────────────────────────────────────────────
+
+function openTalentRankModal(offerId) {
+  _talentRankTarget = offerId;
+  var card = document.querySelector('#talent-cards [data-offer-id="' + offerId + '"]');
+  var name = card ? card.querySelector('.offer-name').childNodes[0].textContent.trim() : offerId;
+  var titleEl = document.getElementById('rank-modal-title');
+  if (titleEl) titleEl.textContent = 'Rank ' + name;
+
+  // List approved-but-not-confirmed
+  var unconfirmed = Array.from(document.querySelectorAll('#talent-cards .offer-card[data-tstate="approved"]'))
+    .map(function(c) { return { name: c.querySelector('.offer-name').childNodes[0].textContent.trim(), rank: parseInt(c.dataset.rank||99) }; })
+    .sort(function(a,b) { return a.rank - b.rank; });
+  var listEl = document.getElementById('rank-modal-list');
+  listEl.innerHTML = unconfirmed.length
+    ? unconfirmed.map(function(x) {
+        return '<div class="rank-row"><span class="rank-num">' + x.rank + '</span>' +
+          '<span class="rank-row-avatar">' + x.name.split(' ').map(function(w){ return w[0]||''; }).join('') + '</span>' +
+          '<span class="rank-row-name">' + x.name + '</span></div>';
+      }).join('')
+    : '<div class="rank-empty-msg">No other approved creators yet.</div>';
+
+  var maxRank = unconfirmed.reduce(function(m,x){ return Math.max(m,x.rank); }, 0);
+  var inp = document.getElementById('rank-modal-input');
+  if (inp) inp.value = maxRank + 1;
+  document.getElementById('rank-overlay').classList.add('open');
+}
+
+function closeTalentRankModal() {
+  document.getElementById('rank-overlay').classList.remove('open');
+  _talentRankTarget = null;
+}
+
+function confirmTalentRank() {
+  var offerId = _talentRankTarget;
+  if (!offerId) return;
+  var rank = Math.max(1, parseInt(document.getElementById('rank-modal-input').value || '1', 10));
+  var safeid = offerId.replace(/[^a-z0-9]/gi, '');
+  var card = document.querySelector('#talent-cards [data-offer-id="' + offerId + '"]');
+  if (!card) return;
+
+  // Update card state
+  card.dataset.tstate = 'approved';
+  card.dataset.rank   = rank;
+  card.classList.add('approved');
+
+  // Replace pill
+  var pillEl = document.getElementById('opill-' + safeid);
+  if (pillEl) pillEl.outerHTML = '<span class="offer-pill pill-approved">✅ Approved</span>';
+
+  // Add rank select to name
+  var nameEl = card.querySelector('.offer-name');
+  if (nameEl && !nameEl.querySelector('.offer-rank-select')) {
+    var sel = document.createElement('select');
+    sel.className = 'offer-rank-select';
+    sel.setAttribute('onchange', 'changeTalentRank(this)');
+    for (var i = 1; i <= 10; i++) {
+      var opt = document.createElement('option');
+      opt.value = i; opt.textContent = 'Ranked ' + i;
+      if (i === rank) opt.selected = true;
+      sel.appendChild(opt);
+    }
+    nameEl.appendChild(sel);
+  }
+
+  // Remove action buttons
+  var actEl = document.getElementById('oact-' + safeid);
+  if (actEl) actEl.remove();
+
+  closeTalentRankModal();
+
+  // Save to Airtable
+  fetch('/api/offer', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ offerId: offerId, approval: 'Approved', ranking: rank }),
+  }).catch(function(e){ console.error('[confirmTalentRank]', e); });
+
+  refreshTalentCounts();
+  setTalentState(_talentState, document.querySelector('.state-tab[data-tstate="' + _talentState + '"]'));
+}
+
+function passTalentOffer(offerId) {
+  var safeid = offerId.replace(/[^a-z0-9]/gi, '');
+  var card = document.querySelector('#talent-cards [data-offer-id="' + offerId + '"]');
+  if (!card) return;
+  card.dataset.tstate = 'not-approved';
+  card.classList.add('passed');
+  var pillEl = document.getElementById('opill-' + safeid);
+  if (pillEl) pillEl.outerHTML = '<span class="offer-pill pill-passed">🚫 Not Approved</span>';
+  var actEl = document.getElementById('oact-' + safeid);
+  if (actEl) actEl.remove();
+
+  fetch('/api/offer', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ offerId: offerId, approval: 'Rejected' }),
+  }).catch(function(e){ console.error('[passTalentOffer]', e); });
+
+  refreshTalentCounts();
+  setTimeout(function(){ setTalentState(_talentState, document.querySelector('.state-tab[data-tstate="' + _talentState + '"]')); }, 400);
+}
+
+function toggleOfferFeedback(offerId) {
+  var card = document.querySelector('#talent-cards [data-offer-id="' + offerId + '"]');
+  if (card) card.classList.toggle('offer-fb-open');
+}
+
+function sendOfferFeedback(offerId) {
+  var safeid = offerId.replace(/[^a-z0-9]/gi, '');
+  var inp = document.getElementById('ofb-' + safeid);
+  if (!inp) return;
+  var val = inp.value.trim();
+  if (!val) { inp.focus(); return; }
+  var card = document.querySelector('#talent-cards [data-offer-id="' + offerId + '"]');
+  if (!card) return;
+  card.classList.remove('offer-fb-open');
+  var body = card.querySelector('.offer-body');
+  if (body) body.insertAdjacentHTML('beforeend', '<div class="offer-note"><b>Feedback:</b> ' + val.replace(/</g,'&lt;') + '</div>');
+  inp.value = '';
+
+  fetch('/api/feedback', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ offerId: offerId, feedback: val }),
+  }).catch(function(e){ console.error('[sendOfferFeedback]', e); });
+}
+
+function changeTalentRank(sel) {
+  var card = sel.closest('.offer-card');
+  if (!card) return;
+  var offerId = card.dataset.offerId;
+  var rank = parseInt(sel.value, 10);
+  card.dataset.rank = rank;
+
+  fetch('/api/offer', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ offerId: offerId, ranking: rank }),
+  }).catch(function(e){ console.error('[changeTalentRank]', e); });
 }
 
 function socialButtons(offer) {
@@ -3013,264 +3318,17 @@ function markUnsaved(el) {
   }, 1000);
 }
 
-// ── BADGE DROPDOWN ────────────────────────────────────────────────────────────
-function syncBadge(sel) {
-  sel.className = 'badge-select ' + sel.value;
-  const card = sel.closest('.talent-offer-card');
-  if (!card) return;
-  const targetMap = {
-    'approved':     'approved-cards',
-    'pending':      'pending-cards',
-    'not-approved': 'not-approved-cards',
-  };
-  const targetContainer = document.getElementById(targetMap[sel.value]);
-  if (!targetContainer) return;
-  if (sel.value === 'not-approved') card.classList.add('passed');
-  else card.classList.remove('passed');
-  card.style.transition = 'opacity 0.25s ease';
-  card.style.opacity = '0';
-  setTimeout(() => {
-    if (sel.value === 'approved') {
-      card.setAttribute('draggable', 'true');
-      // Show or create rank-side (contains rank-badge + drag-handle)
-      var existingSide = card.querySelector('.rank-side');
-      if (existingSide) { existingSide.style.display = ''; }
-      else {
-        var side = document.createElement('div'); side.className = 'rank-side';
-        var b = document.createElement('div'); b.className = 'rank-badge';
-        var h = document.createElement('div'); h.className = 'drag-handle'; h.textContent = '⠿';
-        side.appendChild(b); side.appendChild(h);
-        card.insertBefore(side, card.firstChild);
-      }
-      // Show or create rank-dropdown-wrap
-      var existingWrap = card.querySelector('.rank-dropdown-wrap');
-      if (existingWrap) {
-        existingWrap.style.display = '';
-      } else {
-        const wrap = document.createElement('div'); wrap.className='rank-dropdown-wrap';
-        const dd = document.createElement('select'); dd.className='rank-dropdown'; dd.setAttribute('onchange','changeRankByDropdown(this)');
-        wrap.appendChild(dd);
-        const top = card.querySelector('.talent-offer-top');
-        if (top) top.after(wrap);
-      }
-    } else {
-      card.removeAttribute('draggable');
-      ['rank-side','rank-dropdown-wrap'].forEach(cls => {
-        const el = card.querySelector('.' + cls);
-        if (el) el.style.display = 'none';
-      });
-    }
-    const offerId   = card.dataset.offerId;
-    const newValue  = sel.value;
-    targetContainer.appendChild(card);
-    card.style.opacity = '1';
-    initDragAndDrop(); // may replace card with a clone for drag listeners
-    updateRankDropdowns(); // ensure the newly moved card's rank dropdown is populated
-
-    // Re-find the live card (initDragAndDrop clones approved cards, resetting <select>)
-    const liveCard = offerId
-      ? targetContainer.querySelector(`[data-offer-id="${offerId}"]`)
-      : card;
-    if (liveCard) {
-      const liveSelect = liveCard.querySelector('.badge-select');
-      if (liveSelect) {
-        liveSelect.value     = newValue;
-        liveSelect.className = 'badge-select ' + newValue;
-      }
-      // Keep data-approval in sync so syncAllBadges() has accurate ground truth
-      const approvalMap2 = { 'approved': 'approved', 'not-approved': 'rejected', 'pending': 'pending' };
-      liveCard.dataset.approval = approvalMap2[newValue] || 'pending';
-      liveCard.style.opacity = '1';
-    }
-
-    updateSectionEmptyStates();
-    refreshTalentStatCard();
-
-    // Save approval to Airtable
-    if (offerId) {
-      const approvalMap = { 'approved': 'Approved', 'not-approved': 'Rejected', 'pending': 'Pending' };
-      fetch('/api/offer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ offerId, approval: approvalMap[newValue] }),
-      }).catch(err => console.error('[approval save]', err));
-    }
-  }, 260);
-}
-
-function updateSectionEmptyStates() {
-  [['section-pending','pending-cards','count-pending'],['section-approved','approved-cards','count-approved'],['section-not-approved','not-approved-cards','count-not-approved']].forEach(([sectionId, cardsId, countId]) => {
-    const section   = document.getElementById(sectionId);
-    const container = document.getElementById(cardsId);
-    if (!section || !container) return;
-    const count = container.querySelectorAll('.talent-offer-card').length;
-    section.style.display = count > 0 ? '' : 'none';
-    const countEl = document.getElementById(countId);
-    if (countEl) countEl.textContent = count > 0 ? `(${count})` : '';
-  });
-}
-
-function refreshTalentStatCard() {
-  const el = document.getElementById('stat-talent-count');
-  if (!el) return;
-  const count = (document.getElementById('approved-cards') || { querySelectorAll: () => [] })
-    .querySelectorAll('.talent-offer-card').length;
-  el.innerHTML = `${count} <span class="stat-unit">Creators</span>`;
-}
-
-// ── DRAG & DROP RANKING ───────────────────────────────────────────────────────
-var draggedCard = null;
-
-function initDragAndDrop() {
-  var section = document.getElementById('approved-cards');
-  if (!section) return;
-  var cards = section.querySelectorAll('.talent-offer-card[draggable]');
-  cards.forEach(function(card) {
-    // Remove existing listeners by cloning
-    var clone = card.cloneNode(true);
-    card.parentNode.replaceChild(clone, card);
-  });
-  section.querySelectorAll('.talent-offer-card[draggable]').forEach(function(card) {
-    card.addEventListener('dragstart', function(e) { draggedCard = card; card.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
-    card.addEventListener('dragend',   function()  { card.classList.remove('dragging'); section.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over')); draggedCard=null; updateRankBadges(); updateRankDropdowns(); saveRanking(); });
-    card.addEventListener('dragover',  function(e) { e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect='move'; if (card!==draggedCard&&draggedCard) card.classList.add('drag-over'); });
-    card.addEventListener('dragleave', function()  { card.classList.remove('drag-over'); });
-    card.addEventListener('drop',      function(e) {
-      e.preventDefault(); e.stopPropagation(); card.classList.remove('drag-over');
-      if (draggedCard && draggedCard!==card) {
-        var all = Array.from(section.querySelectorAll('.talent-offer-card'));
-        if (all.indexOf(draggedCard) < all.indexOf(card)) section.insertBefore(draggedCard, card.nextSibling);
-        else section.insertBefore(draggedCard, card);
-      }
-    });
-  });
-  // Sentinel drop zone — always kept as the last child so you can drop below all cards.
-  var sentinel = section.querySelector('.drop-sentinel');
-  if (!sentinel) {
-    sentinel = document.createElement('div');
-    sentinel.className = 'drop-sentinel';
-  }
-  section.appendChild(sentinel); // ensure it stays last
-  // Re-wire (clone to clear old listeners)
-  var newSentinel = sentinel.cloneNode(true);
-  sentinel.parentNode.replaceChild(newSentinel, sentinel);
-  sentinel = newSentinel;
-  sentinel.addEventListener('dragover', function(e) {
-    e.preventDefault(); e.stopPropagation();
-    e.dataTransfer.dropEffect = 'move';
-    sentinel.classList.add('drag-over');
-  });
-  sentinel.addEventListener('dragleave', function() { sentinel.classList.remove('drag-over'); });
-  sentinel.addEventListener('drop', function(e) {
-    e.preventDefault(); e.stopPropagation();
-    sentinel.classList.remove('drag-over');
-    if (draggedCard) {
-      section.insertBefore(draggedCard, sentinel);
-      updateRankBadges(); updateRankDropdowns(); saveRanking();
-      draggedCard.classList.remove('dragging');
-      draggedCard = null;
-    }
-  });
-  updateRankBadges();
-  updateRankDropdowns();
-  syncAllBadges();
-}
-
-// Re-sync every badge-select's value and CSS class after any DOM rearrangement.
-// cloneNode(true) resets <select> to the first <option> with the HTML `selected`
-// attribute, so we re-read the data-approval stored on the card and reapply.
-function syncAllBadges() {
-  document.querySelectorAll('.talent-offer-card').forEach(function(card) {
-    var sel = card.querySelector('.badge-select');
-    if (!sel) return;
-    // data-approval is set when the card is built; use it as ground truth
-    var approval = card.dataset.approval || 'pending';
-    var cls = approval === 'approved' ? 'approved'
-            : approval === 'rejected' ? 'not-approved'
-            : 'pending';
-    sel.value = cls;
-    sel.className = 'badge-select ' + cls;
-  });
-}
-
-function updateRankBadges() {
-  var section = document.getElementById('approved-cards');
-  if (!section) return;
-  var rank = 1;
-  section.querySelectorAll('.talent-offer-card').forEach(function(card) {
-    var b = card.querySelector('.rank-badge');
-    if (b) { b.textContent = rank; rank++; }
-  });
-}
-
-function saveRanking() {
-  var section = document.getElementById('approved-cards');
-  if (!section) return;
-  var rank = 1;
-  section.querySelectorAll('.talent-offer-card').forEach(function(card) {
-    var offerId = card.dataset.offerId;
-    if (offerId) {
-      fetch('/api/offer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ offerId: offerId, ranking: rank }),
-      }).catch(err => console.error('[ranking save]', err));
-      rank++;
-    }
-  });
-}
-
-function restoreRanking() {
-  var saved = localStorage.getItem('talent-ranking-lions2601');
-  if (!saved) return;
-  try {
-    var names  = JSON.parse(saved);
-    var section = document.getElementById('approved-cards');
-    if (!section) return;
-    var cards  = Array.from(section.querySelectorAll('.talent-offer-card'));
-    names.forEach(function(name) {
-      var c = cards.find(c => { var el = c.querySelector('.talent-offer-name'); return el && el.textContent === name; });
-      if (c) section.appendChild(c);
-    });
-    updateRankBadges();
-    updateRankDropdowns();
-  } catch(e) {}
-}
-
-function changeRankByDropdown(sel) {
-  var card    = sel.closest('.talent-offer-card');
-  var section = document.getElementById('approved-cards');
-  if (!card || !section) return;
-  var target  = parseInt(sel.value) - 1;
-  var cards   = Array.from(section.querySelectorAll('.talent-offer-card'));
-  if (cards.indexOf(card) === target) return;
-  card.remove();
-  var updated = Array.from(section.querySelectorAll('.talent-offer-card'));
-  if (target >= updated.length) section.appendChild(card);
-  else section.insertBefore(card, updated[target]);
-  updateRankBadges();
-  updateRankDropdowns();
-  saveRanking();
-}
-
-function updateRankDropdowns() {
-  var section = document.getElementById('approved-cards');
-  if (!section) return;
-  var cards = section.querySelectorAll('.talent-offer-card');
-  var total = cards.length;
-  cards.forEach(function(card, idx) {
-    var dd = card.querySelector('.rank-dropdown');
-    if (!dd) return;
-    if (dd.options.length !== total) {
-      dd.innerHTML = '';
-      for (var i = 1; i <= total; i++) {
-        var opt = document.createElement('option');
-        opt.value = i; opt.textContent = '#' + i + ' Ranking'; dd.appendChild(opt);
-      }
-    }
-    dd.value = idx + 1;
-  });
-}
+// Legacy stubs — replaced by new talent tab implementation
+function syncBadge() {}
+function updateSectionEmptyStates() {}
+function refreshTalentStatCard() {}
+function initDragAndDrop() {}
+function syncAllBadges() {}
+function updateRankBadges() {}
+function saveRanking() {}
+function restoreRanking() {}
+function changeRankByDropdown() {}
+function updateRankDropdowns() {}
 
 // ── APPROVALS UPLOAD & DRAFT ──────────────────────────────────────────────────
 function handleUpload(input, key) {
