@@ -9,7 +9,7 @@
 const BASE_ID      = process.env.AIRTABLE_BASE_ID || 'appcKC14Om93O40QC';
 const OFFERS_TABLE = 'tblmH1uMjxYG1y8X6';
 
-const APPROVAL_FIELD = 'fldoZlmO1OIJc6fI7'; // Brand Approval (singleSelect: "Approved" | "Rejected")
+const APPROVAL_FIELD = 'fldHfOsU05y4sflcE'; // Brand Status (singleSelect)
 const RANKING_FIELD  = 'fldWceYkW6KgT58KI'; // Brand Ranking (number)
 
 module.exports = async function handler(req, res) {
@@ -36,9 +36,13 @@ module.exports = async function handler(req, res) {
     const fields = {};
 
     if (approval !== undefined) {
-      // Airtable singleSelect options: "Approved", "Rejected", "Pending"
-      // Pass null to clear the field entirely
-      fields[APPROVAL_FIELD] = approval;
+      // Map simple values to Brand Status option names
+      const approvalMap = {
+        'Approved': '✅ Brand Approved',
+        'Rejected': '👎 Brand Rejected',
+        'Pending':  '🚦 Brand Pending',
+      };
+      fields[APPROVAL_FIELD] = approvalMap[approval] ?? approval;
     }
     if (ranking !== undefined) {
       fields[RANKING_FIELD] = ranking;
