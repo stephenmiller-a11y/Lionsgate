@@ -2012,6 +2012,10 @@ function confirmTalentRank() {
   var actEl = document.getElementById('oact-' + safeid);
   if (actEl) actEl.remove();
 
+  // Sort again now that this card's tstate + rank are set correctly
+  sortTalentCardsDom();
+  rebuildRankDropdowns();
+
   closeTalentRankModal();
 
   // Save to Airtable
@@ -2074,13 +2078,29 @@ function sendOfferFeedback(offerId) {
 function changeTalentRank(sel) {
   var card = sel.closest('.offer-card');
   if (!card) return;
-  var offerId = card.dataset.offerId;
+  var container = document.getElementById('talent-cards');
+  if (!container) return;
   var newRank = parseInt(sel.value, 10);
-  card.dataset.rank = newRank;
-  var cached = _offers.find(function(o){ return o.id === offerId; });
-  if (cached) cached.brandRanking = newRank;
-  sortTalentCardsDom();
-  resequenceApprovedRanks(); // assigns clean 1..N ranks and saves all to Airtable
+
+  // Get all OTHER approved cards sorted by current rank
+  var others = Array.from(container.querySelectorAll('.offer-card[data-tstate="approved"]'))
+    .filter(function(c) { return c !== card; })
+    .sort(function(a, b) { return (parseInt(a.dataset.rank) || 9999) - (parseInt(b.dataset.rank) || 9999); });
+
+  // Insert this card at position newRank - 1 (0-indexed) among others
+  // others[newRank-1] is the card that should come AFTER this one
+  var insertBefore = others[newRank - 1];
+  if (insertBefore) {
+    container.insertBefore(card, insertBefore);
+  } else {
+    // Target is last approved slot — insert before the first non-approved card
+    var firstNonApproved = Array.from(container.querySelectorAll('.offer-card'))
+      .find(function(c) { return c.dataset.tstate !== 'approved'; });
+    if (firstNonApproved) container.insertBefore(card, firstNonApproved);
+    else container.appendChild(card);
+  }
+
+  resequenceApprovedRanks(); // assigns clean 1..N by DOM order and saves all to Airtable
 }
 
 function socialButtons(offer) {
