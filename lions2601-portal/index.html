@@ -1051,8 +1051,11 @@
 <!-- Rank modal -->
 <div class="rank-modal-overlay" id="rank-overlay" onclick="if(event.target===this)closeTalentRankModal()">
   <div class="rank-modal">
-    <h3 id="rank-modal-title">Rank this creator</h3>
-    <p>Where should they rank among your approved creators? ZATV works down your ranking as slots are contracted.</p>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <h3 id="rank-modal-title" style="margin:0;">Rank this creator</h3>
+      <button onclick="closeTalentRankModal()" style="background:none;border:none;font-size:18px;color:#aaa;cursor:pointer;line-height:1;padding:2px 4px;" aria-label="Close">✕</button>
+    </div>
+    <p>Add your preference for this creator among the approved list.</p>
     <div class="rank-input-row">
       <label for="rank-modal-input">Rank</label>
       <input class="rank-modal-input" id="rank-modal-input" type="number" min="1" value="1">
