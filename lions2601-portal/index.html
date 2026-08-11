@@ -1075,8 +1075,8 @@ function isCompleted(d) {
 // ── SECTION CLASSIFICATION ─────────────────────────────────────────────────────
 function offerSection(offer) {
   const a = (offer.brandApproval || '').toLowerCase();
-  if (a === 'approved')  return 'approved';
-  if (a === 'rejected')  return 'not-approved';
+  if (a.includes('approved'))  return 'approved';
+  if (a.includes('rejected'))  return 'not-approved';
   return 'pending';
 }
 
@@ -1615,9 +1615,9 @@ function talentSort(key) {
 
 function approvalClass(offer) {
   const a = (offer.brandApproval || '').toLowerCase();
-  if (a === 'approved')  return 'approved';
-  if (a === 'rejected')  return 'not-approved';
-  return 'pending'; // "Pending" or empty
+  if (a.includes('approved'))  return 'approved';
+  if (a.includes('rejected'))  return 'not-approved';
+  return 'pending';
 }
 
 function buildOfferCard(offer, section) {
