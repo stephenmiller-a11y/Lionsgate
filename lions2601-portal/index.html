@@ -81,7 +81,7 @@
       font-weight: 800; letter-spacing: 0.05em; text-align: center; border-radius: 14px;
     }
     .hero-text { flex: 1; }
-    .hero-title { font-size: 28px; font-weight: 700; line-height: 1.2; margin-bottom: 14px; }
+    .hero-title { font-size: 28px; font-weight: 700; line-height: 1.2; margin-bottom: 18px; }
     .hero-meta {
       display: flex; align-items: center; gap: 20px;
       flex-wrap: wrap; font-size: 14px; color: rgba(255,255,255,0.6);
@@ -95,7 +95,7 @@
     .hero-stats { display: flex; align-items: center; gap: 36px; flex-wrap: wrap; }
     .hero-stat-item { }
     .hero-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: rgba(255,255,255,0.6); margin-bottom: 4px; }
-    .hero-stat-value { font-size: 16px; font-weight: 700; color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,0.12); }
+    .hero-stat-value { font-size: 16px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; text-shadow: 0 1px 6px rgba(0,0,0,0.12); }
 
     /* ── GRADIENT STAT CARDS ─────────────────────────────────────────────── */
     .summary-grad { border-radius: 12px; padding: 22px 24px 24px; color: #fff; background: linear-gradient(135deg, #16123a 0%, #33246e 55%, #4c37a8 100%); box-shadow: 0 4px 14px rgba(76,55,168,0.25); margin-bottom: 14px; }
@@ -1254,7 +1254,7 @@ function renderOverviewStats(campaign, deliverables, offers) {
     </div>
     <div class="grad-card grad-talent">
       <div class="grad-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6L12 16.8 6.6 19.6l1.1-6L3.2 9.4l6.1-.8L12 3z"/></svg>Talent</div>
-      <div class="grad-value">${accepted} <span class="denom">${accepted === 1 ? 'Creator' : 'Creators'}</span></div>
+      <div class="grad-value">${accepted} <span class="denom">/ ${offers.length}</span></div>
     </div>`;
 }
 
