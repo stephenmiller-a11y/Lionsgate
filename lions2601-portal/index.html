@@ -1672,6 +1672,66 @@ var _talentSortDir  = 1;
 var _talentState = 'pending'; // current filter tab
 var _talentRankTarget = null; // offer id being ranked
 
+function getApprovedCount() {
+  return _offers.filter(function(o) { return offerSection(o) === 'approved'; }).length;
+}
+
+// Rebuild every rank dropdown with 1..N options matching current approved count
+function rebuildRankDropdowns() {
+  var n = Math.max(getApprovedCount(), 1);
+  document.querySelectorAll('#talent-cards .offer-rank-select').forEach(function(sel) {
+    var card = sel.closest('.offer-card');
+    var current = parseInt(card ? card.dataset.rank : 0, 10) || 1;
+    sel.innerHTML = '';
+    for (var i = 1; i <= n; i++) {
+      var opt = document.createElement('option');
+      opt.value = i; opt.textContent = 'Ranked ' + i;
+      if (i === current) opt.selected = true;
+      sel.appendChild(opt);
+    }
+  });
+}
+
+// When a new rank is inserted, bump all other approved offers at >= that rank up by 1
+function applyRankBump(skipOfferId, insertedRank) {
+  var bumped = [];
+  _offers.forEach(function(o) {
+    if (o.id === skipOfferId || offerSection(o) !== 'approved') return;
+    var r = o.brandRanking;
+    if (r != null && r >= insertedRank) {
+      o.brandRanking++;
+      bumped.push({ offerId: o.id, ranking: o.brandRanking });
+      var card = document.querySelector('#talent-cards [data-offer-id="' + o.id + '"]');
+      if (card) card.dataset.rank = o.brandRanking;
+    }
+  });
+  bumped.forEach(function(b) {
+    fetch('/api/offer', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(b),
+    }).catch(function(e){ console.error('[applyRankBump]', e); });
+  });
+  sortTalentCardsDom();
+  rebuildRankDropdowns();
+}
+
+// After a dropdown rerank, assign clean 1..N ranks by current DOM order and save all
+function resequenceApprovedRanks() {
+  var cards = Array.from(document.querySelectorAll('#talent-cards .offer-card[data-tstate="approved"]'));
+  cards.forEach(function(card, idx) {
+    var newRank = idx + 1;
+    card.dataset.rank = newRank;
+    var offerId = card.dataset.offerId;
+    var cached = _offers.find(function(o) { return o.id === offerId; });
+    if (cached) cached.brandRanking = newRank;
+    fetch('/api/offer', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ offerId: offerId, ranking: newRank }),
+    }).catch(function(e){ console.error('[resequenceApprovedRanks]', e); });
+  });
+  rebuildRankDropdowns();
+}
+
 // Re-sort #talent-cards in DOM: approved (by rank) → pending → not-approved
 function sortTalentCardsDom() {
   var container = document.getElementById('talent-cards');
@@ -1827,7 +1887,8 @@ function buildOfferCard(offer, section, confirmed) {
   // Rank select for approved
   var rankOpts = '';
   if (approved) {
-    for (var i = 1; i <= 10; i++) {
+    var rankN = Math.max(getApprovedCount(), offer.brandRanking || 1);
+    for (var i = 1; i <= rankN; i++) {
       rankOpts += '<option value="' + i + '"' + (i === (offer.brandRanking||1) ? ' selected' : '') + '>Ranked ' + i + '</option>';
     }
   }
@@ -1912,6 +1973,16 @@ function confirmTalentRank() {
   var card = document.querySelector('#talent-cards [data-offer-id="' + offerId + '"]');
   if (!card) return;
 
+  // Update cache FIRST so getApprovedCount() and offerSection() reflect new state
+  var cached = _offers.find(function(o){ return o.id === offerId; });
+  if (cached) {
+    cached.brandApproval = '✅ Brand Approved';
+    cached.brandRanking  = rank;
+  }
+
+  // Bump everyone else at or above this rank before we insert
+  applyRankBump(offerId, rank); // also calls sortTalentCardsDom + rebuildRankDropdowns
+
   // Update card state
   card.dataset.tstate = 'approved';
   card.dataset.rank   = rank;
@@ -1921,19 +1992,20 @@ function confirmTalentRank() {
   var pillEl = document.getElementById('opill-' + safeid);
   if (pillEl) pillEl.outerHTML = '<span class="offer-pill pill-approved">✅ Approved</span>';
 
-  // Add rank select to name
+  // Add rank select with correct option count
   var nameEl = card.querySelector('.offer-name');
   if (nameEl && !nameEl.querySelector('.offer-rank-select')) {
-    var sel = document.createElement('select');
-    sel.className = 'offer-rank-select';
-    sel.setAttribute('onchange', 'changeTalentRank(this)');
-    for (var i = 1; i <= 10; i++) {
+    var n = getApprovedCount();
+    var rankSel = document.createElement('select');
+    rankSel.className = 'offer-rank-select';
+    rankSel.setAttribute('onchange', 'changeTalentRank(this)');
+    for (var i = 1; i <= n; i++) {
       var opt = document.createElement('option');
       opt.value = i; opt.textContent = 'Ranked ' + i;
       if (i === rank) opt.selected = true;
-      sel.appendChild(opt);
+      rankSel.appendChild(opt);
     }
-    nameEl.appendChild(sel);
+    nameEl.appendChild(rankSel);
   }
 
   // Remove action buttons
@@ -1948,16 +2020,8 @@ function confirmTalentRank() {
     body: JSON.stringify({ offerId: offerId, approval: 'Approved', ranking: rank }),
   }).catch(function(e){ console.error('[confirmTalentRank]', e); });
 
-  // Re-sort cards so approved section stays ranked
-  sortTalentCardsDom();
-
-  // Update cached offer so roster reflects new approval + ranking immediately
-  var cached = _offers.find(function(o){ return o.id === offerId; });
-  if (cached) {
-    cached.brandApproval = '✅ Brand Approved';
-    cached.brandRanking  = rank;
-    renderTalentRoster(_offers);
-  }
+  // Update roster shelf
+  if (cached) renderTalentRoster(_offers);
 
   refreshTalentCounts();
   setTalentState(_talentState, document.querySelector('.state-tab[data-tstate="' + _talentState + '"]'));
@@ -2011,13 +2075,12 @@ function changeTalentRank(sel) {
   var card = sel.closest('.offer-card');
   if (!card) return;
   var offerId = card.dataset.offerId;
-  var rank = parseInt(sel.value, 10);
-  card.dataset.rank = rank;
-
-  fetch('/api/offer', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ offerId: offerId, ranking: rank }),
-  }).catch(function(e){ console.error('[changeTalentRank]', e); });
+  var newRank = parseInt(sel.value, 10);
+  card.dataset.rank = newRank;
+  var cached = _offers.find(function(o){ return o.id === offerId; });
+  if (cached) cached.brandRanking = newRank;
+  sortTalentCardsDom();
+  resequenceApprovedRanks(); // assigns clean 1..N ranks and saves all to Airtable
 }
 
 function socialButtons(offer) {
