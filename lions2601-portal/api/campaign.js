@@ -61,7 +61,7 @@ const OFFER_FIELDS = [
   'fldrjJQqkKpdXFDyM', // Name (from Talent) — multipleLookupValues
   'fldj9RNXpglllTMBE', // Status (singleSelect)
   'fld2jDj78o2PYGukg', // Brand Feedback
-  'fldoZlmO1OIJc6fI7', // Brand Approval (singleSelect)
+  'fldHfOsU05y4sflcE', // Brand Status (singleSelect)
   'fldWceYkW6KgT58KI', // Brand Ranking
   'fld0pTahNYhyvIMgK', // Instagram URL — multipleLookupValues
   'fldT0Ay8sZT2CdFSO', // TikTok URL — multipleLookupValues
@@ -282,7 +282,7 @@ module.exports = async function handler(req, res) {
         name:                firstLookup(f['fldrjJQqkKpdXFDyM']) || '',  // Name (from Talent)
         status:              f['fldj9RNXpglllTMBE']              || '',  // Status
         brandFeedback:       f['fld2jDj78o2PYGukg']              || '',  // Brand Feedback
-        brandApproval:       f['fldoZlmO1OIJc6fI7']              || null, // Brand Approval
+        brandApproval:       f['fldHfOsU05y4sflcE']              || null, // Brand Status
         brandRanking:        f['fldWceYkW6KgT58KI']              ?? null, // Brand Ranking
         instagramUrl:        firstLookup(f['fld0pTahNYhyvIMgK']),
         tiktokUrl:           firstLookup(f['fldT0Ay8sZT2CdFSO']),
