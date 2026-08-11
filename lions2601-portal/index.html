@@ -949,21 +949,6 @@
     <div id="stats-row-metrics" style="display:none"></div>
     <div id="progress-card"></div>
 
-    <!-- KPIs -->
-    <div class="collapsible-section" id="section-kpis">
-      <div class="section-header" onclick="toggleSection('section-kpis')">
-        <span class="section-chevron">▾</span>
-        <span class="section-title">KPIs</span>
-      </div>
-      <div class="section-body">
-        <div class="kpi-card">
-          <textarea id="kpi-textarea" class="kpi-textarea" placeholder="No KPIs set for this campaign yet." oninput="kpiAutoSave(this)"></textarea>
-          <div class="kpi-footer">
-            <span class="kpi-save-status" id="kpi-save-status"></span>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Talent -->
     <div class="collapsible-section" id="section-talent">
@@ -1252,7 +1237,6 @@ function renderAll(data) {
   document.getElementById('footer').textContent =
     `ZATV Partner Portal · Confidential · This page is intended only for ${brand}`;
   renderHero(campaign);
-  renderKPIs(campaign);
   const activeDeliverables = deliverables.filter(d => !(d.status || '').toLowerCase().includes('voided'));
   renderOverviewStats(campaign, activeDeliverables, offers);
   renderProgressBar(activeDeliverables);
@@ -1606,7 +1590,20 @@ function renderCreative(campaign) {
     { key: 'guidelines', icon: '🎨', title: 'Creative Guidelines', val: campaign.briefGuidelines },
     { key: 'cta',        icon: '📣', title: 'Call-To-Action',     val: campaign.briefCTA        },
   ];
-  document.getElementById('creative-main').innerHTML = sections.map(s => `
+  const kpiHtml = `
+    <div class="brief-card">
+      <div class="brief-card-header">
+        <span class="brief-card-icon">🎯</span>
+        <span class="brief-card-title">KPIs</span>
+      </div>
+      <div class="kpi-card" style="border:none;border-radius:0;margin:0;">
+        <textarea id="kpi-textarea" class="kpi-textarea" placeholder="No KPIs set for this campaign yet." oninput="kpiAutoSave(this)"></textarea>
+        <div class="kpi-footer">
+          <span class="kpi-save-status" id="kpi-save-status"></span>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('creative-main').innerHTML = kpiHtml + sections.map(s => `
     <div class="brief-card">
       <div class="brief-card-header">
         <span class="brief-card-icon">${s.icon}</span>
@@ -1619,6 +1616,7 @@ function renderCreative(campaign) {
            oninput="onBriefInput(this)">${s.val ? escapeHtml(s.val) : ''}</div>
       <div class="brief-save-hint" id="brief-hint-${s.key}"></div>
     </div>`).join('');
+  renderKPIs(campaign);
 }
 
 function escapeHtml(str) {
