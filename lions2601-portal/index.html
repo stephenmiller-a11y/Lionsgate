@@ -2587,15 +2587,21 @@ function conceptOpenFeedback(safeid) {
 function conceptApprove(delivId, safeid) {
   var card = document.querySelector('#panel-concepts [data-deliv-id="' + delivId + '"]');
   if (!card) return;
-  // Update DOM
-  card.dataset.cstate = 'approved';
-  card.classList.remove('cpt-changes');
-  card.classList.add('cpt-approved');
-  var pill = card.querySelector('.cpt-pill');
-  if (pill) { pill.className = 'cpt-pill approved'; pill.textContent = '✅ Approved'; }
-  // Collapse feedback if open
-  var actions = document.getElementById('cact-' + safeid);
-  if (actions) actions.classList.remove('cpt-feedback-open');
+  // Update cache so rebuilt card reflects approved state
+  var d = _deliverables.find(function(x) { return x.id === delivId; });
+  if (d) {
+    d.scriptApproval = true;
+    var newCard = document.createElement('div');
+    newCard.innerHTML = buildConceptCard(d, _headshotMap[d.talent] || null, true);
+    card.parentNode.replaceChild(newCard.firstElementChild, card);
+  } else {
+    // Fallback: minimal DOM update
+    card.dataset.cstate = 'approved';
+    card.classList.remove('cpt-changes');
+    card.classList.add('cpt-approved');
+    var pill = card.querySelector('.cpt-pill');
+    if (pill) { pill.className = 'cpt-pill approved'; pill.textContent = '✅ Approved'; }
+  }
   // Re-filter
   var activeTab = document.querySelector('#concept-state-tabs .state-tab.active');
   if (activeTab) conceptSetState(_conceptState, activeTab);
@@ -2663,13 +2669,22 @@ function draftOpenFeedback(safeid) {
 function draftApprove(delivId, safeid) {
   var card = document.querySelector('#panel-approvals [data-deliv-id="' + delivId + '"]');
   if (!card) return;
-  card.dataset.dstate = 'approved';
-  card.classList.remove('cpt-changes');
-  card.classList.add('cpt-approved');
-  var pill = card.querySelector('.cpt-pill');
-  if (pill) { pill.className = 'cpt-pill approved'; pill.textContent = '✅ Approved'; }
-  var actions = document.getElementById('dact-' + safeid);
-  if (actions) actions.classList.remove('cpt-feedback-open');
+  // Update cache so rebuilt card reflects approved state
+  var d = _deliverables.find(function(x) { return x.id === delivId; });
+  if (d) {
+    d.cutApproval = true;
+    var newCard = document.createElement('div');
+    newCard.innerHTML = buildDraftCard(d, _headshotMap[d.talent] || null);
+    card.parentNode.replaceChild(newCard.firstElementChild, card);
+  } else {
+    // Fallback: minimal DOM update
+    card.dataset.dstate = 'approved';
+    card.classList.remove('cpt-changes');
+    card.classList.add('cpt-approved');
+    var pill = card.querySelector('.cpt-pill');
+    if (pill) { pill.className = 'cpt-pill approved'; pill.textContent = '✅ Approved'; }
+  }
+  // Re-filter
   var activeTab = document.querySelector('#draft-state-tabs .state-tab.active');
   if (activeTab) draftSetState(_draftState, activeTab);
   updateDraftCounts();
