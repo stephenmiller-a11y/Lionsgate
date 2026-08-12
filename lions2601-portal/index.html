@@ -639,7 +639,7 @@
     .state-tab.active { background: #fff; color: #7b2d8b; box-shadow: 0 1px 5px rgba(0,0,0,0.12); }
     .state-count { font-size: 11px; font-weight: 800; min-width: 20px; height: 20px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; padding: 0 6px; background: #ddd; color: #666; }
     .state-tab.active .state-count { background: #7b2d8b; color: #fff; }
-    .cpt-card { background: #fff; border-radius: 14px; border: 1px solid #e8e8e8; margin-bottom: 14px; overflow: hidden; transition: border-color 0.2s, opacity 0.35s ease; }
+    .cpt-card { background: #fff; border-radius: 14px; border: 1px solid #e8e8e8; margin-bottom: 14px; overflow: hidden; transition: border-color 0.2s, opacity 0.175s ease; }
     .cpt-card.fading { opacity: 0; }
     .cpt-card.hidden { display: none; }
     .cpt-card.cpt-approved { border-color: #b8e6c6; }
@@ -2606,7 +2606,7 @@ function conceptApprove(delivId, safeid) {
     var activeTab = document.querySelector('#concept-state-tabs .state-tab.active');
     if (activeTab) conceptSetState(_conceptState, activeTab);
     updateConceptCounts();
-  }, 350);
+  }, 175);
   fetch('/api/deliverable-update', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ delivId: delivId, fields: { scriptApproval: true } }),
@@ -2688,7 +2688,7 @@ function draftApprove(delivId, safeid) {
     var activeTab = document.querySelector('#draft-state-tabs .state-tab.active');
     if (activeTab) draftSetState(_draftState, activeTab);
     updateDraftCounts();
-  }, 350);
+  }, 175);
   fetch('/api/deliverable-update', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ delivId: delivId, fields: { cutApproval: true } }),
