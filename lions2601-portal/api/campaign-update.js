@@ -11,6 +11,7 @@ const FIELD_MAP = {
   background:  'fldPPqqDgpDcmrgvh', // Brief Background  (richText)
   guidelines:  'fldBaDzAw0sUF5nzt', // Brief Creative Guidelines (richText)
   cta:         'fldizWsdOaIYHGf4J', // Brief CTA         (richText)
+  kpis:        'fldAqTjKNP91wOR36', // KPIs              (richText)
 };
 
 module.exports = async function handler(req, res) {
