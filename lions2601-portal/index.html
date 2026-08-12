@@ -659,6 +659,8 @@
     .ver-1 { background: #e8f1fd; color: #1d5fb8; }
     .ver-2 { background: #fff3d6; color: #a36a00; }
     .ver-3 { background: #fdeaf3; color: #c02466; }
+    .ver-4 { background: #eef7ee; color: #1a7a3a; }
+    .ver-5 { background: #f3eeff; color: #6b2fa0; }
     .ver-date { font-size: 13px; font-weight: 700; color: #555; }
     .ver-note { font-size: 12px; font-weight: 600; color: #aaa; }
     .cpt-text { font-size: 13.5px; line-height: 1.6; color: #444; }
@@ -2378,7 +2380,7 @@ function buildDraftCard(d, headshotUrl) {
       var vNotes    = draftNotes[vi];
       var isLast    = (vi === draftUrls.length - 1) || !draftUrls[vi + 1];
       var vApproved = isLast;
-      var vClass    = 'ver-' + Math.min(vNum, 3); // CSS caps at ver-3 for colour
+      var vClass    = 'ver-' + vNum;
       histItems += '<div class="hist-item' + (vApproved ? ' hist-approved' : '') + '">' +
         '<div class="hist-head"><span class="ver-badge ' + vClass + '">V' + vNum + '</span>' +
         (vApproved ? '<span class="hist-approved-tag">✅ Approved</span>' : '') +
