@@ -639,7 +639,8 @@
     .state-tab.active { background: #fff; color: #7b2d8b; box-shadow: 0 1px 5px rgba(0,0,0,0.12); }
     .state-count { font-size: 11px; font-weight: 800; min-width: 20px; height: 20px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; padding: 0 6px; background: #ddd; color: #666; }
     .state-tab.active .state-count { background: #7b2d8b; color: #fff; }
-    .cpt-card { background: #fff; border-radius: 14px; border: 1px solid #e8e8e8; margin-bottom: 14px; overflow: hidden; transition: border-color 0.2s; }
+    .cpt-card { background: #fff; border-radius: 14px; border: 1px solid #e8e8e8; margin-bottom: 14px; overflow: hidden; transition: border-color 0.2s, opacity 0.35s ease; }
+    .cpt-card.fading { opacity: 0; }
     .cpt-card.hidden { display: none; }
     .cpt-card.cpt-approved { border-color: #b8e6c6; }
     .cpt-card.cpt-changes  { border-color: #f3dda0; }
@@ -1598,12 +1599,12 @@ function renderCreative(campaign) {
         <span class="brief-card-icon">🎯</span>
         <span class="brief-card-title">KPIs</span>
       </div>
-      <div class="kpi-card" style="border:none;border-radius:0;margin:0;">
-        <textarea id="kpi-textarea" class="kpi-textarea" placeholder="No KPIs set for this campaign yet." oninput="kpiAutoSave(this)"></textarea>
-        <div class="kpi-footer">
-          <span class="kpi-save-status" id="kpi-save-status"></span>
-        </div>
-      </div>
+      <div class="brief-card-body"
+           contenteditable="true"
+           data-brief-key="kpis"
+           data-placeholder="Add KPIs here…"
+           oninput="onBriefInput(this)">${campaign.kpis ? escapeHtml(campaign.kpis) : ''}</div>
+      <div class="brief-save-hint" id="brief-hint-kpis"></div>
     </div>`;
   document.getElementById('creative-main').innerHTML = kpiHtml + sections.map(s => `
     <div class="brief-card">
@@ -1618,7 +1619,6 @@ function renderCreative(campaign) {
            oninput="onBriefInput(this)">${s.val ? escapeHtml(s.val) : ''}</div>
       <div class="brief-save-hint" id="brief-hint-${s.key}"></div>
     </div>`).join('');
-  renderKPIs(campaign);
 }
 
 function escapeHtml(str) {
@@ -2587,26 +2587,26 @@ function conceptOpenFeedback(safeid) {
 function conceptApprove(delivId, safeid) {
   var card = document.querySelector('#panel-concepts [data-deliv-id="' + delivId + '"]');
   if (!card) return;
-  // Update cache so rebuilt card reflects approved state
-  var d = _deliverables.find(function(x) { return x.id === delivId; });
-  if (d) {
-    d.scriptApproval = true;
-    var newCard = document.createElement('div');
-    newCard.innerHTML = buildConceptCard(d, _headshotMap[d.talent] || null, true);
-    card.parentNode.replaceChild(newCard.firstElementChild, card);
-  } else {
-    // Fallback: minimal DOM update
-    card.dataset.cstate = 'approved';
-    card.classList.remove('cpt-changes');
-    card.classList.add('cpt-approved');
-    var pill = card.querySelector('.cpt-pill');
-    if (pill) { pill.className = 'cpt-pill approved'; pill.textContent = '✅ Approved'; }
-  }
-  // Re-filter
-  var activeTab = document.querySelector('#concept-state-tabs .state-tab.active');
-  if (activeTab) conceptSetState(_conceptState, activeTab);
-  updateConceptCounts();
-  // Write to Airtable
+  card.classList.add('fading');
+  setTimeout(function() {
+    var d = _deliverables.find(function(x) { return x.id === delivId; });
+    if (d) {
+      d.scriptApproval = true;
+      var newCard = document.createElement('div');
+      newCard.innerHTML = buildConceptCard(d, _headshotMap[d.talent] || null, true);
+      card.parentNode.replaceChild(newCard.firstElementChild, card);
+    } else {
+      card.classList.remove('fading');
+      card.dataset.cstate = 'approved';
+      card.classList.remove('cpt-changes');
+      card.classList.add('cpt-approved');
+      var pill = card.querySelector('.cpt-pill');
+      if (pill) { pill.className = 'cpt-pill approved'; pill.textContent = '✅ Approved'; }
+    }
+    var activeTab = document.querySelector('#concept-state-tabs .state-tab.active');
+    if (activeTab) conceptSetState(_conceptState, activeTab);
+    updateConceptCounts();
+  }, 350);
   fetch('/api/deliverable-update', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ delivId: delivId, fields: { scriptApproval: true } }),
@@ -2669,25 +2669,26 @@ function draftOpenFeedback(safeid) {
 function draftApprove(delivId, safeid) {
   var card = document.querySelector('#panel-approvals [data-deliv-id="' + delivId + '"]');
   if (!card) return;
-  // Update cache so rebuilt card reflects approved state
-  var d = _deliverables.find(function(x) { return x.id === delivId; });
-  if (d) {
-    d.cutApproval = true;
-    var newCard = document.createElement('div');
-    newCard.innerHTML = buildDraftCard(d, _headshotMap[d.talent] || null);
-    card.parentNode.replaceChild(newCard.firstElementChild, card);
-  } else {
-    // Fallback: minimal DOM update
-    card.dataset.dstate = 'approved';
-    card.classList.remove('cpt-changes');
-    card.classList.add('cpt-approved');
-    var pill = card.querySelector('.cpt-pill');
-    if (pill) { pill.className = 'cpt-pill approved'; pill.textContent = '✅ Approved'; }
-  }
-  // Re-filter
-  var activeTab = document.querySelector('#draft-state-tabs .state-tab.active');
-  if (activeTab) draftSetState(_draftState, activeTab);
-  updateDraftCounts();
+  card.classList.add('fading');
+  setTimeout(function() {
+    var d = _deliverables.find(function(x) { return x.id === delivId; });
+    if (d) {
+      d.cutApproval = true;
+      var newCard = document.createElement('div');
+      newCard.innerHTML = buildDraftCard(d, _headshotMap[d.talent] || null);
+      card.parentNode.replaceChild(newCard.firstElementChild, card);
+    } else {
+      card.classList.remove('fading');
+      card.dataset.dstate = 'approved';
+      card.classList.remove('cpt-changes');
+      card.classList.add('cpt-approved');
+      var pill = card.querySelector('.cpt-pill');
+      if (pill) { pill.className = 'cpt-pill approved'; pill.textContent = '✅ Approved'; }
+    }
+    var activeTab = document.querySelector('#draft-state-tabs .state-tab.active');
+    if (activeTab) draftSetState(_draftState, activeTab);
+    updateDraftCounts();
+  }, 350);
   fetch('/api/deliverable-update', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ delivId: delivId, fields: { cutApproval: true } }),
