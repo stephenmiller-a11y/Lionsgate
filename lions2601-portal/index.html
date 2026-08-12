@@ -2684,7 +2684,7 @@ function draftSendFeedback(delivId, safeid, ver) {
   if (!textarea) return;
   var text = textarea.value.trim();
   if (!text) return;
-  var fieldName = ver === 3 ? 'draftV3Notes' : ver === 2 ? 'draftV2Notes' : 'draftV1Notes';
+  var fieldName = ver === 5 ? 'draftV5Notes' : ver === 4 ? 'draftV4Notes' : ver === 3 ? 'draftV3Notes' : ver === 2 ? 'draftV2Notes' : 'draftV1Notes';
   var card = document.querySelector('#panel-approvals [data-deliv-id="' + delivId + '"]');
   if (card) {
     card.dataset.dstate = 'revision';
