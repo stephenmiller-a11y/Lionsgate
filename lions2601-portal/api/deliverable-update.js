@@ -11,10 +11,13 @@ const DELIV_TABLE = 'tblNOrIcXwZ0R78LJ';
 const WRITABLE = {
   scriptApproval: 'fldVukxDJTU0q3zrZ', // checkbox
   cutApproval:    'fldMlhJRn66OhYPIB', // checkbox
-  conceptNotes:   'fldsMs0SjgU1UU8KI', // richText
+  conceptNotes:   'fldsMs0SjgU1UU8KI', // concept v1 notes
+  conceptV2Notes: 'fld1SrHxcP1VjJp9S', // concept v2 notes
   draftV1Notes:   'fldq0TUAznUzNHZIq', // richText
   draftV2Notes:   'fldlp5I9siz7M2tR2', // richText
   draftV3Notes:   'fld2ANvIsNG7G9c1g', // richText
+  draftV4Notes:   'flds7xbf1uu49Bp2V', // richText
+  draftV5Notes:   'fld06Yhzmk3dn8gdN', // richText
 };
 
 module.exports = async function handler(req, res) {
