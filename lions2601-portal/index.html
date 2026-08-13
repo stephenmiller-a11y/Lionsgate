@@ -1647,6 +1647,7 @@ function escapeHtml(str) {
 // ── BRIEF SAVE LOGIC ──────────────────────────────────────────────────────────
 var _briefTimers  = {};
 var _reportSort     = 'date';   // 'date' | 'creator' | 'views'
+var _reportSortDir  = 'asc';   // 'asc' | 'desc'
 var _reportMonth    = '';       // '' = all months, 'YYYY-MM' = filtered
 var _reportSearch   = '';       // free-text search across creator + type
 var _reportPage     = 1;
@@ -3246,11 +3247,15 @@ function rptSorted() {
     if (q && !((d.talent || '').toLowerCase().includes(q) || (d.type || '').toLowerCase().includes(q))) return false;
     return true;
   });
+  var dir = _reportSortDir === 'asc' ? 1 : -1;
   return base.slice().sort(function(a, b) {
-    if (_reportSort === 'creator') return (a.talent || '').localeCompare(b.talent || '');
-    if (_reportSort === 'views')   return ((b.views != null ? b.views : -1) - (a.views != null ? a.views : -1));
+    if (_reportSort === 'creator') return dir * (a.talent || '').localeCompare(b.talent || '');
+    if (_reportSort === 'views') {
+      var av = a.views != null ? a.views : -1, bv = b.views != null ? b.views : -1;
+      return dir * (av - bv);
+    }
     var da = calSafeDate(a.airDate) || '9999', db = calSafeDate(b.airDate) || '9999';
-    return da.localeCompare(db);
+    return dir * da.localeCompare(db);
   });
 }
 
@@ -3322,11 +3327,15 @@ function renderReporting(campaign, deliverables) {
     + '</div>'
     + '</div>';
 
+  function rptSortLabel(key, label) {
+    if (_reportSort !== key) return label;
+    return label + ' ' + (_reportSortDir === 'asc' ? '↑' : '↓');
+  }
   var sortBar = '<div class="rpt-sort-bar">'
     + '<span class="rpt-sort-label">Sort by</span>'
-    + '<button class="rpt-sort-btn ' + (_reportSort === 'date'    ? 'active' : '') + '" onclick="sortReporting(\'date\')">Date</button>'
-    + '<button class="rpt-sort-btn ' + (_reportSort === 'views'   ? 'active' : '') + '" onclick="sortReporting(\'views\')">Views ↓</button>'
-    + '<button class="rpt-sort-btn ' + (_reportSort === 'creator' ? 'active' : '') + '" onclick="sortReporting(\'creator\')">Creator</button>'
+    + '<button class="rpt-sort-btn ' + (_reportSort === 'date'    ? 'active' : '') + '" data-sort="date"    onclick="sortReporting(\'date\')">'    + rptSortLabel('date',    'Date')    + '</button>'
+    + '<button class="rpt-sort-btn ' + (_reportSort === 'views'   ? 'active' : '') + '" data-sort="views"   onclick="sortReporting(\'views\')">'   + rptSortLabel('views',   'Views')   + '</button>'
+    + '<button class="rpt-sort-btn ' + (_reportSort === 'creator' ? 'active' : '') + '" data-sort="creator" onclick="sortReporting(\'creator\')">' + rptSortLabel('creator', 'Creator') + '</button>'
     + '<div class="rpt-pages-right" id="rpt-pag-inline"></div>'
     + '</div>'
     + '<div class="rpt-filter-row">'
@@ -3346,15 +3355,22 @@ function renderReporting(campaign, deliverables) {
 }
 
 function sortReporting(key) {
-  _reportSort = key;
+  if (_reportSort === key) {
+    // Same button — toggle direction
+    _reportSortDir = _reportSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    // New button — switch key, reset to sensible default direction
+    _reportSort    = key;
+    _reportSortDir = (key === 'views') ? 'desc' : 'asc';
+  }
   _reportPage = 1;
+  var labels = { date: 'Date', views: 'Views', creator: 'Creator' };
+  var arrow  = _reportSortDir === 'asc' ? ' ↑' : ' ↓';
   document.querySelectorAll('.rpt-sort-btn').forEach(function(btn) {
-    var t = btn.textContent.trim().toLowerCase();
-    btn.classList.toggle('active',
-      (key === 'date'    && t === 'date') ||
-      (key === 'views'   && t.startsWith('views')) ||
-      (key === 'creator' && t === 'creator')
-    );
+    var k = btn.dataset.sort;
+    if (!k) return;
+    btn.classList.toggle('active', k === _reportSort);
+    btn.textContent = labels[k] + (k === _reportSort ? arrow : '');
   });
   renderRptPage(rptSorted());
 }
