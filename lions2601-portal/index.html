@@ -3631,26 +3631,26 @@ async function fetchThumbnails() {
   var btn = document.getElementById('btn-fetch-thumbs');
   if (!btn || btn.disabled) return;
 
-  // Find TikTok deliverables that have a post link but no thumbnail yet
-  var tiktokDelivs = _deliverables.filter(function(d) {
-    var link = (d.postLink || '').toLowerCase();
-    return (link.includes('tiktok.com') || link.includes('vm.tiktok')) && !d.thumbnailUrl;
+  // Find TikTok and YouTube deliverables with a post link but no thumbnail yet
+  function isEligibleLink(link) {
+    return link.includes('tiktok.com') || link.includes('vm.tiktok')
+        || link.includes('youtube.com') || link.includes('youtu.be');
+  }
+  var eligible = _deliverables.filter(function(d) {
+    return isEligibleLink((d.postLink || '').toLowerCase()) && !d.thumbnailUrl;
   });
 
-  console.log('[fetchThumbnails] TikTok posts eligible:', tiktokDelivs.length,
-    tiktokDelivs.map(function(d) { return d.postLink; }));
+  console.log('[fetchThumbnails] eligible posts:', eligible.length,
+    eligible.map(function(d) { return d.postLink; }));
 
-  if (!tiktokDelivs.length) {
-    // Check if there are TikTok posts at all (just no unresolved ones)
-    var anyTiktok = _deliverables.filter(function(d) {
-      var link = (d.postLink || '').toLowerCase();
-      return link.includes('tiktok.com') || link.includes('vm.tiktok');
+  if (!eligible.length) {
+    var anyEligible = _deliverables.some(function(d) {
+      return isEligibleLink((d.postLink || '').toLowerCase());
     });
-    if (anyTiktok.length) {
-      showStatsToast('All TikTok thumbnails are already fetched.', 'success');
-    } else {
-      showStatsToast('No TikTok post links found in this campaign.', 'warn');
-    }
+    showStatsToast(
+      anyEligible ? 'All thumbnails are already fetched.' : 'No TikTok or YouTube post links found in this campaign.',
+      anyEligible ? 'success' : 'warn'
+    );
     return;
   }
 
@@ -3662,7 +3662,7 @@ async function fetchThumbnails() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        deliverables: tiktokDelivs.map(function(d) { return { delivId: d.id, postLink: d.postLink }; })
+        deliverables: eligible.map(function(d) { return { delivId: d.id, postLink: d.postLink }; })
       })
     });
 
