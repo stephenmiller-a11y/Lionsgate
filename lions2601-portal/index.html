@@ -3673,21 +3673,20 @@ async function fetchThumbnails() {
     if (!res.ok) {
       showStatsToast('Thumbnail fetch failed: ' + (data.error || 'HTTP ' + res.status), 'error');
     } else if (data.results && data.results.length) {
-      // Patch in-memory cache so cards re-render immediately
-      data.results.forEach(function(r) {
-        var d = _deliverables.find(function(x) { return x.id === r.delivId; });
-        if (d) d.thumbnailUrl = r.thumb;
-      });
-      renderRptPage(rptSorted());
+      var n = data.results.length;
+      var errNote = (data.errors && data.errors.length) ? ' (' + data.errors.length + ' failed)' : '';
       showStatsToast(
-        '✓ Fetched ' + data.results.length + ' thumbnail' + (data.results.length === 1 ? '' : 's') + '.',
+        '✓ Stored ' + n + ' thumbnail' + (n === 1 ? '' : 's') + errNote + '. Reloading…',
         'success'
       );
+      // Reload from Airtable so phone screens use the Airtable-hosted
+      // attachment URLs rather than the raw TikTok CDN links.
+      loadCampaign();
     } else {
-      showStatsToast(
-        (data.message || 'Apify returned no thumbnails.') + ' Check the console for details.',
-        'warn'
-      );
+      var errDetail = (data.errors && data.errors.length)
+        ? data.errors[0].error
+        : (data.message || 'No thumbnails returned — check the console for details.');
+      showStatsToast(errDetail, 'warn');
     }
   } catch (err) {
     console.error('[fetchThumbnails]', err);
