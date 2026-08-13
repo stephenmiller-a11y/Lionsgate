@@ -3,6 +3,9 @@
   "functions": {
     "api/stats.js": {
       "maxDuration": 300
+    },
+    "api/fetch-thumbnails.js": {
+      "maxDuration": 60
     }
   }
 }
