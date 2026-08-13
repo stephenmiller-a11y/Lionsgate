@@ -1,9 +1,10 @@
 // api/fetch-thumbnails.js
-// Fetches TikTok video thumbnails via TikTok's public oEmbed API (no API key required)
-// and stores them as attachments in Airtable field flds3ZtOYpN6eTur5 (Post Thumbnail).
-// Airtable downloads and stores the image itself — no expiry concerns.
+// Fetches TikTok and YouTube video thumbnails via their public oEmbed APIs
+// (no API key required) and stores them as attachments in Airtable field
+// flds3ZtOYpN6eTur5 (Post Thumbnail). Airtable downloads and stores the
+// image itself — no expiry concerns.
 //
-// POST body: { deliverables: [{ delivId: "recXXX", postLink: "https://tiktok.com/..." }] }
+// POST body: { deliverables: [{ delivId: "recXXX", postLink: "https://..." }] }
 //
 // Required env var: AIRTABLE_TOKEN
 // Optional:         AIRTABLE_BASE_ID
@@ -11,6 +12,21 @@
 const BASE_ID     = process.env.AIRTABLE_BASE_ID || 'appcKC14Om93O40QC';
 const DELIV_TABLE = 'tblNOrIcXwZ0R78LJ';
 const THUMB_FIELD = 'flds3ZtOYpN6eTur5'; // Post Thumbnail (multipleAttachments)
+
+// Detect platform from URL; returns 'tiktok', 'youtube', or null
+function detectPlatform(url) {
+  const l = url.toLowerCase();
+  if (l.includes('tiktok.com') || l.includes('vm.tiktok')) return 'tiktok';
+  if (l.includes('youtube.com') || l.includes('youtu.be'))  return 'youtube';
+  return null;
+}
+
+// Build the oEmbed fetch URL for a given platform
+function oembedUrl(platform, videoUrl) {
+  if (platform === 'tiktok')  return `https://www.tiktok.com/oembed?url=${encodeURIComponent(videoUrl)}`;
+  if (platform === 'youtube') return `https://www.youtube.com/oembed?url=${encodeURIComponent(videoUrl)}&format=json`;
+  return null;
+}
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -27,40 +43,39 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'deliverables array required' });
   }
 
-  // Only process TikTok posts
-  const tiktokPosts = deliverables.filter(d => {
-    const link = (d.postLink || '').toLowerCase();
-    return link.includes('tiktok.com') || link.includes('vm.tiktok');
-  });
+  // Filter to TikTok and YouTube posts
+  const eligible = deliverables
+    .map(d => ({ ...d, platform: detectPlatform(d.postLink || '') }))
+    .filter(d => d.platform !== null);
 
-  if (!tiktokPosts.length) {
-    return res.status(200).json({ ok: true, updated: 0, message: 'No TikTok post links found' });
+  if (!eligible.length) {
+    return res.status(200).json({ ok: true, updated: 0, message: 'No TikTok or YouTube post links found' });
   }
 
-  // Fetch each thumbnail from TikTok oEmbed, then write to Airtable — all in parallel
   const results = [];
   const errors  = [];
 
-  await Promise.all(tiktokPosts.map(async d => {
+  await Promise.all(eligible.map(async d => {
     try {
-      // Resolve any shortened URLs (vm.tiktok.com) by following the redirect first
       let url = d.postLink;
-      if (url.toLowerCase().includes('vm.tiktok')) {
+
+      // Resolve shortened TikTok URLs (vm.tiktok.com) via redirect
+      if (d.platform === 'tiktok' && url.toLowerCase().includes('vm.tiktok')) {
         try {
           const redir = await fetch(url, { method: 'HEAD', redirect: 'follow' });
           url = redir.url || url;
-        } catch (_) { /* fall through with original URL */ }
+        } catch (_) { /* fall through */ }
       }
 
-      const oembedRes = await fetch(
-        `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`,
-        { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; bot)' } }
-      );
+      const fetchUrl = oembedUrl(d.platform, url);
+      const oembedRes = await fetch(fetchUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; bot)' },
+      });
 
       if (!oembedRes.ok) {
         const body = await oembedRes.text();
-        errors.push({ delivId: d.delivId, error: `oEmbed ${oembedRes.status}: ${body.slice(0, 120)}` });
-        console.error('[fetch-thumbnails] oEmbed error', oembedRes.status, url, body.slice(0, 200));
+        errors.push({ delivId: d.delivId, error: `${d.platform} oEmbed ${oembedRes.status}: ${body.slice(0, 120)}` });
+        console.error('[fetch-thumbnails] oEmbed error', d.platform, oembedRes.status, url, body.slice(0, 200));
         return;
       }
 
@@ -68,12 +83,12 @@ module.exports = async function handler(req, res) {
       const thumb  = oembed.thumbnail_url;
 
       if (!thumb) {
-        errors.push({ delivId: d.delivId, error: 'No thumbnail_url in oEmbed response' });
-        console.error('[fetch-thumbnails] no thumbnail_url', url, JSON.stringify(oembed).slice(0, 200));
+        errors.push({ delivId: d.delivId, error: `No thumbnail_url in ${d.platform} oEmbed response` });
+        console.error('[fetch-thumbnails] no thumbnail_url', d.platform, url, JSON.stringify(oembed).slice(0, 200));
         return;
       }
 
-      // Write URL back to Airtable
+      // Write to Airtable attachment field — Airtable fetches and stores the image
       const atRes = await fetch(
         `https://api.airtable.com/v0/${BASE_ID}/${DELIV_TABLE}/${d.delivId}`,
         {
@@ -82,14 +97,14 @@ module.exports = async function handler(req, res) {
             Authorization: `Bearer ${atToken}`,
             'Content-Type': 'application/json',
           },
-          // Attachment fields take an array of { url } objects —
-          // Airtable fetches and stores the image itself.
-          body: JSON.stringify({ fields: { [THUMB_FIELD]: [{ url: thumb, filename: `thumb_${d.delivId}.jpg` }] } }),
+          body: JSON.stringify({
+            fields: { [THUMB_FIELD]: [{ url: thumb, filename: `thumb_${d.delivId}.jpg` }] },
+          }),
         }
       );
 
       if (atRes.ok) {
-        results.push({ delivId: d.delivId, thumb });
+        results.push({ delivId: d.delivId, thumb, platform: d.platform });
       } else {
         const body = await atRes.text();
         errors.push({ delivId: d.delivId, error: `Airtable ${atRes.status}: ${body.slice(0, 120)}` });
