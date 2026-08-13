@@ -3215,6 +3215,7 @@ function buildPaginationHtml(cur, total, count, start, end) {
 }
 
 function renderRptPage(sorted) {
+  var scrollY = window.scrollY; // save before DOM update
   var totalPages = Math.max(1, Math.ceil(sorted.length / _reportPageSz));
   _reportPage = Math.max(1, Math.min(_reportPage, totalPages));
   var start = (_reportPage - 1) * _reportPageSz;
@@ -3225,6 +3226,8 @@ function renderRptPage(sorted) {
   // Update inline pagination in sort bar
   var pagEl = document.getElementById('rpt-pag-inline');
   if (pagEl) pagEl.innerHTML = buildRptPagBtns(_reportPage, totalPages, sorted.length, start, end);
+  // Restore scroll position — prevents the page jumping on pagination clicks
+  window.scrollTo(0, scrollY);
 }
 
 function rptMonthLabel(ym) {
