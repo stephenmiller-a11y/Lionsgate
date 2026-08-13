@@ -773,6 +773,7 @@
     .post-left { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
     .phone { width: 100px; aspect-ratio: 9 / 17.5; background: #0d0d0f; border-radius: 20px; padding: 5px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); position: relative; flex-shrink: 0; }
     .phone-screen { width: 100%; height: 100%; border-radius: 15px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
+    .phone-screen img.phone-thumb { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
     .phone-notch { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 36px; height: 8px; background: #0d0d0f; border-radius: 6px; z-index: 2; }
     .thumb { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #fff; }
     .thumb .play { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; }
@@ -3162,11 +3163,14 @@ function buildRptCardHtml(d) {
     + '<div class="phone">'
     + '<div class="phone-notch"></div>'
     + '<div class="phone-screen">'
-    + '<div class="thumb" style="background:' + thumbGrad + '">'
-    + '<div class="play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="#fff"/></svg></div>'
-    + '<div class="thumb-label">' + (d.type || 'Video') + '</div>'
-    + '</div>'
-    + (platLabel ? '<div class="phone-platform">' + platSvg + ' ' + platLabel + '</div>' : '')
+    + (d.thumbnailUrl
+        ? '<img class="phone-thumb" src="' + d.thumbnailUrl + '" alt="">'
+          + (platLabel ? '<div class="phone-platform">' + platSvg + ' ' + platLabel + '</div>' : '')
+        : '<div class="thumb" style="background:' + thumbGrad + '">'
+          + '<div class="play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="#fff"/></svg></div>'
+          + '<div class="thumb-label">' + (d.type || 'Video') + '</div>'
+          + '</div>'
+          + (platLabel ? '<div class="phone-platform">' + platSvg + ' ' + platLabel + '</div>' : ''))
     + '</div>'
     + '</div>'
     + linkHtml
@@ -3278,6 +3282,7 @@ function renderReporting(campaign, deliverables) {
     + '<div class="reporting-buttons">'
     + '<button class="btn-refresh" onclick="refreshReporting()">&#x21BA; Refresh</button>'
     + '<button class="btn-update" id="btn-update-stats" onclick="updateStats()">&#x1F4CA; Update Stats</button>'
+    + '<button class="btn-update" id="btn-fetch-thumbs" onclick="fetchThumbnails()" style="background:#f5eeff;color:#7b2d8b;border-color:#d9b8f5">&#x1F5BC; Fetch Thumbnails</button>'
     + '</div></div>';
 
   var statRow = '<div class="rpt-stat-row">'
@@ -3620,6 +3625,55 @@ async function updateStats() {
     btn.disabled = false;
     btn.textContent = '📊 Update Stats';
   }
+}
+
+async function fetchThumbnails() {
+  var btn = document.getElementById('btn-fetch-thumbs');
+  if (!btn || btn.disabled) return;
+
+  // Find TikTok deliverables that have a post link but no thumbnail yet
+  var tiktokDelivs = _deliverables.filter(function(d) {
+    var link = (d.postLink || '').toLowerCase();
+    return (link.includes('tiktok.com') || link.includes('vm.tiktok')) && !d.thumbnailUrl;
+  });
+
+  if (!tiktokDelivs.length) {
+    btn.textContent = '✅ All up to date';
+    setTimeout(function() { btn.textContent = '🖼 Fetch Thumbnails'; }, 2500);
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Fetching…';
+
+  try {
+    var res = await fetch('/api/fetch-thumbnails', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        deliverables: tiktokDelivs.map(function(d) { return { delivId: d.id, postLink: d.postLink }; })
+      })
+    });
+    var data = await res.json();
+
+    if (data.results && data.results.length) {
+      // Patch in-memory cache so cards re-render with the new URL immediately
+      data.results.forEach(function(r) {
+        var d = _deliverables.find(function(x) { return x.id === r.delivId; });
+        if (d) d.thumbnailUrl = r.thumb;
+      });
+      renderRptPage(rptSorted());
+      btn.textContent = '✅ Got ' + data.results.length + ' thumbnail' + (data.results.length === 1 ? '' : 's');
+    } else {
+      btn.textContent = '⚠ None found';
+    }
+  } catch (err) {
+    console.error('[fetchThumbnails]', err);
+    btn.textContent = '⚠ Error';
+  }
+
+  btn.disabled = false;
+  setTimeout(function() { if (btn) btn.textContent = '🖼 Fetch Thumbnails'; }, 3500);
 }
 
 function showStatsToast(message, type) {
