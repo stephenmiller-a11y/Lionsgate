@@ -54,6 +54,7 @@ const DELIVERABLE_FIELDS = [
   'fldAJ64smous4Sum4', // Fourth Draft (url)
   'fldKXUXRkHwkATQmc', // Fifth Draft (url)
   'fldUdrMJAhL1Zey7q', // Duration (number in seconds)
+  'fld1SsIcnuhPtt8FJ', // Post Thumbnail URL (text — written by fetch-thumbnails.js via Apify)
 ];
 
 // Offers table — accessed by field ID (returnFieldsByFieldId=true)
@@ -243,6 +244,7 @@ module.exports = async function handler(req, res) {
           comments:     f['fldTm8YrIhRvRCQUr'] ?? null,
           shares:       f['fldqqQzTtUl6k5crI'] ?? null,
           hasThumbnail:   !!(f['flds3ZtOYpN6eTur5'] && f['flds3ZtOYpN6eTur5'].length > 0),
+          thumbnailUrl:   f['fld1SsIcnuhPtt8FJ'] || null,  // Post Thumbnail URL (plain text, populated by Apify)
           scriptDue:      f['fldlhbnzU71XhvOPN'] || null,
           draftDue:       f['fldt7DyDbsVthLa4U'] || null,
           shootDate:      f['fldJH1c8IzvodKKoo'] || null,
