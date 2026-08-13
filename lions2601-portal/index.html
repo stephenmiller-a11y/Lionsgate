@@ -732,8 +732,9 @@
     .chart-wrap svg { display: block; width: 100%; height: auto; overflow: visible; }
     .rpt-chart-pt { cursor: pointer; }
     /* Top posts */
-    .top-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f6f6f6; }
+    .top-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f6f6f6; border-radius: 6px; transition: background 0.12s; }
     .top-row:last-child { border-bottom: none; }
+    a.top-row:hover { background: #fafafa; cursor: pointer; }
     .top-rank { width: 22px; height: 22px; border-radius: 50%; background: #f5eeff; color: #7b2d8b; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .top-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #7b2d8b, #b39ddb); color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
     img.top-avatar { object-fit: cover; }
@@ -3470,13 +3471,15 @@ function buildTopPostsHtml(delivs) {
     var av = _headshotMap[d.talent]
       ? '<img class="top-avatar" src="' + _headshotMap[d.talent] + '" alt="' + (d.talent || '') + '">'
       : '<div class="top-avatar">' + initials(d.talent) + '</div>';
-    return '<div class="top-row">'
+    var rowTag  = d.postLink ? 'a'   : 'div';
+    var rowAttr = d.postLink ? ' href="' + d.postLink + '" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"' : '';
+    return '<' + rowTag + ' class="top-row"' + rowAttr + '>'
       + '<div class="top-rank">' + (i + 1) + '</div>'
       + av
       + '<div class="top-info"><div class="top-name">' + (d.talent || '—') + '</div>'
       + '<div class="top-sub">' + (d.type || '') + (d.airDate ? ' · ' + fmtDate(d.airDate) : '') + '</div></div>'
-      + '<div class="top-views">' + fmtNum(d.views) + '</div>'
-      + '</div>';
+      + '<div class="top-views">' + fmtNum(d.views) + (d.postLink ? ' <span style="font-size:10px;opacity:0.5">↗</span>' : '') + '</div>'
+      + '</' + rowTag + '>';
   }).join('');
 }
 
