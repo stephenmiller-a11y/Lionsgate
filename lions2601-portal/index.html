@@ -3637,9 +3637,20 @@ async function fetchThumbnails() {
     return (link.includes('tiktok.com') || link.includes('vm.tiktok')) && !d.thumbnailUrl;
   });
 
+  console.log('[fetchThumbnails] TikTok posts eligible:', tiktokDelivs.length,
+    tiktokDelivs.map(function(d) { return d.postLink; }));
+
   if (!tiktokDelivs.length) {
-    btn.textContent = '✅ All up to date';
-    setTimeout(function() { btn.textContent = '🖼 Fetch Thumbnails'; }, 2500);
+    // Check if there are TikTok posts at all (just no unresolved ones)
+    var anyTiktok = _deliverables.filter(function(d) {
+      var link = (d.postLink || '').toLowerCase();
+      return link.includes('tiktok.com') || link.includes('vm.tiktok');
+    });
+    if (anyTiktok.length) {
+      showStatsToast('All TikTok thumbnails are already fetched.', 'success');
+    } else {
+      showStatsToast('No TikTok post links found in this campaign.', 'warn');
+    }
     return;
   }
 
@@ -3654,26 +3665,37 @@ async function fetchThumbnails() {
         deliverables: tiktokDelivs.map(function(d) { return { delivId: d.id, postLink: d.postLink }; })
       })
     });
-    var data = await res.json();
 
-    if (data.results && data.results.length) {
-      // Patch in-memory cache so cards re-render with the new URL immediately
+    var data;
+    try { data = await res.json(); } catch (e) { data = {}; }
+    console.log('[fetchThumbnails] API response', res.status, data);
+
+    if (!res.ok) {
+      showStatsToast('Thumbnail fetch failed: ' + (data.error || 'HTTP ' + res.status), 'error');
+    } else if (data.results && data.results.length) {
+      // Patch in-memory cache so cards re-render immediately
       data.results.forEach(function(r) {
         var d = _deliverables.find(function(x) { return x.id === r.delivId; });
         if (d) d.thumbnailUrl = r.thumb;
       });
       renderRptPage(rptSorted());
-      btn.textContent = '✅ Got ' + data.results.length + ' thumbnail' + (data.results.length === 1 ? '' : 's');
+      showStatsToast(
+        '✓ Fetched ' + data.results.length + ' thumbnail' + (data.results.length === 1 ? '' : 's') + '.',
+        'success'
+      );
     } else {
-      btn.textContent = '⚠ None found';
+      showStatsToast(
+        (data.message || 'Apify returned no thumbnails.') + ' Check the console for details.',
+        'warn'
+      );
     }
   } catch (err) {
     console.error('[fetchThumbnails]', err);
-    btn.textContent = '⚠ Error';
+    showStatsToast('Thumbnail fetch error: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🖼 Fetch Thumbnails';
   }
-
-  btn.disabled = false;
-  setTimeout(function() { if (btn) btn.textContent = '🖼 Fetch Thumbnails'; }, 3500);
 }
 
 function showStatsToast(message, type) {
