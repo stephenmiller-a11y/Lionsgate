@@ -703,48 +703,11 @@
     .tab-count-dot { background: #7b2d8b; color: #fff; font-size: 10.5px; font-weight: 800; min-width: 18px; height: 18px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; padding: 0 5px; margin-left: 4px; }
 
     /* ── REPORTING TAB ───────────────────────────────────────────────────── */
-    .reporting-main { max-width: 960px; margin: 0 auto; padding: 32px 32px 64px; }
-    .reporting-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .reporting-main { max-width: 980px; margin: 0 auto; padding: 32px 32px 64px; }
+    .reporting-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
     .reporting-header-left h2 { font-size: 20px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
     .reporting-header-left p  { font-size: 13px; color: #999; }
     .reporting-buttons { display: flex; gap: 10px; align-items: center; }
-    .rpt-sort-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
-    .rpt-sort-label { font-size: 12px; font-weight: 600; color: #aaa; text-transform: uppercase; letter-spacing: 0.06em; margin-right: 2px; }
-    .rpt-sort-btn {
-      padding: 5px 13px; border-radius: 20px; font-size: 12px; font-weight: 600;
-      border: 1.5px solid #e0e0e0; background: #fff; color: #666; cursor: pointer; transition: all 0.15s;
-    }
-    .rpt-sort-btn:hover { border-color: #bbb; color: #333; }
-    .rpt-sort-btn.active { background: #1a1a1a; border-color: #1a1a1a; color: #fff; }
-    .rpt-sort-divider { width: 1px; height: 18px; background: #e0e0e0; margin: 0 4px; }
-    .rpt-month-select {
-      height: 32px; padding: 0 10px; border-radius: 20px; border: 1.5px solid #ddd;
-      font-size: 13px; font-weight: 600; color: #555; background: #fff;
-      cursor: pointer; outline: none; appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23aaa'/%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right 10px center;
-      padding-right: 28px;
-    }
-    .rpt-month-select:hover { border-color: #bbb; color: #333; }
-    .rpt-search {
-      flex: 1; min-width: 160px; height: 32px; padding: 0 12px;
-      border-radius: 20px; border: 1.5px solid #ddd;
-      font-size: 13px; color: #555; outline: none; background: #fff;
-    }
-    .rpt-search:focus { border-color: #7b2d8b; }
-    .rpt-search::placeholder { color: #bbb; }
-    .rpt-pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 28px; padding-top: 20px; border-top: 1px solid #f0f0f0; }
-    .rpt-page-info { font-size: 12px; color: #aaa; }
-    .rpt-page-btns { display: flex; gap: 4px; align-items: center; }
-    .rpt-page-btn {
-      min-width: 32px; height: 32px; padding: 0 8px; border-radius: 7px;
-      font-size: 13px; font-weight: 600; border: 1.5px solid #e8e8e8;
-      background: #fff; color: #555; cursor: pointer; transition: all 0.12s;
-    }
-    .rpt-page-btn:hover:not(:disabled) { border-color: #bbb; color: #222; }
-    .rpt-page-btn.active { background: #1a1a1a; border-color: #1a1a1a; color: #fff; }
-    .rpt-page-btn:disabled { opacity: 0.35; cursor: default; }
-    .rpt-page-ellipsis { font-size: 13px; color: #bbb; padding: 0 4px; }
     .btn-refresh, .btn-update {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
@@ -755,38 +718,86 @@
     .btn-update  { background: #7b2d8b; color: #fff; }
     .btn-update:hover { background: #6a2578; }
     .last-updated { font-size: 11px; color: #bbb; }
-    .reporting-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
-    .rpt-stat-card { background: #fff; border-radius: 12px; padding: 18px 20px; border: 1px solid #e8e8e8; }
-    .rpt-stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 6px; }
-    .rpt-stat-value { font-size: 24px; font-weight: 700; color: #1a1a1a; }
-    .rpt-stat-sub   { font-size: 11px; color: #bbb; margin-top: 4px; }
-    .rpt-deliverable-card { background: #fff; border-radius: 14px; border: 1px solid #e8e8e8; margin-bottom: 16px; overflow: hidden; }
-    .rpt-del-header { padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f0f0f0; }
-    .rpt-del-header-left { display: flex; align-items: center; gap: 14px; }
-    .rpt-del-avatar {
-      width: 44px; height: 44px; border-radius: 50%;
-      background: linear-gradient(135deg, #7b2d8b, #b39ddb);
-      display: flex; align-items: center; justify-content: center;
-      color: #fff; font-size: 16px; font-weight: 700; flex-shrink: 0;
+    /* 3-col stat row for reporting */
+    .rpt-stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
+    /* Chart + Top Posts grid */
+    .chart-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 14px; margin-bottom: 24px; }
+    .chart-card, .top-card { background: #fff; border-radius: 12px; border: 1px solid #e8e8e8; padding: 20px 22px; }
+    .card-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .card-title { font-size: 14px; font-weight: 700; }
+    .metric-toggle { display: flex; background: #f0f0f2; border-radius: 8px; padding: 3px; gap: 2px; }
+    .metric-toggle button { border: none; background: transparent; padding: 5px 12px; font-size: 11.5px; font-weight: 600; color: #777; border-radius: 6px; cursor: pointer; }
+    .metric-toggle button.active { background: #fff; color: #7b2d8b; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .chart-wrap { position: relative; overflow: visible; }
+    .chart-wrap svg { display: block; width: 100%; height: auto; overflow: visible; }
+    .rpt-chart-pt { cursor: pointer; }
+    /* Top posts */
+    .top-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f6f6f6; }
+    .top-row:last-child { border-bottom: none; }
+    .top-rank { width: 22px; height: 22px; border-radius: 50%; background: #f5eeff; color: #7b2d8b; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .top-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #7b2d8b, #b39ddb); color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+    img.top-avatar { object-fit: cover; }
+    .top-info { flex: 1; min-width: 0; }
+    .top-name { font-size: 12.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .top-sub { font-size: 11px; color: #999; }
+    .top-views { font-size: 14px; font-weight: 800; flex-shrink: 0; }
+    .top-empty { padding: 24px 0; text-align: center; color: #ccc; font-size: 13px; font-style: italic; }
+    /* Sort / filter bar */
+    .rpt-sort-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .rpt-sort-label { font-size: 12px; font-weight: 600; color: #aaa; text-transform: uppercase; letter-spacing: 0.06em; flex-shrink: 0; }
+    .rpt-sort-btn { padding: 5px 13px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1.5px solid #e0e0e0; background: #fff; color: #666; cursor: pointer; transition: all 0.15s; }
+    .rpt-sort-btn:hover { border-color: #bbb; color: #333; }
+    .rpt-sort-btn.active { background: #7b2d8b; border-color: #7b2d8b; color: #fff; }
+    .rpt-pages-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+    .rpt-filter-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .rpt-platform-select {
+      height: 32px; padding: 0 28px 0 12px; border-radius: 20px; border: 1.5px solid #ddd;
+      font-size: 13px; font-weight: 600; color: #555; background: #fff; cursor: pointer; outline: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23aaa'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
     }
-    img.rpt-del-avatar { object-fit: cover; background: #e8e8e8; display: block; }
-    .rpt-del-name { font-size: 15px; font-weight: 700; color: #1a1a1a; }
-    .rpt-del-code { font-size: 12px; color: #999; margin-top: 2px; }
-    .rpt-del-body { padding: 20px 24px; }
-    .rpt-metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-    .rpt-metric { text-align: center; }
-    .rpt-metric-value { font-size: 22px; font-weight: 700; color: #1a1a1a; }
-    .rpt-metric-value.empty { color: #ddd; font-size: 18px; }
-    .rpt-metric-label { font-size: 11px; color: #999; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
-    .rpt-del-footer { padding: 12px 24px; border-top: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; background: #fafafa; }
-    .rpt-del-footer-left { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #888; }
-    .rpt-post-link {
-      display: inline-flex; align-items: center; gap: 5px;
-      color: #7b2d8b; font-size: 12px; font-weight: 600; text-decoration: none;
-      padding: 4px 10px; border-radius: 6px; background: #f5eeff; border: 1px solid #e0ccff;
-    }
+    .rpt-platform-select:hover { border-color: #bbb; color: #333; }
+    .rpt-search { flex: 1; min-width: 160px; height: 32px; padding: 0 12px; border-radius: 20px; border: 1.5px solid #ddd; font-size: 13px; color: #555; outline: none; background: #fff; }
+    .rpt-search:focus { border-color: #7b2d8b; }
+    .rpt-search::placeholder { color: #bbb; }
+    .rpt-page-info { font-size: 12px; color: #aaa; flex-shrink: 0; }
+    .rpt-page-btns { display: flex; gap: 4px; align-items: center; }
+    .rpt-page-btn { min-width: 30px; height: 30px; padding: 0 8px; border-radius: 7px; font-size: 12.5px; font-weight: 600; border: 1.5px solid #e8e8e8; background: #fff; color: #555; cursor: pointer; transition: all 0.12s; }
+    .rpt-page-btn:hover:not(:disabled) { border-color: #bbb; color: #222; }
+    .rpt-page-btn.active { background: #7b2d8b; border-color: #7b2d8b; color: #fff; }
+    .rpt-page-btn:disabled { opacity: 0.35; cursor: default; }
+    .rpt-page-ellipsis { font-size: 13px; color: #bbb; padding: 0 4px; }
+    /* Post cards — phone mockup */
+    .post-card { background: #fff; border-radius: 14px; border: 1px solid #e8e8e8; margin-bottom: 12px; padding: 14px 18px; display: flex; gap: 22px; }
+    .post-left { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .phone { width: 100px; aspect-ratio: 9 / 17.5; background: #0d0d0f; border-radius: 20px; padding: 5px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); position: relative; flex-shrink: 0; }
+    .phone-screen { width: 100%; height: 100%; border-radius: 15px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
+    .phone-notch { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 36px; height: 8px; background: #0d0d0f; border-radius: 6px; z-index: 2; }
+    .thumb { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #fff; }
+    .thumb .play { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; }
+    .thumb .play svg { width: 12px; height: 12px; fill: #fff; margin-left: 2px; }
+    .thumb-label { font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255,255,255,0.85); text-align: center; padding: 0 4px; }
+    .phone-platform { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; font-size: 8px; font-weight: 700; color: rgba(255,255,255,0.9); background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 20px; white-space: nowrap; z-index: 3; }
+    .phone-platform svg { width: 9px; height: 9px; flex-shrink: 0; }
+    .rpt-post-link { display: inline-flex; align-items: center; gap: 4px; color: #7b2d8b; font-size: 11px; font-weight: 600; text-decoration: none; padding: 3px 8px; border-radius: 6px; background: #f5eeff; border: 1px solid #e0ccff; }
     .rpt-post-link:hover { background: #ede0ff; }
-    .rpt-no-link { font-size: 12px; color: #ccc; font-style: italic; }
+    .post-right { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+    .post-head { display: flex; align-items: flex-start; justify-content: space-between; }
+    .post-head-left { display: flex; align-items: center; gap: 12px; }
+    .rpt-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #7b2d8b, #b39ddb); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 700; flex-shrink: 0; overflow: hidden; }
+    img.rpt-avatar { object-fit: cover; }
+    .rpt-name { font-size: 14px; font-weight: 700; }
+    .rpt-code { font-size: 12px; color: #999; margin-top: 2px; }
+    .post-metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 20px; padding-top: 8px; border-top: 1px solid #f0f0f0; }
+    .rpt-metric { text-align: center; }
+    .rpt-metric-value { font-size: 17px; font-weight: 800; color: #1a1a1a; }
+    .rpt-metric-value.empty { color: #ddd; }
+    .rpt-metric-label { font-size: 10px; color: #999; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 4px; }
+    .rpt-metric-label svg { width: 11px; height: 11px; flex-shrink: 0; }
+    /* Chart hover tooltip */
+    .chart-tip { position: fixed; z-index: 500; background: #1c1c1e; color: #fff; border-radius: 8px; padding: 7px 11px; font-size: 12px; font-weight: 600; pointer-events: none; opacity: 0; transform: translate(-50%, calc(-100% - 12px)); transition: opacity 0.1s; white-space: nowrap; }
+    .chart-tip .tip-sub { font-weight: 500; color: rgba(255,255,255,0.6); font-size: 11px; }
+    .chart-tip.show { opacity: 1; }
 
     /* Update modal */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
@@ -887,8 +898,10 @@
       .details-grid { grid-template-columns: 1fr; }
       .stats-row { grid-template-columns: 1fr 1fr; }
       .talent-grid { grid-template-columns: 1fr; }
-      .reporting-stats { grid-template-columns: repeat(2, 1fr); }
-      .rpt-metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .rpt-stat-row { grid-template-columns: repeat(2, 1fr); }
+      .chart-grid { grid-template-columns: 1fr; }
+      .post-metrics { grid-template-columns: repeat(2, 1fr); }
+      .phone { width: 76px; }
       .reporting-header { flex-direction: column; align-items: flex-start; gap: 12px; }
       .talent-offer-inner { grid-template-columns: 90px 1fr; }
       .talent-offer-photo, .talent-offer-photo-fallback { width: 90px; height: 120px; }
@@ -1631,11 +1644,14 @@ function escapeHtml(str) {
 
 // ── BRIEF SAVE LOGIC ──────────────────────────────────────────────────────────
 var _briefTimers  = {};
-var _reportSort   = 'date';  // 'date' | 'creator' | 'views' | 'platform'
-var _reportMonth  = '';      // '' = all months, 'YYYY-MM' = filtered
-var _reportSearch = '';      // free-text search across creator + type
-var _reportPage   = 1;
-var _reportPageSz = 10;
+var _reportSort     = 'date';   // 'date' | 'creator' | 'views'
+var _reportMonth    = '';       // '' = all months, 'YYYY-MM' = filtered
+var _reportSearch   = '';       // free-text search across creator + type
+var _reportPage     = 1;
+var _reportPageSz   = 10;
+var _rptDelivs      = [];       // snapshot for chart re-render on toggle
+var _rptChartMetric = 'views';  // 'views' | 'eng'
+var _rptPlatform    = '';       // platform filter: '' | 'instagram' | 'tiktok' | 'youtube' | 'snap'
 
 function onBriefInput(el) {
   const key = el.dataset.briefKey;
@@ -3092,35 +3108,84 @@ function bioToggle(btn) {
 // ── REPORTING TAB ─────────────────────────────────────────────────────────────
 
 function buildRptCardHtml(d) {
-  const metricIcons = { views: '👁', likes: '❤️', comments: '💬', shares: '🔁' };
-  const metrics = ['views','likes','comments','shares'].map(m => {
-    const val = d[m], isEmpty = val == null;
-    return `<div class="rpt-metric">
-      <div class="rpt-metric-value${isEmpty ? ' empty' : ''}">${fmtNum(val)}</div>
-      <div class="rpt-metric-label">${metricIcons[m]} ${m.charAt(0).toUpperCase() + m.slice(1)}</div>
-    </div>`;
-  }).join('');
-  const linkHtml = d.postLink
-    ? `<a class="rpt-post-link" href="${d.postLink}" target="_blank">↗ View Post</a>`
-    : `<span class="rpt-no-link">No post link yet</span>`;
-  return `<div class="rpt-deliverable-card">
-    <div class="rpt-del-header">
-      <div class="rpt-del-header-left">
-        ${_headshotMap[d.talent]
-          ? `<img class="rpt-del-avatar rpt-del-avatar-img" src="${_headshotMap[d.talent]}" alt="${d.talent}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`+`<div class="rpt-del-avatar" style="display:none">${initials(d.talent)}</div>`
-          : `<div class="rpt-del-avatar">${initials(d.talent)}</div>`}
-        <div>
-          <div class="rpt-del-name">${d.talent}</div>
-          <div class="rpt-del-code">${fmtDate(d.airDate)} · ${calPlatformSvg(d.type || '')} ${d.type || '👻 Snap Video'}</div>
-        </div>
-      </div>
-      ${statusPill(d.status)}
-    </div>
-    <div class="rpt-del-body"><div class="rpt-metrics-grid">${metrics}</div></div>
-    <div class="rpt-del-footer">
-      <div class="rpt-del-footer-left">${platformPill(d.type)}${linkHtml}</div>
-    </div>
-  </div>`;
+  var isLive = isCompleted(d) || !!(d.postLink);
+  var t = (d.type || '').toLowerCase();
+  var thumbGrad, platLabel, platSvg;
+  if (t.includes('instagram') || t.includes('ig reel') || t.includes('ig story') || /\big\b/.test(t)) {
+    thumbGrad = 'linear-gradient(160deg,#f09433 0%,#dc2743 50%,#bc1888 100%)';
+    platLabel = 'Instagram';
+    platSvg   = SVG.insta;
+  } else if (t.includes('tiktok') || t.includes('tik tok')) {
+    thumbGrad = 'linear-gradient(160deg,#010101 0%,#1a1a1a 50%,#69c9d0 100%)';
+    platLabel = 'TikTok';
+    platSvg   = SVG.tiktok;
+  } else if (t.includes('youtube') || t.includes('yt short')) {
+    thumbGrad = 'linear-gradient(160deg,#282828 0%,#cc0000 100%)';
+    platLabel = 'YouTube';
+    platSvg   = SVG.youtube;
+  } else if (t.includes('snap')) {
+    thumbGrad = 'linear-gradient(160deg,#1a1a1a 0%,#fffc00 100%)';
+    platLabel = 'Snapchat';
+    platSvg   = SVG.snap || '';
+  } else {
+    thumbGrad = 'linear-gradient(160deg,#2d1060 0%,#7b2d8b 100%)';
+    platLabel = (d.type || 'Video').split(' ')[0];
+    platSvg   = '';
+  }
+
+  var avatarHtml = _headshotMap[d.talent]
+    ? '<img class="rpt-avatar" src="' + _headshotMap[d.talent] + '" alt="' + (d.talent || '') + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+      + '<div class="rpt-avatar" style="display:none">' + initials(d.talent) + '</div>'
+    : '<div class="rpt-avatar">' + initials(d.talent) + '</div>';
+
+  var linkHtml = d.postLink
+    ? '<a class="rpt-post-link" href="' + d.postLink + '" target="_blank" rel="noopener">↗ View Post</a>'
+    : '<span style="font-size:11px;color:#ccc;font-style:italic">No link yet</span>';
+
+  var svgEye   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/></svg>';
+  var svgHeart = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 8.6c0 5-8.8 11-8.8 11s-8.8-6-8.8-11a4.9 4.9 0 0 1 8.8-3 4.9 4.9 0 0 1 8.8 3z"/></svg>';
+  var svgMsg   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.9 8.9 0 0 1-3.9-.9L3 20l1-4.9a8.3 8.3 0 0 1-1-4A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/></svg>';
+  var svgShare = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>';
+
+  var mv = d.views    != null ? fmtNum(d.views)    : '—';
+  var ml = d.likes    != null ? fmtNum(d.likes)    : '—';
+  var mc = d.comments != null ? fmtNum(d.comments) : '—';
+  var ms = d.shares   != null ? fmtNum(d.shares)   : '—';
+  var emV = d.views    == null ? ' empty' : '';
+  var emL = d.likes    == null ? ' empty' : '';
+  var emC = d.comments == null ? ' empty' : '';
+  var emS = d.shares   == null ? ' empty' : '';
+
+  return '<div class="post-card">'
+    + '<div class="post-left">'
+    + '<div class="phone">'
+    + '<div class="phone-notch"></div>'
+    + '<div class="phone-screen">'
+    + '<div class="thumb" style="background:' + thumbGrad + '">'
+    + '<div class="play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="#fff"/></svg></div>'
+    + '<div class="thumb-label">' + (d.type || 'Video') + '</div>'
+    + '</div>'
+    + (platLabel ? '<div class="phone-platform">' + platSvg + ' ' + platLabel + '</div>' : '')
+    + '</div>'
+    + '</div>'
+    + linkHtml
+    + '</div>'
+    + '<div class="post-right">'
+    + '<div class="post-head">'
+    + '<div class="post-head-left">' + avatarHtml
+    + '<div><div class="rpt-name">' + (d.talent || '—') + '</div>'
+    + '<div class="rpt-code">' + fmtDate(d.airDate) + (d.type ? ' · ' + d.type : '') + '</div></div>'
+    + '</div>'
+    + (isLive ? '<span class="pill pill-live" style="font-size:11px;padding:3px 10px;flex-shrink:0">🚀 Live</span>' : '')
+    + '</div>'
+    + '<div class="post-metrics">'
+    + '<div class="rpt-metric"><div class="rpt-metric-value' + emV + '">' + mv + '</div><div class="rpt-metric-label">' + svgEye   + ' Views</div></div>'
+    + '<div class="rpt-metric"><div class="rpt-metric-value' + emL + '">' + ml + '</div><div class="rpt-metric-label">' + svgHeart + ' Likes</div></div>'
+    + '<div class="rpt-metric"><div class="rpt-metric-value' + emC + '">' + mc + '</div><div class="rpt-metric-label">' + svgMsg   + ' Comments</div></div>'
+    + '<div class="rpt-metric"><div class="rpt-metric-value' + emS + '">' + ms + '</div><div class="rpt-metric-label">' + svgShare + ' Shares</div></div>'
+    + '</div>'
+    + '</div>'
+    + '</div>';
 }
 
 function buildPaginationHtml(cur, total, count, start, end) {
@@ -3150,9 +3215,11 @@ function renderRptPage(sorted) {
   var start = (_reportPage - 1) * _reportPageSz;
   var end   = Math.min(start + _reportPageSz, sorted.length);
   var cards = sorted.slice(start, end).map(buildRptCardHtml).join('');
-  var pagination = buildPaginationHtml(_reportPage, totalPages, sorted.length, start, end);
   var container = document.getElementById('rpt-cards');
-  if (container) container.innerHTML = cards + pagination;
+  if (container) container.innerHTML = cards || '<p style="padding:40px 0;text-align:center;color:#ccc;font-size:13px">No posts match your filters.</p>';
+  // Update inline pagination in sort bar
+  var pagEl = document.getElementById('rpt-pag-inline');
+  if (pagEl) pagEl.innerHTML = buildRptPagBtns(_reportPage, totalPages, sorted.length, start, end);
 }
 
 function rptMonthLabel(ym) {
@@ -3163,15 +3230,15 @@ function rptMonthLabel(ym) {
 
 function rptSorted() {
   var q = _reportSearch.toLowerCase().trim();
-  var base = _deliverables.filter(d => {
+  var base = _deliverables.filter(function(d) {
     if (_reportMonth && !(d.airDate && d.airDate.startsWith(_reportMonth))) return false;
+    if (_rptPlatform && !(d.type || '').toLowerCase().includes(_rptPlatform)) return false;
     if (q && !((d.talent || '').toLowerCase().includes(q) || (d.type || '').toLowerCase().includes(q))) return false;
     return true;
   });
-  return [...base].sort((a, b) => {
-    if (_reportSort === 'creator')  return (a.talent || '').localeCompare(b.talent || '');
-    if (_reportSort === 'views')    return (b.views ?? -1) - (a.views ?? -1);
-    if (_reportSort === 'platform') return (a.type || '').localeCompare(b.type || '');
+  return base.slice().sort(function(a, b) {
+    if (_reportSort === 'creator') return (a.talent || '').localeCompare(b.talent || '');
+    if (_reportSort === 'views')   return ((b.views != null ? b.views : -1) - (a.views != null ? a.views : -1));
     var da = calSafeDate(a.airDate) || '9999', db = calSafeDate(b.airDate) || '9999';
     return da.localeCompare(db);
   });
@@ -3190,10 +3257,11 @@ function filterReporting(month) {
 }
 
 function renderReporting(campaign, deliverables) {
+  _rptDelivs = deliverables;
   var totalViews = 0, totalLikes = 0, totalComments = 0, totalShares = 0;
-  var hasMetrics = false, postsLive = 0;
-  deliverables.forEach(d => {
-    if (isCompleted(d)) postsLive++;
+  var hasMetrics = false, completed = 0, total = deliverables.length;
+  deliverables.forEach(function(d) {
+    if (isCompleted(d)) completed++;
     if (d.views    != null) { totalViews    += d.views;    hasMetrics = true; }
     if (d.likes    != null) { totalLikes    += d.likes;    hasMetrics = true; }
     if (d.comments != null) { totalComments += d.comments; hasMetrics = true; }
@@ -3201,71 +3269,81 @@ function renderReporting(campaign, deliverables) {
   });
   var totalEng = totalLikes + totalComments + totalShares;
 
-  var summaryCards = `
-    <div class="reporting-stats">
-      <div class="rpt-stat-card">
-        <div class="rpt-stat-label">Deliverables</div>
-        <div class="rpt-stat-value">${deliverables.length}</div>
-      </div>
-      <div class="rpt-stat-card">
-        <div class="rpt-stat-label">Total Views</div>
-        <div class="rpt-stat-value">${hasMetrics ? fmtNum(totalViews) : '—'}</div>
-        ${!hasMetrics ? `<div class="rpt-stat-sub">Awaiting post links</div>` : ''}
-      </div>
-      <div class="rpt-stat-card">
-        <div class="rpt-stat-label">Total Engagements</div>
-        <div class="rpt-stat-value">${hasMetrics ? fmtNum(totalEng) : '—'}</div>
-      </div>
-      <div class="rpt-stat-card">
-        <div class="rpt-stat-label">Posts Live</div>
-        <div class="rpt-stat-value">${postsLive}<span style="font-size:14px;color:#ccc;font-weight:400;margin-left:4px">/ ${deliverables.length}</span></div>
-      </div>
-    </div>`;
-
-  var allMonths = [...new Set(deliverables.map(function(d) { var s = calSafeDate(d.airDate); return s ? s.slice(0,7) : null; }).filter(Boolean))].sort();
-  var monthDropdown = allMonths.length > 1
-    ? `<select class="rpt-month-select" onchange="filterReporting(this.value)">
-        <option value="">All Months</option>
-        ${allMonths.map(ym => `<option value="${ym}" ${_reportMonth===ym?'selected':''}>${rptMonthLabel(ym)}</option>`).join('')}
-      </select>`
-    : '';
-
-  var sortBar = `
-    <div class="rpt-sort-bar">
-      <span class="rpt-sort-label">Sort by</span>
-      <button class="rpt-sort-btn ${_reportSort==='date'     ? 'active':''}" onclick="sortReporting('date')">Post Date</button>
-      <button class="rpt-sort-btn ${_reportSort==='creator'  ? 'active':''}" onclick="sortReporting('creator')">Creator</button>
-      <button class="rpt-sort-btn ${_reportSort==='platform' ? 'active':''}" onclick="sortReporting('platform')">Platform</button>
-      <button class="rpt-sort-btn ${_reportSort==='views'    ? 'active':''}" onclick="sortReporting('views')">Views ↓</button>
-      ${monthDropdown ? `<span class="rpt-sort-divider"></span>${monthDropdown}` : ''}
-      <span class="rpt-sort-divider"></span>
-      <input class="rpt-search" type="text" placeholder="🔍 Search creator or platform…" value="${_reportSearch}" oninput="searchReporting(this.value)">
-    </div>`;
-
   var lastUpdated = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString();
-  var header = `
-    <div class="reporting-header">
-      <div class="reporting-header-left">
-        <h2>Campaign Report</h2>
-        <p>${campaign.name} · ${deliverables.length} deliverables · <span class="last-updated">Last updated: ${lastUpdated}</span></p>
-      </div>
-      <div class="reporting-buttons">
-        <button class="btn-refresh" onclick="refreshReporting()">⟳ Refresh Data</button>
-        <button class="btn-update" id="btn-update-stats" onclick="updateStats()">📊 Update Stats</button>
-      </div>
-    </div>`;
+  var header = '<div class="reporting-header">'
+    + '<div class="reporting-header-left"><h2>Campaign Report</h2>'
+    + '<p>' + campaign.name + ' \xB7 ' + total + ' deliverables \xB7 <span class="last-updated">Last updated: ' + lastUpdated + '</span></p>'
+    + '</div>'
+    + '<div class="reporting-buttons">'
+    + '<button class="btn-refresh" onclick="refreshReporting()">&#x21BA; Refresh</button>'
+    + '<button class="btn-update" id="btn-update-stats" onclick="updateStats()">&#x1F4CA; Update Stats</button>'
+    + '</div></div>';
+
+  var statRow = '<div class="rpt-stat-row">'
+    + '<div class="grad-card grad-views">'
+    + '<div class="grad-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/></svg>Views</div>'
+    + '<div class="grad-value">' + (hasMetrics ? fmtNum(totalViews) : '&mdash;') + '</div>'
+    + '</div>'
+    + '<div class="grad-card grad-engagements">'
+    + '<div class="grad-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M20.8 8.6c0 5-8.8 11-8.8 11s-8.8-6-8.8-11a4.9 4.9 0 0 1 8.8-3 4.9 4.9 0 0 1 8.8 3z"/></svg>Engagements</div>'
+    + '<div class="grad-value">' + (hasMetrics ? fmtNum(totalEng) : '&mdash;') + '</div>'
+    + '</div>'
+    + '<div class="grad-card grad-deliverables">'
+    + '<div class="grad-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>Deliverables</div>'
+    + '<div class="grad-value">' + completed + '<span class="denom"> / ' + total + '</span></div>'
+    + '</div>'
+    + '</div>';
+
+  var chartSvg = buildRptChartSvg(deliverables, _rptChartMetric);
+  var chartSection = '<div class="chart-grid">'
+    + '<div class="chart-card">'
+    + '<div class="card-title-row">'
+    + '<div class="card-title">Views Over Time</div>'
+    + '<div class="metric-toggle">'
+    + '<button class="' + (_rptChartMetric === 'views' ? 'active' : '') + '" onclick="toggleChartMetric(\'views\')">Views</button>'
+    + '<button class="' + (_rptChartMetric === 'eng'   ? 'active' : '') + '" onclick="toggleChartMetric(\'eng\')">Engagements</button>'
+    + '</div></div>'
+    + '<div class="chart-wrap" id="rpt-chart-wrap">' + chartSvg + '</div>'
+    + '</div>'
+    + '<div class="top-card">'
+    + '<div class="card-title-row"><div class="card-title">Top Posts</div></div>'
+    + '<div id="rpt-top-posts">' + buildTopPostsHtml(deliverables) + '</div>'
+    + '</div>'
+    + '</div>';
+
+  var sortBar = '<div class="rpt-sort-bar">'
+    + '<span class="rpt-sort-label">Sort by</span>'
+    + '<button class="rpt-sort-btn ' + (_reportSort === 'date'    ? 'active' : '') + '" onclick="sortReporting(\'date\')">Date</button>'
+    + '<button class="rpt-sort-btn ' + (_reportSort === 'views'   ? 'active' : '') + '" onclick="sortReporting(\'views\')">Views ↓</button>'
+    + '<button class="rpt-sort-btn ' + (_reportSort === 'creator' ? 'active' : '') + '" onclick="sortReporting(\'creator\')">Creator</button>'
+    + '<div class="rpt-pages-right" id="rpt-pag-inline"></div>'
+    + '</div>'
+    + '<div class="rpt-filter-row">'
+    + '<select class="rpt-platform-select" onchange="filterRptPlatform(this.value)">'
+    + '<option value="">All Platforms</option>'
+    + '<option value="instagram"' + (_rptPlatform === 'instagram' ? ' selected' : '') + '>Instagram</option>'
+    + '<option value="tiktok"'    + (_rptPlatform === 'tiktok'    ? ' selected' : '') + '>TikTok</option>'
+    + '<option value="youtube"'   + (_rptPlatform === 'youtube'   ? ' selected' : '') + '>YouTube</option>'
+    + '<option value="snap"'      + (_rptPlatform === 'snap'      ? ' selected' : '') + '>Snapchat</option>'
+    + '</select>'
+    + '<input class="rpt-search" type="text" placeholder="🔍 Search by creator…" value="' + _reportSearch + '" oninput="searchReporting(this.value)">'
+    + '</div>';
 
   document.getElementById('reporting-main').innerHTML =
-    header + summaryCards + sortBar + `<div id="rpt-cards"></div>`;
+    header + statRow + chartSection + sortBar + '<div id="rpt-cards"></div>';
   renderRptPage(rptSorted());
 }
 
 function sortReporting(key) {
   _reportSort = key;
   _reportPage = 1;
-  document.querySelectorAll('.rpt-sort-btn').forEach(btn => {
-    var label = key === 'date' ? 'date' : key === 'views' ? 'views' : key === 'platform' ? 'platform' : 'creator';
-    btn.classList.toggle('active', btn.textContent.toLowerCase().includes(label));
+  document.querySelectorAll('.rpt-sort-btn').forEach(function(btn) {
+    var t = btn.textContent.trim().toLowerCase();
+    btn.classList.toggle('active',
+      (key === 'date'    && t === 'date') ||
+      (key === 'views'   && t.startsWith('views')) ||
+      (key === 'creator' && t === 'creator')
+    );
   });
   renderRptPage(rptSorted());
 }
@@ -3275,6 +3353,162 @@ function goToRptPage(page) {
   renderRptPage(rptSorted());
   var el = document.getElementById('rpt-cards');
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── REPORTING: PLATFORM FILTER ────────────────────────────────────────────────
+function filterRptPlatform(val) {
+  _rptPlatform = val;
+  _reportPage  = 1;
+  renderRptPage(rptSorted());
+}
+
+// ── REPORTING: INLINE PAGINATION BUTTONS ─────────────────────────────────────
+function buildRptPagBtns(cur, total, count, start, end) {
+  if (total <= 1 && count <= _reportPageSz) return '';
+  var near = new Set([1, total, cur-1, cur, cur+1].filter(function(p) { return p >= 1 && p <= total; }));
+  var pages = Array.from(near).sort(function(a,b){return a-b;});
+  var btns = '', prev = -1;
+  pages.forEach(function(p) {
+    if (prev !== -1 && p - prev > 1) btns += '<span class="rpt-page-ellipsis">&hellip;</span>';
+    btns += '<button class="rpt-page-btn' + (p === cur ? ' active' : '') + '" onclick="goToRptPage(' + p + ')">' + p + '</button>';
+    prev = p;
+  });
+  return '<span class="rpt-page-info">' + (start+1) + '&ndash;' + end + ' of ' + count + '</span>'
+    + '<div class="rpt-page-btns">'
+    + '<button class="rpt-page-btn" onclick="goToRptPage(' + (cur-1) + ')" ' + (cur === 1 ? 'disabled' : '') + '>&#8249;</button>'
+    + btns
+    + '<button class="rpt-page-btn" onclick="goToRptPage(' + (cur+1) + ')" ' + (cur === total ? 'disabled' : '') + '>&#8250;</button>'
+    + '</div>';
+}
+
+// ── REPORTING: CHART BUILDER ──────────────────────────────────────────────────
+function buildRptChartSvg(delivs, metric) {
+  var byDate = {};
+  delivs.forEach(function(d) {
+    var raw = calSafeDate(d.airDate);
+    if (!raw) return;
+    var val = metric === 'eng'
+      ? ((d.likes || 0) + (d.comments || 0) + (d.shares || 0))
+      : (d.views || 0);
+    var ds = String(raw).slice(0, 10);
+    byDate[ds] = (byDate[ds] || 0) + val;
+  });
+  var dates = Object.keys(byDate).sort();
+  if (dates.length < 2) {
+    return '<div style="height:180px;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:13px;font-style:italic">Not enough dated posts to chart yet</div>';
+  }
+  // Bucket into at most 9 data points
+  var pts;
+  if (dates.length <= 9) {
+    pts = dates.map(function(ds) { return { label: formatChartLabel(ds), val: byDate[ds] }; });
+  } else {
+    var sz = Math.ceil(dates.length / 9);
+    pts = [];
+    for (var i = 0; i < dates.length; i += sz) {
+      var chunk = dates.slice(i, i + sz);
+      var tot = chunk.reduce(function(s, ds) { return s + byDate[ds]; }, 0);
+      pts.push({ label: formatChartLabel(chunk[0]), val: tot });
+    }
+  }
+  var maxVal = Math.max.apply(null, pts.map(function(p) { return p.val; }));
+  if (!maxVal) {
+    return '<div style="height:180px;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:13px;font-style:italic">No ' + (metric === 'eng' ? 'engagement' : 'view') + ' data yet</div>';
+  }
+  var W = 560, H = 220, ML = 44, MR = 15, MT = 20, MB = 24;
+  var cW = W - ML - MR, cH = H - MT - MB, n = pts.length;
+  var points = pts.map(function(p, i) {
+    var x = ML + (n === 1 ? cW / 2 : (i / (n - 1)) * cW);
+    var y = MT + cH - Math.round((p.val / maxVal) * cH);
+    return { x: x, y: y, val: p.val, label: p.label };
+  });
+  var yLevels = [0, 0.25, 0.5, 0.75, 1.0];
+  var grid = yLevels.map(function(f) {
+    var gy = MT + cH - Math.round(f * cH);
+    return '<line x1="' + ML + '" y1="' + gy + '" x2="' + (W - MR) + '" y2="' + gy + '" stroke="#f0f0f2" stroke-width="1"/>';
+  }).join('');
+  var yLabels = yLevels.map(function(f) {
+    var gy = MT + cH - Math.round(f * cH);
+    return '<text x="' + (ML - 6) + '" y="' + (gy + 4) + '" font-size="10" fill="#bbb" text-anchor="end">' + fmtNum(Math.round(f * maxVal)) + '</text>';
+  }).join('');
+  var xSkip = Math.ceil(n / 6);
+  var xLabels = points.map(function(p, i) {
+    if (i % xSkip !== 0 && i !== n - 1) return '';
+    return '<text x="' + p.x.toFixed(1) + '" y="' + (H - 4) + '" font-size="10" fill="#bbb" text-anchor="middle">' + p.label + '</text>';
+  }).join('');
+  var lineStr = points.map(function(p, i) { return (i ? 'L' : 'M') + p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' ');
+  var areaStr = lineStr + ' L' + points[n-1].x.toFixed(1) + ',' + (MT + cH) + ' L' + ML + ',' + (MT + cH) + ' Z';
+  var dots = points.map(function(p) {
+    var tipV = fmtNum(p.val) + ' ' + (metric === 'eng' ? 'engagements' : 'views');
+    return '<circle class="rpt-chart-pt" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="4" fill="#7b2d8b" stroke="#fff" stroke-width="2"'
+      + ' data-v="' + tipV + '" data-d="' + p.label + '"'
+      + ' onmouseenter="rptChartTipShow(event,this)" onmouseleave="rptChartTipHide(this)"/>';
+  }).join('');
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;display:block;overflow:visible">'
+    + '<defs><linearGradient id="rptAreaGrad" x1="0" y1="0" x2="0" y2="1">'
+    + '<stop offset="0%" stop-color="#7b2d8b" stop-opacity="0.28"/>'
+    + '<stop offset="100%" stop-color="#7b2d8b" stop-opacity="0"/>'
+    + '</linearGradient></defs>'
+    + grid + yLabels + xLabels
+    + '<path d="' + areaStr + '" fill="url(#rptAreaGrad)"/>'
+    + '<path d="' + lineStr + '" fill="none" stroke="#7b2d8b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'
+    + dots + '</svg>';
+}
+
+function formatChartLabel(ds) {
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var parts = String(ds).split('-');
+  if (parts.length < 3) return ds;
+  return months[parseInt(parts[1], 10) - 1] + ' ' + parseInt(parts[2], 10);
+}
+
+// ── REPORTING: TOP POSTS ──────────────────────────────────────────────────────
+function buildTopPostsHtml(delivs) {
+  var sorted = delivs.filter(function(d) { return d.views != null && d.views > 0; })
+    .sort(function(a, b) { return (b.views || 0) - (a.views || 0); }).slice(0, 5);
+  if (!sorted.length) return '<div class="top-empty">No posts with view data yet</div>';
+  return sorted.map(function(d, i) {
+    var av = _headshotMap[d.talent]
+      ? '<img class="top-avatar" src="' + _headshotMap[d.talent] + '" alt="' + (d.talent || '') + '">'
+      : '<div class="top-avatar">' + initials(d.talent) + '</div>';
+    return '<div class="top-row">'
+      + '<div class="top-rank">' + (i + 1) + '</div>'
+      + av
+      + '<div class="top-info"><div class="top-name">' + (d.talent || '—') + '</div>'
+      + '<div class="top-sub">' + (d.type || '') + (d.airDate ? ' · ' + fmtDate(d.airDate) : '') + '</div></div>'
+      + '<div class="top-views">' + fmtNum(d.views) + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+// ── REPORTING: CHART METRIC TOGGLE ───────────────────────────────────────────
+function toggleChartMetric(metric) {
+  _rptChartMetric = metric;
+  var wrap = document.getElementById('rpt-chart-wrap');
+  if (wrap) wrap.innerHTML = buildRptChartSvg(_rptDelivs, metric);
+  document.querySelectorAll('.metric-toggle button').forEach(function(btn) {
+    btn.classList.toggle('active', btn.textContent.trim() === (metric === 'views' ? 'Views' : 'Engagements'));
+  });
+}
+
+// ── REPORTING: CHART TOOLTIP ─────────────────────────────────────────────────
+function rptChartTipShow(event, el) {
+  var tip = document.getElementById('rpt-chart-tip');
+  if (!tip) {
+    tip = document.createElement('div');
+    tip.id = 'rpt-chart-tip';
+    tip.className = 'chart-tip';
+    document.body.appendChild(tip);
+  }
+  tip.innerHTML = '<span>' + (el.dataset.v || '') + '</span><div class="tip-sub">' + (el.dataset.d || '') + '</div>';
+  tip.style.left = event.clientX + 'px';
+  tip.style.top  = event.clientY + 'px';
+  tip.classList.add('show');
+  el.setAttribute('r', '6');
+}
+function rptChartTipHide(el) {
+  var tip = document.getElementById('rpt-chart-tip');
+  if (tip) tip.classList.remove('show');
+  if (el) el.setAttribute('r', '4');
 }
 
 function refreshReporting() {
