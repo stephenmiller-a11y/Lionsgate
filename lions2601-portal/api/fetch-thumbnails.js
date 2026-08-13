@@ -61,6 +61,7 @@ module.exports = async function handler(req, res) {
       body: JSON.stringify({
         startUrls,
         maxItems: tiktokPosts.length + 5, // small buffer
+        proxyConfiguration: { useApifyProxy: true }, // required — TikTok blocks direct requests
       }),
     });
     if (!apifyRes.ok) {
