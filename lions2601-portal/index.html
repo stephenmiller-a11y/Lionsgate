@@ -3695,9 +3695,21 @@ async function updateStats() {
   var btn = document.getElementById('btn-update-stats');
   if (!btn) return;
 
-  var toUpdate = _deliverables.filter(function(d) { return d.postLink; });
+  var ONE_HOUR = 60 * 60 * 1000;
+  var now = Date.now();
+  var toUpdate = _deliverables.filter(function(d) {
+    if (!d.postLink) return false;
+    if (d.statsUpdated && (now - new Date(d.statsUpdated).getTime()) < ONE_HOUR) return false;
+    return true;
+  });
+  var recentlySkipped = _deliverables.filter(function(d) {
+    return d.postLink && d.statsUpdated && (now - new Date(d.statsUpdated).getTime()) < ONE_HOUR;
+  }).length;
   if (toUpdate.length === 0) {
-    showStatsToast('No post links found on any deliverables. Add post links in Airtable first.', 'warn');
+    var msg = recentlySkipped > 0
+      ? 'All ' + recentlySkipped + ' deliverable' + (recentlySkipped !== 1 ? 's' : '') + ' were updated within the last hour — nothing to refresh.'
+      : 'No post links found on any deliverables. Add post links in Airtable first.';
+    showStatsToast(msg, 'warn');
     return;
   }
 
@@ -3710,10 +3722,11 @@ async function updateStats() {
     if (/youtube\.com|youtu\.be/.test(url))  return 'youtube';
     if (/instagram\.com/.test(url))          return 'instagram';
     if (/tiktok\.com/.test(url))             return 'tiktok';
+    if (/snapchat\.com/.test(url))           return 'snapchat';
     return 'unknown';
   }
 
-  var byPlatform = { youtube: [], instagram: [], tiktok: [] };
+  var byPlatform = { youtube: [], instagram: [], tiktok: [], snapchat: [] };
   for (var i = 0; i < toUpdate.length; i++) {
     var d = toUpdate[i];
     var p = clientDetectPlatform(d.postLink);
@@ -3767,8 +3780,17 @@ async function updateStats() {
         'Fetching Instagram stats…' + (igBatches.length > 1 ? ' (' + (i+1) + '/' + igBatches.length + ')' : ''));
     }
 
+    // Snapchat — same 25-per-call pattern
+    var scBatches = [];
+    for (var i = 0; i < byPlatform.snapchat.length; i += APIFY_BATCH)
+      scBatches.push(byPlatform.snapchat.slice(i, i + APIFY_BATCH));
+    for (var i = 0; i < scBatches.length; i++) {
+      await callBatch(scBatches[i],
+        'Fetching Snapchat stats…' + (scBatches.length > 1 ? ' (' + (i+1) + '/' + scBatches.length + ')' : ''));
+    }
+
     // Build summary toast
-    var parts = ['youtube', 'instagram', 'tiktok'].map(function(p) {
+    var parts = ['youtube', 'instagram', 'tiktok', 'snapchat'].map(function(p) {
       var n = allResults.filter(function(r) { return r.platform === p && r.status === 'updated'; }).length;
       return n > 0 ? n + ' ' + p : null;
     }).filter(Boolean);
