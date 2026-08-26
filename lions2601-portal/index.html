@@ -327,6 +327,9 @@
     .brief-card-icon  { font-size: 18px; }
     .brief-card-title { font-size: 15px; font-weight: 700; color: #1a1a1a; }
     .brief-card-body  { padding: 20px 24px; font-size: 14px; line-height: 1.7; color: #333; white-space: pre-wrap; }
+    .brief-edit-btn { margin-left: auto; padding: 4px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1.5px solid #e0e0e0; background: #fff; color: #666; cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
+    .brief-edit-btn:hover { border-color: #7b2d8b; color: #7b2d8b; }
+    .brief-edit-btn.editing { background: #7b2d8b; border-color: #7b2d8b; color: #fff; }
     .brief-card-body[contenteditable="true"] {
       outline: none; cursor: text;
       border-radius: 0 0 12px 12px;
@@ -1613,9 +1616,10 @@ function renderCreative(campaign) {
       <div class="brief-card-header">
         <span class="brief-card-icon">🎯</span>
         <span class="brief-card-title">KPIs</span>
+        <button class="brief-edit-btn" id="brief-edit-btn-kpis" onclick="briefToggleEdit('kpis')">Edit</button>
       </div>
       <div class="brief-card-body"
-           contenteditable="true"
+           contenteditable="false"
            data-brief-key="kpis"
            data-placeholder="Add KPIs here…"
            oninput="onBriefInput(this)">${campaign.kpis ? escapeHtml(campaign.kpis) : ''}</div>
@@ -1626,9 +1630,10 @@ function renderCreative(campaign) {
       <div class="brief-card-header">
         <span class="brief-card-icon">${s.icon}</span>
         <span class="brief-card-title">${s.title}</span>
+        <button class="brief-edit-btn" id="brief-edit-btn-${s.key}" onclick="briefToggleEdit('${s.key}')">Edit</button>
       </div>
       <div class="brief-card-body"
-           contenteditable="true"
+           contenteditable="false"
            data-brief-key="${s.key}"
            data-placeholder="Add ${s.title.toLowerCase()} here…"
            oninput="onBriefInput(this)">${s.val ? escapeHtml(s.val) : ''}</div>
@@ -1681,6 +1686,34 @@ async function saveBriefField(key, el, hint) {
     if (hint) { hint.textContent = 'Saved'; hint.className = 'brief-save-hint saved'; setTimeout(() => { if (hint) hint.textContent = ''; }, 2000); }
   } catch (err) {
     if (hint) { hint.textContent = `Save failed: ${err.message}`; hint.className = 'brief-save-hint error'; }
+  }
+}
+
+function briefToggleEdit(key) {
+  var body = document.querySelector('[data-brief-key="' + key + '"]');
+  var btn  = document.getElementById('brief-edit-btn-' + key);
+  if (!body || !btn) return;
+
+  if (body.contentEditable === 'true') {
+    // Save and exit edit mode
+    body.contentEditable = 'false';
+    btn.textContent = 'Edit';
+    btn.classList.remove('editing');
+    clearTimeout(_briefTimers[key]);
+    saveBriefField(key, body, document.getElementById('brief-hint-' + key));
+  } else {
+    // Enter edit mode
+    body.contentEditable = 'true';
+    body.focus();
+    // Place cursor at end
+    var range = document.createRange();
+    range.selectNodeContents(body);
+    range.collapse(false);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    btn.textContent = 'Save';
+    btn.classList.add('editing');
   }
 }
 
