@@ -32,6 +32,7 @@ function detectPlatform(url) {
   if (/youtube\.com|youtu\.be/.test(url))  return 'youtube';
   if (/instagram\.com/.test(url))          return 'instagram';
   if (/tiktok\.com/.test(url))             return 'tiktok';
+  if (/snapchat\.com/.test(url))           return 'snapchat';
   return null;
 }
 
@@ -266,6 +267,56 @@ async function fetchTikTokStatsApify(deliverables, apiToken) {
   return byVideoId;
 }
 
+// ── Snapchat (via Apify tri_angle/snapchat-spotlight-scraper) ─────────────────
+// Only works for Spotlight URLs (snapchat.com/spotlight/...).
+// Stories are private/ephemeral — no public stats available.
+// Output has viewCount and shareCount; no likes or comments.
+
+function isSnapchatSpotlight(url) {
+  return /snapchat\.com\/spotlight\//.test(url || '');
+}
+
+function canonicalizeSnapchatUrl(url) {
+  if (!url) return url;
+  try {
+    const p = new URL(url);
+    return `https://www.snapchat.com${p.pathname}`;
+  } catch { return url; }
+}
+
+async function fetchSnapchatStatsApify(deliverables, apiToken) {
+  const urls = deliverables.map(d => canonicalizeSnapchatUrl(d.postLink));
+
+  const res = await fetch(
+    `https://api.apify.com/v2/acts/tri_angle~snapchat-spotlight-scraper/run-sync-get-dataset-items?token=${apiToken}&timeout=180&memoryMbytes=2048`,
+    {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ spotlightUrls: urls }),
+    }
+  );
+
+  if (!res.ok) {
+    const b = await res.text();
+    throw new Error(`Apify Snapchat scraper [${res.status}]: ${b}`);
+  }
+
+  const items = await res.json();
+
+  // Build map: normalised URL path → stats
+  const byUrl = {};
+  for (const item of (Array.isArray(items) ? items : [])) {
+    const key = canonicalizeSnapchatUrl(item.url || '');
+    if (key) byUrl[key] = {
+      views:       item.viewCount  ?? null,
+      shares:      item.shareCount ?? null,
+      publishedAt: item.dateUploaded || null,
+      coverUrl:    item.thumbnailUrl || null,
+    };
+  }
+  return byUrl;
+}
+
 // ── Airtable PATCH ────────────────────────────────────────────────────────────
 
 async function patchDeliverable(recordId, fields, token) {
@@ -327,7 +378,7 @@ module.exports = async function handler(req, res) {
   }
 
   // Group by platform
-  const byPlatform = { youtube: [], instagram: [], tiktok: [], unknown: [] };
+  const byPlatform = { youtube: [], instagram: [], tiktok: [], snapchat: [], unknown: [] };
   for (const d of deliverables) {
     if (!d.postLink) { byPlatform.unknown.push(d); continue; }
     const platform = detectPlatform(d.postLink);
@@ -456,8 +507,47 @@ module.exports = async function handler(req, res) {
       }
     }
 
+    // ── Snapchat (via Apify) ────────────────────────────────────────────────────
+    if (byPlatform.snapchat.length > 0) {
+      if (!apifyToken) {
+        warnings.push('Snapchat: APIFY_API_TOKEN not configured — skipped.');
+      } else {
+        try {
+          const spotlights    = byPlatform.snapchat.filter(d =>  isSnapchatSpotlight(d.postLink));
+          const nonSpotlights = byPlatform.snapchat.filter(d => !isSnapchatSpotlight(d.postLink));
+          for (const d of nonSpotlights) {
+            warnings.push(`Snapchat: only Spotlight URLs are supported — stats unavailable for ${d.postLink}`);
+            results.push({ id: d.id, platform: 'snapchat', status: 'not_supported' });
+          }
+          if (spotlights.length > 0) {
+            const CHUNK = 25;
+            for (let i = 0; i < spotlights.length; i += CHUNK) {
+              const chunk  = spotlights.slice(i, i + CHUNK);
+              const byUrl  = await fetchSnapchatStatsApify(chunk, apifyToken);
+              console.log(`[stats] Snapchat chunk ${Math.floor(i/CHUNK)+1} — returned: ${Object.keys(byUrl).length}`);
+              for (const d of chunk) {
+                const key   = canonicalizeSnapchatUrl(d.postLink);
+                const stats = byUrl[key];
+                if (!stats) {
+                  warnings.push(`Snapchat: no data returned for ${d.postLink}`);
+                  results.push({ id: d.id, platform: 'snapchat', status: 'not_found' });
+                  continue;
+                }
+                const scThumb = d.hasThumbnail ? null : (stats.coverUrl || null);
+                await patchDeliverable(d.id, buildFields(stats, scThumb), airtableToken);
+                results.push({ id: d.id, platform: 'snapchat', status: 'updated', ...stats });
+              }
+            }
+          }
+        } catch (err) {
+          warnings.push(`Snapchat (Apify): ${err.message}`);
+          byPlatform.snapchat.forEach(d => results.push({ id: d.id, platform: 'snapchat', status: 'error' }));
+        }
+      }
+    }
+
     const updated = results.filter(r => r.status === 'updated').length;
-    const byPlat = ['youtube', 'instagram', 'tiktok'].map(p => {
+    const byPlat = ['youtube', 'instagram', 'tiktok', 'snapchat'].map(p => {
       const n = results.filter(r => r.platform === p && r.status === 'updated').length;
       return n > 0 ? `${n} ${p}` : null;
     }).filter(Boolean).join(', ');
