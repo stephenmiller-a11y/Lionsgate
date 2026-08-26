@@ -23,7 +23,7 @@ const F_COMMENTS      = 'fldTm8YrIhRvRCQUr';
 const F_SHARES        = 'fldqqQzTtUl6k5crI';
 const F_SOCIAL_POST   = 'fldHkJxRyOoTrXvHc';
 const F_THUMBNAIL     = 'flds3ZtOYpN6eTur5';
-const F_STATS_UPDATED = 'REPLACE_WITH_STATS_UPDATED_FIELD_ID'; // Stats Updated (dateTime)
+const F_STATS_UPDATED = 'fldHFyucfmau6iFLc'; // Stats Updated (dateTime)
 
 // ── Platform detection ────────────────────────────────────────────────────────
 
