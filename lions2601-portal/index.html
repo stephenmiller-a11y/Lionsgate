@@ -824,7 +824,9 @@
     .cal-wrap { background: #fff; border-radius: 16px; border: 1px solid #e8e8e8; overflow: hidden; }
     /* Header */
     .cal-header { display: flex; align-items: center; gap: 10px; padding: 16px 22px; border-bottom: 1px solid #f0f0f0; }
-    .cal-month-label { font-size: 18px; font-weight: 700; min-width: 170px; }
+    .cal-month-label { font-size: 18px; font-weight: 700; min-width: 170px; text-align: center; }
+    .cal-view-select { padding: 5px 10px; border-radius: 6px; border: 1.5px solid #e0e0e0; background: #fff; color: #555; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .cal-view-select:focus { outline: none; border-color: #7b2d8b; }
     .cal-nav-btn { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid #e0e0e0; background: #fff; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; color: #555; line-height: 1; }
     .cal-nav-btn:hover { background: #f5f5f5; }
     .cal-today-btn { padding: 5px 14px; border-radius: 20px; border: 1.5px solid #7b2d8b; background: #fff; color: #7b2d8b; font-size: 12px; font-weight: 700; cursor: pointer; }
@@ -836,8 +838,8 @@
     .cal-dow-row { display: grid; grid-template-columns: repeat(7, 1fr); background: #fafafa; border-bottom: 1px solid #f0f0f0; }
     .cal-dow { text-align: center; font-size: 11px; font-weight: 700; letter-spacing: 0.07em; color: #aaa; padding: 7px 0; }
     /* Grid */
-    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
-    .cal-cell { min-height: 96px; border-right: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; padding: 6px 5px 6px 6px; position: relative; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); height: 576px; grid-auto-rows: 1fr; }
+    .cal-cell { border-right: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; padding: 6px 5px 6px 6px; position: relative; overflow-y: auto; }
     .cal-cell:nth-child(7n) { border-right: none; }
     .cal-cell.out-of-month { background: #fafafa; }
     .cal-cell.cal-today-cell { background: #fdf8ff; }
@@ -918,7 +920,7 @@
       .cal-outer { padding: 20px 20px 48px; }
       .cal-header { flex-wrap: wrap; gap: 8px; }
       .cal-legend { margin-left: 0; }
-      .cal-cell { min-height: 72px; }
+      .cal-grid { height: 420px; }
     }
   </style>
 </head>
@@ -1094,11 +1096,11 @@
         <span class="cal-month-label" id="cal-month-label">August 2026</span>
         <button class="cal-nav-btn" onclick="calNext()">&#8250;</button>
         <button class="cal-today-btn" onclick="calToday()">Today</button>
-        <div class="cal-view-toggle">
-          <button class="cal-view-btn" data-view="week"  onclick="calSetView('week')">Week</button>
-          <button class="cal-view-btn" data-view="2week" onclick="calSetView('2week')">2 Week</button>
-          <button class="cal-view-btn active" data-view="month" onclick="calSetView('month')">Month</button>
-        </div>
+        <select class="cal-view-select" id="cal-view-select" onchange="calSetView(this.value)">
+          <option value="week">Week</option>
+          <option value="2week">2 Week</option>
+          <option value="month" selected>Month</option>
+        </select>
         <div class="cal-legend">
           <span class="cal-legend-item"><span class="cal-legend-dot" style="background:#3b82f6"></span>Shoots</span>
           <span class="cal-legend-item"><span class="cal-legend-dot" style="background:#ca8a04"></span>Scripts Due</span>
@@ -2972,7 +2974,7 @@ function calSetView(view) {
     if (now.getFullYear() === _calYear && now.getMonth() === _calMonth) ref = now;
     _calWeekStart = calGetWeekStart(ref);
   }
-  document.querySelectorAll('.cal-view-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.view === view); });
+  var sel = document.getElementById('cal-view-select'); if (sel) sel.value = view;
   renderCalendarView();
 }
 
