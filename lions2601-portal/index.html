@@ -769,7 +769,7 @@
     .rpt-page-btn:disabled { opacity: 0.35; cursor: default; }
     .rpt-page-ellipsis { font-size: 13px; color: #bbb; padding: 0 4px; }
     /* Post cards — phone mockup */
-    .post-card { background: #fff; border-radius: 14px; border: 1px solid #e8e8e8; margin-bottom: 12px; padding: 14px 18px; display: flex; gap: 22px; align-items: center; }
+    .post-card { background: #fff; border-radius: 14px; border: 1px solid #e8e8e8; margin-bottom: 12px; padding: 14px 18px; display: flex; gap: 22px; align-items: stretch; }
     .post-left { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
     .phone { width: 100px; aspect-ratio: 9 / 17.5; background: #0d0d0f; border-radius: 20px; padding: 5px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); position: relative; flex-shrink: 0; }
     .phone-screen { width: 100%; height: 100%; border-radius: 15px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
@@ -790,9 +790,9 @@
     img.rpt-avatar { object-fit: cover; }
     .rpt-name { font-size: 14px; font-weight: 700; }
     .rpt-code { font-size: 12px; color: #999; margin-top: 2px; }
-    .post-metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 20px; padding-top: 8px; border-top: 1px solid #f0f0f0; }
+    .post-metrics { flex: 1; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 20px; padding-top: 8px; border-top: 1px solid #f0f0f0; align-content: center; }
     .rpt-metric { text-align: center; }
-    .rpt-metric-value { font-size: 17px; font-weight: 800; color: #1a1a1a; }
+    .rpt-metric-value { font-size: 21px; font-weight: 800; color: #1a1a1a; }
     .rpt-metric-value.empty { color: #ddd; }
     .rpt-metric-label { font-size: 10px; color: #999; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 4px; }
     .rpt-metric-label svg { width: 11px; height: 11px; flex-shrink: 0; }
