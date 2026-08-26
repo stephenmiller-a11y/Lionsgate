@@ -17,12 +17,13 @@ const AT_BASE            = `https://api.airtable.com/v0/${BASE_ID}`;
 const DELIVERABLES_TABLE = 'tblNOrIcXwZ0R78LJ';
 
 // Deliverable field IDs
-const F_VIEWS       = 'fldliR0ZyX2OzMkvs';
-const F_LIKES       = 'fld3BhTWQ1IdTe6um';
-const F_COMMENTS    = 'fldTm8YrIhRvRCQUr';
-const F_SHARES      = 'fldqqQzTtUl6k5crI';
-const F_SOCIAL_POST = 'fldHkJxRyOoTrXvHc';
-const F_THUMBNAIL   = 'flds3ZtOYpN6eTur5';
+const F_VIEWS         = 'fldliR0ZyX2OzMkvs';
+const F_LIKES         = 'fld3BhTWQ1IdTe6um';
+const F_COMMENTS      = 'fldTm8YrIhRvRCQUr';
+const F_SHARES        = 'fldqqQzTtUl6k5crI';
+const F_SOCIAL_POST   = 'fldHkJxRyOoTrXvHc';
+const F_THUMBNAIL     = 'flds3ZtOYpN6eTur5';
+const F_STATS_UPDATED = 'REPLACE_WITH_STATS_UPDATED_FIELD_ID'; // Stats Updated (dateTime)
 
 // ── Platform detection ────────────────────────────────────────────────────────
 
@@ -104,7 +105,7 @@ async function fetchInstagramStatsApify(deliverables, apiToken) {
   if (uniqueUrls.length === 0) return {};
 
   const res = await fetch(
-    `https://api.apify.com/v2/acts/patient_discovery~instagram-reel-analytics-by-url/run-sync-get-dataset-items?token=${apiToken}&timeout=120`,
+    `https://api.apify.com/v2/acts/patient_discovery~instagram-reel-analytics-by-url/run-sync-get-dataset-items?token=${apiToken}&timeout=180&memoryMbytes=2048`,
     {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -226,9 +227,9 @@ async function fetchTikTokStatsApify(deliverables, apiToken) {
     shouldDownloadSlideshowImages: false,
   };
 
-  // Run the Apify TikTok scraper synchronously — waits up to 120s for results
+  // Run the Apify TikTok scraper synchronously — waits up to 180s for results
   const res = await fetch(
-    `https://api.apify.com/v2/acts/clockworks~tiktok-scraper/run-sync-get-dataset-items?token=${apiToken}&timeout=120`,
+    `https://api.apify.com/v2/acts/clockworks~tiktok-scraper/run-sync-get-dataset-items?token=${apiToken}&timeout=180&memoryMbytes=2048`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -280,12 +281,13 @@ async function patchDeliverable(recordId, fields, token) {
 // thumbnailUrl: only passed when the deliverable doesn't already have one (one-time).
 function buildFields(stats, thumbnailUrl) {
   const fields = {};
-  if (stats.views       != null) fields[F_VIEWS]       = stats.views;
-  if (stats.likes       != null) fields[F_LIKES]       = stats.likes;
-  if (stats.comments    != null) fields[F_COMMENTS]    = stats.comments;
-  if (stats.shares      != null) fields[F_SHARES]      = stats.shares;
-  if (stats.publishedAt != null) fields[F_SOCIAL_POST] = stats.publishedAt;
-  if (thumbnailUrl)               fields[F_THUMBNAIL]   = [{ url: thumbnailUrl }];
+  if (stats.views       != null) fields[F_VIEWS]         = stats.views;
+  if (stats.likes       != null) fields[F_LIKES]         = stats.likes;
+  if (stats.comments    != null) fields[F_COMMENTS]      = stats.comments;
+  if (stats.shares      != null) fields[F_SHARES]        = stats.shares;
+  if (stats.publishedAt != null) fields[F_SOCIAL_POST]   = stats.publishedAt;
+  if (thumbnailUrl)               fields[F_THUMBNAIL]     = [{ url: thumbnailUrl }];
+  if (F_STATS_UPDATED)            fields[F_STATS_UPDATED] = new Date().toISOString();
   return fields;
 }
 
@@ -365,7 +367,7 @@ module.exports = async function handler(req, res) {
         try {
           // Sequential chunks — one Apify response in memory at a time.
           // Patch Airtable immediately per chunk before fetching the next.
-          const CHUNK = 10;
+          const CHUNK = 25;
           for (let i = 0; i < byPlatform.instagram.length; i += CHUNK) {
             const chunk = byPlatform.instagram.slice(i, i + CHUNK);
             const byShortCode = await fetchInstagramStatsApify(chunk, apifyToken);
@@ -406,7 +408,7 @@ module.exports = async function handler(req, res) {
           // Sequential chunks — one Apify response in memory at a time.
           // Patch Airtable immediately per chunk before fetching the next.
           if (longUrls.length > 0) {
-            const CHUNK = 10;
+            const CHUNK = 25;
             for (let i = 0; i < longUrls.length; i += CHUNK) {
               const chunk = longUrls.slice(i, i + CHUNK);
               const byVideoId = await fetchTikTokStatsApify(chunk, apifyToken);
