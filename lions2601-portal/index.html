@@ -849,7 +849,11 @@
     .cal-chip-icon { display: flex; align-items: center; flex-shrink: 0; }
     .cal-chip-icon svg { width: 10px !important; height: 10px !important; }
     .cal-chip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90px; }
-    .cal-more { font-size: 10px; color: #aaa; padding-left: 4px; margin-top: 1px; }
+    .cal-more { font-size: 10px; color: #aaa; padding-left: 4px; margin-top: 1px; cursor: pointer; }
+    .cal-more:hover { color: #7b2d8b; text-decoration: underline; }
+    .cal-view-toggle { display: flex; background: #f0f0f2; border-radius: 8px; padding: 3px; gap: 2px; }
+    .cal-view-btn { padding: 4px 11px; border-radius: 6px; font-size: 12px; font-weight: 600; border: none; background: transparent; color: #666; cursor: pointer; transition: all 0.15s; }
+    .cal-view-btn.active { background: #fff; color: #7b2d8b; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     /* Coming up */
     .cal-coming-up-wrap { background: #fff; border-radius: 16px; border: 1px solid #e8e8e8; padding: 22px 24px; }
     .cal-coming-up-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; color: #1a1a1a; }
@@ -1090,6 +1094,11 @@
         <span class="cal-month-label" id="cal-month-label">August 2026</span>
         <button class="cal-nav-btn" onclick="calNext()">&#8250;</button>
         <button class="cal-today-btn" onclick="calToday()">Today</button>
+        <div class="cal-view-toggle">
+          <button class="cal-view-btn" data-view="week"  onclick="calSetView('week')">Week</button>
+          <button class="cal-view-btn" data-view="2week" onclick="calSetView('2week')">2 Week</button>
+          <button class="cal-view-btn active" data-view="month" onclick="calSetView('month')">Month</button>
+        </div>
         <div class="cal-legend">
           <span class="cal-legend-item"><span class="cal-legend-dot" style="background:#3b82f6"></span>Shoots</span>
           <span class="cal-legend-item"><span class="cal-legend-dot" style="background:#ca8a04"></span>Scripts Due</span>
@@ -2865,9 +2874,15 @@ function renderApprovals(offers, deliverables) {
 
 // ── CALENDAR TAB ──────────────────────────────────────────────────────────────
 
-var _calYear   = new Date().getFullYear();
-var _calMonth  = new Date().getMonth(); // 0-based
-var _calEvents = []; // all calendar events built from deliverables
+var _calYear      = new Date().getFullYear();
+var _calMonth     = new Date().getMonth(); // 0-based
+var _calEvents    = []; // all calendar events built from deliverables
+var _calView      = 'month'; // 'month' | 'week' | '2week'
+var _calWeekStart = (function() { var d = new Date(); d.setDate(d.getDate() - d.getDay()); d.setHours(0,0,0,0); return d; })();
+
+function calGetWeekStart(date) {
+  var d = new Date(date); d.setDate(d.getDate() - d.getDay()); d.setHours(0,0,0,0); return d;
+}
 
 var CAL_TYPES = {
   shoot:  { label: 'Shoot',      bg: '#dbeafe', border: '#3b82f6', text: '#1e40af' },
@@ -2932,12 +2947,116 @@ function buildCalEvents(deliverables) {
 function renderCalendar(deliverables) {
   var active = deliverables.filter(function(d) { return !(d.status || '').toLowerCase().includes('voided'); });
   _calEvents = buildCalEvents(active);
-  renderCalendarMonth();
+  renderCalendarView();
 }
 
-function calPrev()  { _calMonth--; if (_calMonth < 0) { _calMonth = 11; _calYear--; } renderCalendarMonth(); }
-function calNext()  { _calMonth++; if (_calMonth > 11) { _calMonth = 0;  _calYear++; } renderCalendarMonth(); }
-function calToday() { var n = new Date(); _calYear = n.getFullYear(); _calMonth = n.getMonth(); renderCalendarMonth(); }
+function calPrev() {
+  if (_calView === 'month') { _calMonth--; if (_calMonth < 0) { _calMonth = 11; _calYear--; } }
+  else { var d = _calView === '2week' ? 14 : 7; _calWeekStart = new Date(_calWeekStart); _calWeekStart.setDate(_calWeekStart.getDate() - d); }
+  renderCalendarView();
+}
+function calNext() {
+  if (_calView === 'month') { _calMonth++; if (_calMonth > 11) { _calMonth = 0; _calYear++; } }
+  else { var d = _calView === '2week' ? 14 : 7; _calWeekStart = new Date(_calWeekStart); _calWeekStart.setDate(_calWeekStart.getDate() + d); }
+  renderCalendarView();
+}
+function calToday() {
+  var n = new Date(); _calYear = n.getFullYear(); _calMonth = n.getMonth(); _calWeekStart = calGetWeekStart(n);
+  renderCalendarView();
+}
+function calSetView(view) {
+  _calView = view;
+  if (view !== 'month') {
+    var ref = new Date(_calYear, _calMonth, 1);
+    var now = new Date();
+    if (now.getFullYear() === _calYear && now.getMonth() === _calMonth) ref = now;
+    _calWeekStart = calGetWeekStart(ref);
+  }
+  document.querySelectorAll('.cal-view-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.view === view); });
+  renderCalendarView();
+}
+
+// Helper: build one chip's HTML
+function buildCalChipHtml(ev, ct) {
+  return '<div class="cal-chip" style="background:' + ct.bg + ';border-left:3px solid ' + ct.border + ';color:' + ct.text + '"' +
+    ' data-code="' + ev.code.replace(/"/g,'&quot;') + '"' +
+    ' data-talent="' + ev.talent.replace(/"/g,'&quot;') + '"' +
+    ' data-type="' + ev.type.replace(/"/g,'&quot;') + '"' +
+    ' data-date="' + ev.date + '"' +
+    ' data-event-type="' + ev.eventType + '"' +
+    ' onmouseenter="calChipEnter(event,this)" onmouseleave="calChipLeave()">' +
+    '<span class="cal-chip-icon">' + calPlatformSvg(ev.type) + '</span>' +
+    '<span class="cal-chip-name">' + (ev.talent || ev.code) + '</span>' +
+    '</div>';
+}
+
+// Expand a cell to show all hidden events
+function calExpandCell(ds) {
+  var cell = document.querySelector('.cal-cell[data-cell-date="' + ds + '"]');
+  if (!cell) return;
+  var byDate = {};
+  _calEvents.forEach(function(e) { if (!byDate[e.date]) byDate[e.date] = []; byDate[e.date].push(e); });
+  var typeOrder = ['shoot','script','draft','post'];
+  var evts = (byDate[ds] || []).slice().sort(function(a,b) { return typeOrder.indexOf(a.eventType) - typeOrder.indexOf(b.eventType); });
+  var chips = evts.map(function(ev) { return buildCalChipHtml(ev, CAL_TYPES[ev.eventType]); }).join('');
+  // Replace content below the date number
+  var dateNum = cell.querySelector('.cal-date-num').outerHTML;
+  cell.innerHTML = dateNum + chips;
+}
+
+function renderCalendarView() {
+  if (_calView === 'month') { renderCalendarMonth(); return; }
+  // Week / 2-week
+  var today    = new Date().toISOString().slice(0,10);
+  var label    = document.getElementById('cal-month-label');
+  var grid     = document.getElementById('cal-grid');
+  var comingUp = document.getElementById('cal-coming-up');
+  if (!label || !grid || !comingUp) return;
+
+  var numDays = _calView === '2week' ? 14 : 7;
+  var endDate = new Date(_calWeekStart); endDate.setDate(endDate.getDate() + numDays - 1);
+  var mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var s = mo[_calWeekStart.getMonth()] + ' ' + _calWeekStart.getDate();
+  var e = mo[endDate.getMonth()] + ' ' + endDate.getDate() + ', ' + endDate.getFullYear();
+  if (_calWeekStart.getFullYear() !== endDate.getFullYear()) s += ', ' + _calWeekStart.getFullYear();
+  label.textContent = s + ' – ' + e;
+
+  var byDate = {}, typeOrder = ['shoot','script','draft','post'];
+  _calEvents.forEach(function(ev) { if (!byDate[ev.date]) byDate[ev.date] = []; byDate[ev.date].push(ev); });
+  Object.keys(byDate).forEach(function(dt) { byDate[dt].sort(function(a,b) { return typeOrder.indexOf(a.eventType) - typeOrder.indexOf(b.eventType); }); });
+
+  var MAX_CHIPS = _calView === 'week' ? 8 : 5;
+  var cells = '';
+  for (var i = 0; i < numDays; i++) {
+    var cd = new Date(_calWeekStart); cd.setDate(cd.getDate() + i);
+    var ds = cd.toISOString().slice(0,10);
+    var isToday = ds === today;
+    var evts = byDate[ds] || [];
+    var chips = evts.slice(0, MAX_CHIPS).map(function(ev) { return buildCalChipHtml(ev, CAL_TYPES[ev.eventType]); }).join('');
+    var more = evts.length > MAX_CHIPS
+      ? '<div class="cal-more" onclick="calExpandCell(\'' + ds + '\')" data-date="' + ds + '">+' + (evts.length - MAX_CHIPS) + ' more</div>'
+      : '';
+    cells += '<div class="cal-cell' + (isToday ? ' cal-today-cell' : '') + '" data-cell-date="' + ds + '">' +
+      '<span class="cal-date-num' + (isToday ? ' cal-today-num' : '') + '">' + cd.getDate() + '</span>' +
+      chips + more + '</div>';
+  }
+  grid.innerHTML = cells;
+
+  // Coming up (same as month view)
+  var upcoming = _calEvents.filter(function(ev) { return ev.date >= today; });
+  upcoming.sort(function(a,b) { return a.date !== b.date ? String(a.date).localeCompare(String(b.date)) : typeOrder.indexOf(a.eventType) - typeOrder.indexOf(b.eventType); });
+  upcoming = upcoming.slice(0, 20);
+  if (!upcoming.length) { comingUp.style.display = 'none'; return; }
+  comingUp.style.display = '';
+  comingUp.innerHTML = '<div class="cal-coming-up-title">Coming Up</div><div class="cal-upcoming-list">' +
+    upcoming.map(function(ev) {
+      var parts = ev.date.split('-'), mo2 = parseInt(parts[1],10)-1, day = parseInt(parts[2],10);
+      var ct = CAL_TYPES[ev.eventType];
+      return '<div class="cal-upcoming-item"><div class="cal-date-badge"><span class="cal-date-badge-month">' + CAL_MONTHS_SHORT[mo2] + '</span><span class="cal-date-badge-day">' + day + '</span></div>' +
+        '<div class="cal-upcoming-info"><div class="cal-upcoming-title">' + ct.label + ' · ' + (ev.code||ev.talent) + '</div><div class="cal-upcoming-sub">' + ev.talent + ' · ' + calPlatformLabel(ev.type) + '</div></div>' +
+        '<span class="cal-upcoming-pill" style="background:' + ct.bg + ';color:' + ct.text + ';border:1px solid ' + ct.border + '">' + ct.label + '</span></div>';
+    }).join('') + '</div>';
+}
 
 function renderCalendarMonth() {
   var today     = new Date().toISOString().slice(0,10);
@@ -2978,24 +3097,12 @@ function renderCalendarMonth() {
     var ds = _calYear + '-' + String(_calMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
     var isToday = ds === today;
     var evts = byDate[ds] || [];
-    var chips = '';
     var MAX_CHIPS = 3;
-    for (var ei = 0; ei < Math.min(evts.length, MAX_CHIPS); ei++) {
-      var ev = evts[ei];
-      var ct = CAL_TYPES[ev.eventType];
-      chips += '<div class="cal-chip" style="background:' + ct.bg + ';border-left:3px solid ' + ct.border + ';color:' + ct.text + '"' +
-        ' data-code="' + ev.code.replace(/"/g,'&quot;') + '"' +
-        ' data-talent="' + ev.talent.replace(/"/g,'&quot;') + '"' +
-        ' data-type="' + ev.type.replace(/"/g,'&quot;') + '"' +
-        ' data-date="' + ev.date + '"' +
-        ' data-event-type="' + ev.eventType + '"' +
-        ' onmouseenter="calChipEnter(event,this)" onmouseleave="calChipLeave()">' +
-        '<span class="cal-chip-icon">' + calPlatformSvg(ev.type) + '</span>' +
-        '<span class="cal-chip-name">' + (ev.talent || ev.code) + '</span>' +
-        '</div>';
-    }
-    var more = evts.length > MAX_CHIPS ? '<div class="cal-more">+' + (evts.length - MAX_CHIPS) + ' more</div>' : '';
-    cells += '<div class="cal-cell' + (isToday ? ' cal-today-cell' : '') + '">' +
+    var chips = evts.slice(0, MAX_CHIPS).map(function(ev) { return buildCalChipHtml(ev, CAL_TYPES[ev.eventType]); }).join('');
+    var more = evts.length > MAX_CHIPS
+      ? '<div class="cal-more" onclick="calExpandCell(\'' + ds + '\')" data-date="' + ds + '">+' + (evts.length - MAX_CHIPS) + ' more</div>'
+      : '';
+    cells += '<div class="cal-cell' + (isToday ? ' cal-today-cell' : '') + '" data-cell-date="' + ds + '">' +
       '<span class="cal-date-num' + (isToday ? ' cal-today-num' : '') + '">' + d + '</span>' +
       chips + more + '</div>';
   }
