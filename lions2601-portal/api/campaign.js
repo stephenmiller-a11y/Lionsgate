@@ -34,6 +34,7 @@ const DELIVERABLE_FIELDS = [
   'fldTm8YrIhRvRCQUr', // Comments
   'fldqqQzTtUl6k5crI', // Shares
   'flds3ZtOYpN6eTur5', // Post Thumbnail (multipleAttachments — populated by stats pull)
+  'fldHFyucfmau6iFLc', // Stats Updated (dateTime)
   'fldlhbnzU71XhvOPN', // Script Due (formula)
   'fldt7DyDbsVthLa4U', // Draft Due (date)
   'fldJH1c8IzvodKKoo', // Shoot Date (formula)
@@ -244,6 +245,7 @@ module.exports = async function handler(req, res) {
           shares:       f['fldqqQzTtUl6k5crI'] ?? null,
           hasThumbnail:   !!(f['flds3ZtOYpN6eTur5'] && f['flds3ZtOYpN6eTur5'].length > 0),
           thumbnailUrl:   (f['flds3ZtOYpN6eTur5'] && f['flds3ZtOYpN6eTur5'][0] && f['flds3ZtOYpN6eTur5'][0].url) || null,
+          statsUpdated:   f['fldHFyucfmau6iFLc'] || null,
           scriptDue:      f['fldlhbnzU71XhvOPN'] || null,
           draftDue:       f['fldt7DyDbsVthLa4U'] || null,
           shootDate:      f['fldJH1c8IzvodKKoo'] || null,
