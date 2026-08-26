@@ -3314,7 +3314,7 @@ function renderReporting(campaign, deliverables) {
   var chartSection = '<div class="chart-grid">'
     + '<div class="chart-card">'
     + '<div class="card-title-row">'
-    + '<div class="card-title">Views Over Time</div>'
+    + '<div class="card-title" id="rpt-chart-title">' + (_rptChartMetric === 'eng' ? 'Engagements' : 'Views') + ' Over Time</div>'
     + '<div class="metric-toggle">'
     + '<button class="' + (_rptChartMetric === 'views' ? 'active' : '') + '" onclick="toggleChartMetric(\'views\')">Views</button>'
     + '<button class="' + (_rptChartMetric === 'eng'   ? 'active' : '') + '" onclick="toggleChartMetric(\'eng\')">Engagements</button>'
@@ -3512,6 +3512,8 @@ function buildTopPostsHtml(delivs) {
 // ── REPORTING: CHART METRIC TOGGLE ───────────────────────────────────────────
 function toggleChartMetric(metric) {
   _rptChartMetric = metric;
+  var title = document.getElementById('rpt-chart-title');
+  if (title) title.textContent = (metric === 'eng' ? 'Engagements' : 'Views') + ' Over Time';
   var wrap = document.getElementById('rpt-chart-wrap');
   if (wrap) wrap.innerHTML = buildRptChartSvg(_rptDelivs, metric);
   document.querySelectorAll('.metric-toggle button').forEach(function(btn) {
