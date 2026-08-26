@@ -15,6 +15,7 @@
 const BASE_ID            = process.env.AIRTABLE_BASE_ID || 'appcKC14Om93O40QC';
 const AT_BASE            = `https://api.airtable.com/v0/${BASE_ID}`;
 const DELIVERABLES_TABLE = 'tblNOrIcXwZ0R78LJ';
+const F_STAT_ERRORS      = 'fldfpjcNq41Jmxgb7'; // Stat Errors (on Deliverable record)
 
 // Deliverable field IDs
 const F_VIEWS         = 'fldliR0ZyX2OzMkvs';
@@ -276,12 +277,32 @@ function isSnapchatSpotlight(url) {
   return /snapchat\.com\/spotlight\//.test(url || '');
 }
 
+function isSnapchatShortUrl(url) {
+  return /snapchat\.com\/t\//.test(url || '');
+}
+
 function canonicalizeSnapchatUrl(url) {
   if (!url) return url;
   try {
     const p = new URL(url);
     return `https://www.snapchat.com${p.pathname}`;
   } catch { return url; }
+}
+
+// Follow redirect to resolve shortened Snapchat URLs (snapchat.com/t/XXXX)
+async function resolveSnapchatShortUrl(url) {
+  try {
+    const res = await fetch(url, {
+      method:   'GET',
+      redirect: 'follow',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+      },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (res.url && isSnapchatSpotlight(res.url)) return res.url;
+  } catch {}
+  return url; // give up — caller will emit a warning
 }
 
 async function fetchSnapchatStatsApify(deliverables, apiToken) {
@@ -339,6 +360,7 @@ function buildFields(stats, thumbnailUrl) {
   if (stats.publishedAt != null) fields[F_SOCIAL_POST]   = stats.publishedAt;
   if (thumbnailUrl)               fields[F_THUMBNAIL]     = [{ url: thumbnailUrl }];
   if (F_STATS_UPDATED)            fields[F_STATS_UPDATED] = new Date().toISOString();
+                                  fields[F_STAT_ERRORS]   = ''; // clear any previous error
   return fields;
 }
 
@@ -385,8 +407,15 @@ module.exports = async function handler(req, res) {
     (byPlatform[platform] || byPlatform.unknown).push(d);
   }
 
-  const results  = [];
-  const warnings = [];
+  const results    = [];
+  const warnings   = [];
+  const delivErrors = {}; // delivId → error message, for writing to F_STAT_ERRORS
+
+  // Helper: record a warning and associate it with a specific deliverable
+  function warnDeliv(d, msg) {
+    warnings.push(msg);
+    delivErrors[d.id] = msg;
+  }
 
   try {
     // ── YouTube ────────────────────────────────────────────────────────────────
@@ -398,12 +427,16 @@ module.exports = async function handler(req, res) {
         for (const d of byPlatform.youtube) {
           const vid = extractYouTubeId(d.postLink);
           if (vid) idMap[vid] = d;
-          else warnings.push(`YouTube: could not parse video ID from ${d.postLink}`);
+          else warnDeliv(d, `YouTube: could not parse video ID from ${d.postLink}`);
         }
         const statsMap = await fetchYouTubeStats(Object.keys(idMap), youtubeKey);
         await Promise.all(Object.entries(idMap).map(async ([vid, d]) => {
           const stats = statsMap[vid];
-          if (!stats) { results.push({ id: d.id, platform: 'youtube', status: 'not_found' }); return; }
+          if (!stats) {
+            warnDeliv(d, `YouTube: no data returned for video ${vid} — video may be private or removed`);
+            results.push({ id: d.id, platform: 'youtube', status: 'not_found' });
+            return;
+          }
           await patchDeliverable(d.id, buildFields(stats, null), airtableToken);
           results.push({ id: d.id, platform: 'youtube', status: 'updated', ...stats });
         }));
@@ -425,10 +458,10 @@ module.exports = async function handler(req, res) {
             console.log(`[stats] Instagram chunk ${Math.floor(i/CHUNK)+1} — returned: ${Object.keys(byShortCode).length}`);
             for (const d of chunk) {
               const shortcode = extractInstagramShortcode(d.postLink);
-              if (!shortcode) { warnings.push(`Instagram: could not parse shortcode from ${d.postLink}`); continue; }
+              if (!shortcode) { warnDeliv(d, `Instagram: could not parse shortcode from ${d.postLink}`); continue; }
               const stats = byShortCode[shortcode];
               if (!stats) {
-                warnings.push(`Instagram: no data returned for ${shortcode} — post may be age-restricted, private, or removed. Requires manual entry. (${d.postLink})`);
+                warnDeliv(d, `Instagram: no data returned for ${shortcode} — post may be age-restricted, private, or removed. Requires manual entry.`);
                 results.push({ id: d.id, platform: 'instagram', status: 'not_found' });
                 continue;
               }
@@ -438,8 +471,9 @@ module.exports = async function handler(req, res) {
             }
           }
         } catch (err) {
-          warnings.push(`Instagram (Apify): ${err.message}`);
-          byPlatform.instagram.forEach(d => results.push({ id: d.id, platform: 'instagram', status: 'error' }));
+          const msg = `Instagram (Apify): ${err.message}`;
+          warnings.push(msg);
+          byPlatform.instagram.forEach(d => { delivErrors[d.id] = msg; results.push({ id: d.id, platform: 'instagram', status: 'error' }); });
         }
       }
     }
@@ -466,10 +500,10 @@ module.exports = async function handler(req, res) {
               console.log(`[stats] TikTok chunk ${Math.floor(i/CHUNK)+1} — returned: ${Object.keys(byVideoId).length}`);
               for (const d of chunk) {
                 const videoId = extractTikTokVideoId(d.postLink);
-                if (!videoId) { warnings.push(`TikTok: could not parse video ID from ${d.postLink}`); continue; }
+                if (!videoId) { warnDeliv(d, `TikTok: could not parse video ID from ${d.postLink}`); continue; }
                 const stats = byVideoId[videoId];
                 if (!stats) {
-                  warnings.push(`TikTok: could not fetch stats for video ${videoId} — video likely has audience controls (18+/friends only) and requires manual entry (${d.postLink})`);
+                  warnDeliv(d, `TikTok: video likely has audience controls (18+/friends only) and requires manual entry`);
                   results.push({ id: d.id, platform: 'tiktok', status: 'not_found' });
                   continue;
                 }
@@ -487,7 +521,7 @@ module.exports = async function handler(req, res) {
               const ids = Object.keys(byVideoId);
               console.log('[stats] TikTok short URL —', d.postLink, '| Apify returned:', ids.length, 'items');
               if (ids.length === 0) {
-                warnings.push(`TikTok: could not fetch stats for short URL — video likely has audience controls and requires manual entry (${d.postLink})`);
+                warnDeliv(d, `TikTok: video likely has audience controls and requires manual entry`);
                 results.push({ id: d.id, platform: 'tiktok', status: 'not_found' });
                 continue;
               }
@@ -496,13 +530,14 @@ module.exports = async function handler(req, res) {
               await patchDeliverable(d.id, buildFields(stats, ttShortThumb), airtableToken);
               results.push({ id: d.id, platform: 'tiktok', status: 'updated', ...stats });
             } catch (err) {
-              warnings.push(`TikTok (${d.postLink}): ${err.message}`);
+              warnDeliv(d, `TikTok: ${err.message}`);
               results.push({ id: d.id, platform: 'tiktok', status: 'error' });
             }
           }
         } catch (err) {
-          warnings.push(`TikTok (Apify): ${err.message}`);
-          byPlatform.tiktok.forEach(d => results.push({ id: d.id, platform: 'tiktok', status: 'error' }));
+          const msg = `TikTok (Apify): ${err.message}`;
+          warnings.push(msg);
+          byPlatform.tiktok.forEach(d => { delivErrors[d.id] = msg; results.push({ id: d.id, platform: 'tiktok', status: 'error' }); });
         }
       }
     }
@@ -513,10 +548,25 @@ module.exports = async function handler(req, res) {
         warnings.push('Snapchat: APIFY_API_TOKEN not configured — skipped.');
       } else {
         try {
-          const spotlights    = byPlatform.snapchat.filter(d =>  isSnapchatSpotlight(d.postLink));
-          const nonSpotlights = byPlatform.snapchat.filter(d => !isSnapchatSpotlight(d.postLink));
+          // Resolve short URLs (snapchat.com/t/XXXX) before filtering
+          const allSnap = byPlatform.snapchat;
+          const shortUrlDelivs  = allSnap.filter(d =>  isSnapchatShortUrl(d.postLink));
+          const longUrlDelivs   = allSnap.filter(d => !isSnapchatShortUrl(d.postLink));
+
+          const resolvedShort = await Promise.all(shortUrlDelivs.map(async d => {
+            const resolved = await resolveSnapchatShortUrl(d.postLink);
+            if (!isSnapchatSpotlight(resolved)) {
+              warnDeliv(d, `Snapchat: short URL did not resolve to a Spotlight video — manual entry required`);
+              results.push({ id: d.id, platform: 'snapchat', status: 'not_supported' });
+              return null;
+            }
+            return { ...d, postLink: resolved };
+          }));
+
+          const spotlights    = [...longUrlDelivs.filter(d => isSnapchatSpotlight(d.postLink)), ...resolvedShort.filter(Boolean)];
+          const nonSpotlights = longUrlDelivs.filter(d => !isSnapchatSpotlight(d.postLink));
           for (const d of nonSpotlights) {
-            warnings.push(`Snapchat: only Spotlight URLs are supported — stats unavailable for ${d.postLink}`);
+            warnDeliv(d, `Snapchat: only Spotlight video URLs are supported (not profile or feed links) — manual entry required`);
             results.push({ id: d.id, platform: 'snapchat', status: 'not_supported' });
           }
           if (spotlights.length > 0) {
@@ -529,7 +579,7 @@ module.exports = async function handler(req, res) {
                 const key   = canonicalizeSnapchatUrl(d.postLink);
                 const stats = byUrl[key];
                 if (!stats) {
-                  warnings.push(`Snapchat: no data returned for ${d.postLink}`);
+                  warnDeliv(d, `Snapchat: no data returned — video may be unavailable`);
                   results.push({ id: d.id, platform: 'snapchat', status: 'not_found' });
                   continue;
                 }
@@ -540,10 +590,19 @@ module.exports = async function handler(req, res) {
             }
           }
         } catch (err) {
-          warnings.push(`Snapchat (Apify): ${err.message}`);
-          byPlatform.snapchat.forEach(d => results.push({ id: d.id, platform: 'snapchat', status: 'error' }));
+          const msg = `Snapchat (Apify): ${err.message}`;
+          warnings.push(msg);
+          byPlatform.snapchat.forEach(d => { delivErrors[d.id] = msg; results.push({ id: d.id, platform: 'snapchat', status: 'error' }); });
         }
       }
+    }
+
+    // Write per-deliverable error messages (or clear on success via buildFields)
+    const errorIds = Object.keys(delivErrors);
+    if (errorIds.length > 0) {
+      await Promise.all(errorIds.map(id =>
+        patchDeliverable(id, { [F_STAT_ERRORS]: delivErrors[id] }, airtableToken).catch(() => {})
+      ));
     }
 
     const updated = results.filter(r => r.status === 'updated').length;
