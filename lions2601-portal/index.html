@@ -305,6 +305,10 @@
       display: flex; gap: 0; position: sticky; top: 0; z-index: 100;
       box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     }
+    /* Reporting-only mode: hide nav and action buttons */
+    body.reporting-only .tab-bar { display: none; }
+    body.reporting-only #btn-update-stats,
+    body.reporting-only #btn-fetch-thumbs { display: none !important; }
     .tab-bar-inner { max-width: 960px; margin: 0 auto; width: 100%; display: flex; }
     .tab {
       padding: 14px 16px; font-size: 13px; font-weight: 600; color: #999;
@@ -1253,6 +1257,8 @@ var _deliverables  = []; // cached for updateStats()
 var _offers        = []; // cached for roster updates after approval actions
 var _headshotMap   = {}; // talent name → headshotUrl, built from offers
 var _campaignId    = new URLSearchParams(window.location.search).get('campaign') || '';
+var _reportingOnly = new URLSearchParams(window.location.search).get('view') === 'reporting';
+if (_reportingOnly) document.body.classList.add('reporting-only');
 
 // ── RENDER ALL ────────────────────────────────────────────────────────────────
 function renderAll(data) {
@@ -1284,6 +1290,11 @@ function renderAll(data) {
   // Restore saved states
   restoreFeedback(offers);
   restoreApprovalState();
+  // Auto-switch to Reporting tab in reporting-only mode
+  if (_reportingOnly) {
+    var rptTab = document.querySelector('.tab[onclick*="reporting"]');
+    if (rptTab) switchTab('reporting', rptTab);
+  }
 }
 
 // ── HERO ──────────────────────────────────────────────────────────────────────
