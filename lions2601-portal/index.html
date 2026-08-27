@@ -798,7 +798,7 @@
     img.rpt-avatar { object-fit: cover; }
     .rpt-name { font-size: 14px; font-weight: 700; }
     .rpt-code { font-size: 12px; color: #999; margin-top: 2px; }
-    .post-metrics { flex: 1; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 20px; padding-top: 8px; padding-bottom: 16px; border-top: 1px solid #f0f0f0; align-content: center; }
+    .post-metrics { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 20px; padding-top: 8px; padding-bottom: 16px; border-top: 1px solid #f0f0f0; align-content: center; }
     .rpt-metric { text-align: center; }
     .rpt-metric-value { font-size: 21px; font-weight: 800; color: #1a1a1a; }
     .rpt-metric-value.empty { color: #ddd; }
@@ -916,7 +916,7 @@
       .talent-grid { grid-template-columns: 1fr; }
       .rpt-stat-row { grid-template-columns: repeat(2, 1fr); }
       .chart-grid { grid-template-columns: 1fr; }
-      .post-metrics { grid-template-columns: repeat(2, 1fr); }
+      .post-metrics { grid-template-columns: repeat(3, 1fr); }
       .phone { width: 76px; }
       .reporting-header { flex-direction: column; align-items: flex-start; gap: 12px; }
       .talent-offer-inner { grid-template-columns: 90px 1fr; }
@@ -3304,15 +3304,21 @@ function buildRptCardHtml(d) {
   var svgHeart = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 8.6c0 5-8.8 11-8.8 11s-8.8-6-8.8-11a4.9 4.9 0 0 1 8.8-3 4.9 4.9 0 0 1 8.8 3z"/></svg>';
   var svgMsg   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.9 8.9 0 0 1-3.9-.9L3 20l1-4.9a8.3 8.3 0 0 1-1-4A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/></svg>';
   var svgShare = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>';
+  var svgSave  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+  var svgEng   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>';
 
-  var mv = d.views    != null ? fmtNum(d.views)    : '—';
-  var ml = d.likes    != null ? fmtNum(d.likes)    : '—';
-  var mc = d.comments != null ? fmtNum(d.comments) : '—';
-  var ms = d.shares   != null ? fmtNum(d.shares)   : '—';
-  var emV = d.views    == null ? ' empty' : '';
-  var emL = d.likes    == null ? ' empty' : '';
-  var emC = d.comments == null ? ' empty' : '';
-  var emS = d.shares   == null ? ' empty' : '';
+  var mv  = d.views          != null ? fmtNum(d.views)                          : '—';
+  var ml  = d.likes          != null ? fmtNum(d.likes)                          : '—';
+  var mc  = d.comments       != null ? fmtNum(d.comments)                       : '—';
+  var ms  = d.shares         != null ? fmtNum(d.shares)                         : '—';
+  var msa = d.saves          != null ? fmtNum(d.saves)                          : '—';
+  var mer = d.engagementRate != null ? (d.engagementRate * 100).toFixed(2) + '%' : '—';
+  var emV  = d.views          == null ? ' empty' : '';
+  var emL  = d.likes          == null ? ' empty' : '';
+  var emC  = d.comments       == null ? ' empty' : '';
+  var emS  = d.shares         == null ? ' empty' : '';
+  var emSa = d.saves          == null ? ' empty' : '';
+  var emEr = d.engagementRate == null ? ' empty' : '';
 
   return '<div class="post-card">'
     + '<div class="post-left">'
@@ -3340,10 +3346,12 @@ function buildRptCardHtml(d) {
     + (isLive ? '<span class="pill pill-live" style="font-size:11px;padding:3px 10px;flex-shrink:0">🚀 Live</span>' : '')
     + '</div>'
     + '<div class="post-metrics">'
-    + '<div class="rpt-metric"><div class="rpt-metric-value' + emV + '">' + mv + '</div><div class="rpt-metric-label">' + svgEye   + ' Views</div></div>'
-    + '<div class="rpt-metric"><div class="rpt-metric-value' + emL + '">' + ml + '</div><div class="rpt-metric-label">' + svgHeart + ' Likes</div></div>'
-    + '<div class="rpt-metric"><div class="rpt-metric-value' + emC + '">' + mc + '</div><div class="rpt-metric-label">' + svgMsg   + ' Comments</div></div>'
-    + '<div class="rpt-metric"><div class="rpt-metric-value' + emS + '">' + ms + '</div><div class="rpt-metric-label">' + svgShare + ' Shares</div></div>'
+    + '<div class="rpt-metric"><div class="rpt-metric-value' + emV  + '">' + mv  + '</div><div class="rpt-metric-label">' + svgEye   + ' Views</div></div>'
+    + '<div class="rpt-metric"><div class="rpt-metric-value' + emL  + '">' + ml  + '</div><div class="rpt-metric-label">' + svgHeart + ' Likes</div></div>'
+    + '<div class="rpt-metric"><div class="rpt-metric-value' + emC  + '">' + mc  + '</div><div class="rpt-metric-label">' + svgMsg   + ' Comments</div></div>'
+    + '<div class="rpt-metric"><div class="rpt-metric-value' + emS  + '">' + ms  + '</div><div class="rpt-metric-label">' + svgShare + ' Shares</div></div>'
+    + '<div class="rpt-metric"><div class="rpt-metric-value' + emSa + '">' + msa + '</div><div class="rpt-metric-label">' + svgSave  + ' Saves</div></div>'
+    + '<div class="rpt-metric"><div class="rpt-metric-value' + emEr + '">' + mer + '</div><div class="rpt-metric-label">' + svgEng   + ' Eng. Rate</div></div>'
     + '</div>'
     + '</div>'
     + '</div>';
