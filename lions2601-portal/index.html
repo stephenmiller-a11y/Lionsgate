@@ -3483,7 +3483,7 @@ function renderRptMetrics(filtered) {
     + '</div>';
 
   var chartWrap = document.getElementById('rpt-chart-wrap');
-  if (chartWrap) chartWrap.innerHTML = buildRptChartSvg(filtered, _rptChartMetric);
+  if (chartWrap) { chartWrap.innerHTML = buildRptDonutHtml(filtered); wireRptDonut(); }
 
   var topPosts = document.getElementById('rpt-top-posts');
   if (topPosts) topPosts.innerHTML = buildTopPostsHtml(filtered);
@@ -3535,13 +3535,8 @@ function renderReporting(campaign, deliverables) {
 
   var chartSection = '<div class="chart-grid">'
     + '<div class="chart-card">'
-    + '<div class="card-title-row">'
-    + '<div class="card-title" id="rpt-chart-title">' + (_rptChartMetric === 'eng' ? 'Engagements' : 'Views') + ' Over Time</div>'
-    + '<div class="metric-toggle">'
-    + '<button class="' + (_rptChartMetric === 'views' ? 'active' : '') + '" onclick="toggleChartMetric(\'views\')">Views</button>'
-    + '<button class="' + (_rptChartMetric === 'eng'   ? 'active' : '') + '" onclick="toggleChartMetric(\'eng\')">Engagements</button>'
-    + '</div></div>'
-    + '<div class="chart-wrap" id="rpt-chart-wrap"></div>'
+    + '<div class="card-title-row"><div class="card-title">Deliverables by Type</div></div>'
+    + '<div id="rpt-chart-wrap"></div>'
     + '</div>'
     + '<div class="top-card">'
     + '<div class="card-title-row"><div class="card-title">Top Posts</div></div>'
@@ -3623,6 +3618,98 @@ function buildRptPagBtns(cur, total, count, start, end) {
     + btns
     + '<button class="rpt-page-btn" onclick="goToRptPage(' + (cur+1) + ')" ' + (cur === total ? 'disabled' : '') + '>&#8250;</button>'
     + '</div>';
+}
+
+// ── REPORTING: DONUT CHART ────────────────────────────────────────────────────
+function buildRptDonutHtml(deliverables) {
+  var total = deliverables.length;
+  if (!total) return '<div style="padding:40px;text-align:center;color:#ccc;font-size:13px">No deliverables</div>';
+
+  var C = 2 * Math.PI * 62;
+  var donutSegs = [];
+  var offset = 0;
+
+  // Group by type using PLAT_DEFS (same palette as Overview page)
+  var platMap = {};
+  deliverables.forEach(function(d) {
+    var t = d.type || '';
+    for (var i = 0; i < PLAT_DEFS.length; i++) {
+      if (PLAT_DEFS[i].test(t)) {
+        var pk = PLAT_DEFS[i].key;
+        if (!platMap[pk]) platMap[pk] = { def: PLAT_DEFS[i], types: {} };
+        platMap[pk].types[t] = (platMap[pk].types[t] || 0) + 1;
+        return;
+      }
+    }
+    if (!platMap['_other']) platMap['_other'] = { def: { key: '_other', subColors: ['#b39ddb'] }, types: {} };
+    platMap['_other'].types[t || 'Other'] = (platMap['_other'].types[t || 'Other'] || 0) + 1;
+  });
+
+  PLAT_DEFS.forEach(function(def) {
+    var pg = platMap[def.key];
+    if (!pg) return;
+    Object.entries(pg.types).sort(function(a, b) { return b[1] - a[1]; }).forEach(function(entry, si) {
+      var tn = entry[0], cnt = entry[1];
+      var pct = Math.round(cnt / total * 100);
+      var color = def.subColors[si % def.subColors.length];
+      var arc = cnt / total * C;
+      donutSegs.push({ name: tn, color: color, count: cnt, pct: pct, arc: arc, offset: offset });
+      offset += arc;
+    });
+  });
+
+  var segsHtml = donutSegs.map(function(s) {
+    return '<circle class="donut-seg"'
+      + ' data-name="' + s.name + '" data-color="' + s.color + '"'
+      + ' data-sub="' + s.count + ' deliverable' + (s.count !== 1 ? 's' : '') + ' \xB7 ' + s.pct + '% of total"'
+      + ' cx="80" cy="80" r="62" fill="none"'
+      + ' stroke="' + s.color + '" stroke-width="17"'
+      + ' stroke-dasharray="' + s.arc.toFixed(2) + ' ' + (C - s.arc).toFixed(2) + '"'
+      + ' stroke-dashoffset="' + (-s.offset).toFixed(2) + '"/>';
+  }).join('');
+
+  return '<div class="donut-block">'
+    + '<div class="donut-inner" id="rpt-donut-inner">'
+    + '<svg width="176" height="176" viewBox="0 0 160 160">'
+    + '<g transform="rotate(-90 80 80)">' + segsHtml + '</g>'
+    + '</svg>'
+    + '<div class="donut-center"><span class="dc-num">' + total + '</span><span class="dc-label">Total</span></div>'
+    + '</div>'
+    + '</div>';
+}
+
+function wireRptDonut() {
+  var inner = document.getElementById('rpt-donut-inner');
+  if (!inner) return;
+  // Reuse or create floating tooltip
+  var tip = document.getElementById('rpt-donut-tip');
+  if (!tip) {
+    tip = document.createElement('div');
+    tip.id = 'rpt-donut-tip';
+    tip.className = 'donut-tip';
+    tip.innerHTML = '<div class="dt-head"><span class="dt-dot" id="rpt-tt-dot"></span><span id="rpt-tt-name"></span></div>'
+      + '<div class="dt-sub" id="rpt-tt-sub"></div>';
+    document.body.appendChild(tip);
+  }
+  var ttDot  = document.getElementById('rpt-tt-dot');
+  var ttName = document.getElementById('rpt-tt-name');
+  var ttSub  = document.getElementById('rpt-tt-sub');
+  inner.querySelectorAll('.donut-seg').forEach(function(seg) {
+    seg.addEventListener('mouseenter', function() {
+      inner.classList.add('hovering'); seg.classList.add('active');
+      ttDot.style.background = seg.dataset.color;
+      ttName.textContent = seg.dataset.name;
+      ttSub.textContent  = seg.dataset.sub;
+      tip.classList.add('show');
+    });
+    seg.addEventListener('mousemove', function(ev) {
+      tip.style.left = ev.clientX + 'px'; tip.style.top = ev.clientY + 'px';
+    });
+    seg.addEventListener('mouseleave', function() {
+      inner.classList.remove('hovering'); seg.classList.remove('active');
+      tip.classList.remove('show');
+    });
+  });
 }
 
 // ── REPORTING: CHART BUILDER ──────────────────────────────────────────────────
