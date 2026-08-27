@@ -296,21 +296,6 @@ function canonicalizeSnapchatUrl(url) {
   } catch { return url; }
 }
 
-// Follow redirect to resolve shortened Snapchat URLs (snapchat.com/t/XXXX)
-async function resolveSnapchatShortUrl(url) {
-  try {
-    const res = await fetch(url, {
-      method:   'GET',
-      redirect: 'follow',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
-      },
-      signal: AbortSignal.timeout(8000),
-    });
-    if (res.url && isSnapchatSpotlight(res.url)) return res.url;
-  } catch {}
-  return url; // give up — caller will emit a warning
-}
 
 async function fetchSnapchatStatsApify(deliverables, apiToken) {
   const urls = deliverables.map(d => canonicalizeSnapchatUrl(d.postLink));
@@ -561,17 +546,14 @@ module.exports = async function handler(req, res) {
           const shortUrlDelivs  = allSnap.filter(d =>  isSnapchatShortUrl(d.postLink));
           const longUrlDelivs   = allSnap.filter(d => !isSnapchatShortUrl(d.postLink));
 
-          const resolvedShort = await Promise.all(shortUrlDelivs.map(async d => {
-            const resolved = await resolveSnapchatShortUrl(d.postLink);
-            if (!isSnapchatSpotlight(resolved)) {
-              warnDeliv(d, `Snapchat: short URL did not resolve to a Spotlight video — manual entry required`);
-              results.push({ id: d.id, platform: 'snapchat', status: 'not_supported' });
-              return null;
-            }
-            return { ...d, postLink: resolved };
-          }));
+          // Short URLs (snapchat.com/t/XXXX) are not supported — resolution via
+          // redirect produces unreliable stats. The full Spotlight URL is needed.
+          for (const d of shortUrlDelivs) {
+            warnDeliv(d, `Snapchat: short URLs are not supported — please use the full Spotlight video URL (snapchat.com/@user/spotlight/...)`);
+            results.push({ id: d.id, platform: 'snapchat', status: 'not_supported' });
+          }
 
-          const spotlights    = [...longUrlDelivs.filter(d => isSnapchatSpotlight(d.postLink)), ...resolvedShort.filter(Boolean)];
+          const spotlights    = longUrlDelivs.filter(d => isSnapchatSpotlight(d.postLink));
           const nonSpotlights = longUrlDelivs.filter(d => !isSnapchatSpotlight(d.postLink));
           for (const d of nonSpotlights) {
             warnDeliv(d, `Snapchat: only Spotlight video URLs are supported (not profile or feed links) — manual entry required`);
