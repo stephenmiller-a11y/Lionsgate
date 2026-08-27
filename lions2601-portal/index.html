@@ -3487,11 +3487,8 @@ function renderReporting(campaign, deliverables) {
 
   var lastUpdated = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString();
   var header = '<div class="reporting-header">'
-    + '<div class="reporting-header-left"><h2>Campaign Report</h2>'
-    + '<p>' + campaign.name + ' \xB7 ' + total + ' deliverables \xB7 <span class="last-updated">Last updated: ' + lastUpdated + '</span></p>'
-    + '</div>'
+    + '<div class="reporting-header-left"><h2>Campaign Report</h2></div>'
     + '<div class="reporting-buttons">'
-    + '<button class="btn-refresh" onclick="refreshReporting()">&#x21BA; Refresh</button>'
     + '<button class="btn-update" id="btn-update-stats" onclick="updateStats()">&#x1F4CA; Update Stats</button>'
     + '<button class="btn-update" id="btn-fetch-thumbs" onclick="fetchThumbnails()" style="background:#f5eeff;color:#7b2d8b;border-color:#d9b8f5">&#x1F5BC; Fetch Thumbnails</button>'
     + '</div></div>';
@@ -3522,6 +3519,7 @@ function renderReporting(campaign, deliverables) {
     + '<option value="youtube"'   + (_rptPlatform === 'youtube'   ? ' selected' : '') + '>YouTube</option>'
     + '<option value="snap"'      + (_rptPlatform === 'snap'      ? ' selected' : '') + '>Snapchat</option>'
     + '</select>'
+    + '<button class="btn-refresh" style="margin-left:auto" onclick="refreshReporting()">&#x21BA; Refresh</button>'
     + '</div>';
 
   // Stat row skeleton — filled immediately by renderRptMetrics() below.
