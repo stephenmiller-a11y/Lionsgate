@@ -22,6 +22,7 @@ const F_VIEWS         = 'fldliR0ZyX2OzMkvs';
 const F_LIKES         = 'fld3BhTWQ1IdTe6um';
 const F_COMMENTS      = 'fldTm8YrIhRvRCQUr';
 const F_SHARES        = 'fldqqQzTtUl6k5crI';
+const F_SAVES         = 'fldbxbzPhXG4LKjVV';
 const F_SOCIAL_POST   = 'fldHkJxRyOoTrXvHc';
 const F_THUMBNAIL     = 'flds3ZtOYpN6eTur5';
 const F_STATS_UPDATED = 'fldHFyucfmau6iFLc'; // Stats Updated (dateTime)
@@ -134,6 +135,7 @@ async function fetchInstagramStatsApify(deliverables, apiToken) {
       likes:       m.like_count     ?? null,
       comments:    m.comment_count  ?? null,
       shares:      m.share_count    ?? null,
+      saves:       m.saved_count    ?? m.saves_count ?? m.save_count ?? null,
       publishedAt: item.taken_at_date || null,
       coverUrl:    item.thumbnail_url || item.display_url || item.image_url
                    || item.image_versions?.[0]?.url || null,
@@ -256,10 +258,11 @@ async function fetchTikTokStatsApify(deliverables, apiToken) {
     const id    = urlId || String(item.id ?? '');
     if (!id) continue;
     byVideoId[id] = {
-      views:       item.playCount    ?? item.stats?.playCount    ?? null,
-      likes:       item.diggCount    ?? item.stats?.diggCount    ?? null,
-      comments:    item.commentCount ?? item.stats?.commentCount ?? null,
-      shares:      item.shareCount   ?? item.stats?.shareCount   ?? null,
+      views:       item.playCount     ?? item.stats?.playCount     ?? null,
+      likes:       item.diggCount     ?? item.stats?.diggCount     ?? null,
+      comments:    item.commentCount  ?? item.stats?.commentCount  ?? null,
+      shares:      item.shareCount    ?? item.stats?.shareCount    ?? null,
+      saves:       item.collectCount  ?? item.stats?.collectCount  ?? null,
       publishedAt: item.createTimeISO
         || (item.createTime ? new Date(item.createTime * 1000).toISOString() : null),
       coverUrl:    item.coverUrl || item.covers?.[0] || item.video?.cover || null,
@@ -286,6 +289,22 @@ function extractSpotlightToken(url) {
 
 function isSnapchatShortUrl(url) {
   return /snapchat\.com\/t\//.test(url || '');
+}
+
+// Resolve a short Snapchat URL (snapchat.com/t/XXXX) to a canonical spotlight URL.
+// Returns https://www.snapchat.com/spotlight/TOKEN on success, null on failure.
+async function resolveSnapchatShortUrl(url) {
+  try {
+    const res = await fetch(url, {
+      method:   'GET',
+      redirect: 'follow',
+      headers: { 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1' },
+      signal:   AbortSignal.timeout(8000),
+    });
+    const token = extractSpotlightToken(res.url || '');
+    if (token) return `https://www.snapchat.com/spotlight/${token}`;
+  } catch {}
+  return null;
 }
 
 function canonicalizeSnapchatUrl(url) {
@@ -346,14 +365,17 @@ async function patchDeliverable(recordId, fields, token) {
 // thumbnailUrl: only passed when the deliverable doesn't already have one (one-time).
 function buildFields(stats, thumbnailUrl) {
   const fields = {};
-  if (stats.views       != null) fields[F_VIEWS]         = stats.views;
-  if (stats.likes       != null) fields[F_LIKES]         = stats.likes;
-  if (stats.comments    != null) fields[F_COMMENTS]      = stats.comments;
-  if (stats.shares      != null) fields[F_SHARES]        = stats.shares;
-  if (stats.publishedAt != null) fields[F_SOCIAL_POST]   = stats.publishedAt;
-  if (thumbnailUrl)               fields[F_THUMBNAIL]     = [{ url: thumbnailUrl }];
-  if (F_STATS_UPDATED)            fields[F_STATS_UPDATED] = new Date().toISOString();
-                                  fields[F_STAT_ERRORS]   = ''; // clear any previous error
+  if (stats.views    != null && stats.views    > 0) fields[F_VIEWS]    = stats.views;
+  if (stats.likes    != null && stats.likes    > 0) fields[F_LIKES]    = stats.likes;
+  if (stats.comments != null && stats.comments > 0) fields[F_COMMENTS] = stats.comments;
+  if (stats.shares   != null && stats.shares   > 0) fields[F_SHARES]   = stats.shares;
+  if (stats.saves    != null && stats.saves    > 0) fields[F_SAVES]    = stats.saves;
+  if (stats.publishedAt != null) fields[F_SOCIAL_POST] = stats.publishedAt;
+  if (thumbnailUrl)               fields[F_THUMBNAIL]   = [{ url: thumbnailUrl }];
+  // Only stamp the update time if at least one engagement count was actually written
+  const hasEngagement = F_VIEWS in fields || F_LIKES in fields || F_COMMENTS in fields || F_SHARES in fields || F_SAVES in fields;
+  if (hasEngagement && F_STATS_UPDATED) fields[F_STATS_UPDATED] = new Date().toISOString();
+  fields[F_STAT_ERRORS] = ''; // clear any previous error
   return fields;
 }
 
@@ -546,14 +568,21 @@ module.exports = async function handler(req, res) {
           const shortUrlDelivs  = allSnap.filter(d =>  isSnapchatShortUrl(d.postLink));
           const longUrlDelivs   = allSnap.filter(d => !isSnapchatShortUrl(d.postLink));
 
-          // Short URLs (snapchat.com/t/XXXX) are not supported — resolution via
-          // redirect produces unreliable stats. The full Spotlight URL is needed.
-          for (const d of shortUrlDelivs) {
-            warnDeliv(d, `Snapchat: short URLs are not supported — please use the full Spotlight video URL (snapchat.com/@user/spotlight/...)`);
-            results.push({ id: d.id, platform: 'snapchat', status: 'not_supported' });
-          }
+          // Resolve short URLs (snapchat.com/t/XXXX) to canonical spotlight URLs
+          const resolvedShort = await Promise.all(shortUrlDelivs.map(async d => {
+            const resolved = await resolveSnapchatShortUrl(d.postLink);
+            if (!resolved) {
+              warnDeliv(d, `Snapchat: could not resolve short URL — please replace with full Spotlight URL`);
+              results.push({ id: d.id, platform: 'snapchat', status: 'not_supported' });
+              return null;
+            }
+            return { ...d, postLink: resolved };
+          }));
 
-          const spotlights    = longUrlDelivs.filter(d => isSnapchatSpotlight(d.postLink));
+          const spotlights = [
+            ...longUrlDelivs.filter(d => isSnapchatSpotlight(d.postLink)),
+            ...resolvedShort.filter(Boolean),
+          ];
           const nonSpotlights = longUrlDelivs.filter(d => !isSnapchatSpotlight(d.postLink));
           for (const d of nonSpotlights) {
             warnDeliv(d, `Snapchat: only Spotlight video URLs are supported (not profile or feed links) — manual entry required`);
