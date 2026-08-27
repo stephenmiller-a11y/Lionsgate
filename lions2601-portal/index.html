@@ -758,6 +758,7 @@
     .rpt-sort-btn.active { background: #7b2d8b; border-color: #7b2d8b; color: #fff; }
     .rpt-pages-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
     .rpt-filter-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .rpt-filter-row--top { margin-top: 4px; margin-bottom: 20px; }
     .rpt-platform-select, .rpt-month-select {
       height: 32px; padding: 0 28px 0 12px; border-radius: 20px; border: 1.5px solid #ddd;
       font-size: 13px; font-weight: 600; color: #555; background: #fff; cursor: pointer; outline: none; appearance: none;
@@ -3431,14 +3432,25 @@ function searchReporting(val) {
 function filterReporting(month) {
   _reportMonth = month;
   _reportPage  = 1;
+  renderRptMetrics(filteredForStats());
   renderRptPage(rptSorted());
 }
 
-function renderReporting(campaign, deliverables) {
-  _rptDelivs = deliverables;
+// Returns deliverables filtered by the active month + platform filters (not search/sort).
+// Used to drive the stat cards, chart, and top posts so they reflect the selected filters.
+function filteredForStats() {
+  return _deliverables.filter(function(d) {
+    if (_reportMonth && !(d.airDate && d.airDate.startsWith(_reportMonth))) return false;
+    if (_rptPlatform && !(d.type || '').toLowerCase().includes(_rptPlatform)) return false;
+    return true;
+  });
+}
+
+// Re-renders the stat cards, chart, and top-posts panel from a filtered set of deliverables.
+function renderRptMetrics(filtered) {
   var totalViews = 0, totalLikes = 0, totalComments = 0, totalShares = 0;
-  var hasMetrics = false, completed = 0, total = deliverables.length;
-  deliverables.forEach(function(d) {
+  var hasMetrics = false, completed = 0;
+  filtered.forEach(function(d) {
     if (isCompleted(d)) completed++;
     if (d.views    != null) { totalViews    += d.views;    hasMetrics = true; }
     if (d.likes    != null) { totalLikes    += d.likes;    hasMetrics = true; }
@@ -3446,6 +3458,32 @@ function renderReporting(campaign, deliverables) {
     if (d.shares   != null) { totalShares   += d.shares;   hasMetrics = true; }
   });
   var totalEng = totalLikes + totalComments + totalShares;
+
+  var statEl = document.getElementById('rpt-stat-row');
+  if (statEl) statEl.innerHTML =
+    '<div class="grad-card grad-views">'
+    + '<div class="grad-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/></svg>Views</div>'
+    + '<div class="grad-value">' + (hasMetrics ? fmtNum(totalViews) : '&mdash;') + '</div>'
+    + '</div>'
+    + '<div class="grad-card grad-engagements">'
+    + '<div class="grad-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M20.8 8.6c0 5-8.8 11-8.8 11s-8.8-6-8.8-11a4.9 4.9 0 0 1 8.8-3 4.9 4.9 0 0 1 8.8 3z"/></svg>Engagements</div>'
+    + '<div class="grad-value">' + (hasMetrics ? fmtNum(totalEng) : '&mdash;') + '</div>'
+    + '</div>'
+    + '<div class="grad-card grad-deliverables">'
+    + '<div class="grad-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>Deliverables</div>'
+    + '<div class="grad-value">' + completed + '</div>'
+    + '</div>';
+
+  var chartWrap = document.getElementById('rpt-chart-wrap');
+  if (chartWrap) chartWrap.innerHTML = buildRptChartSvg(filtered, _rptChartMetric);
+
+  var topPosts = document.getElementById('rpt-top-posts');
+  if (topPosts) topPosts.innerHTML = buildTopPostsHtml(filtered);
+}
+
+function renderReporting(campaign, deliverables) {
+  _rptDelivs = deliverables;
+  var total = deliverables.length;
 
   var lastUpdated = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString();
   var header = '<div class="reporting-header">'
@@ -3458,42 +3496,6 @@ function renderReporting(campaign, deliverables) {
     + '<button class="btn-update" id="btn-fetch-thumbs" onclick="fetchThumbnails()" style="background:#f5eeff;color:#7b2d8b;border-color:#d9b8f5">&#x1F5BC; Fetch Thumbnails</button>'
     + '</div></div>';
 
-  var statRow = '<div class="rpt-stat-row">'
-    + '<div class="grad-card grad-views">'
-    + '<div class="grad-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/></svg>Views</div>'
-    + '<div class="grad-value">' + (hasMetrics ? fmtNum(totalViews) : '&mdash;') + '</div>'
-    + '</div>'
-    + '<div class="grad-card grad-engagements">'
-    + '<div class="grad-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M20.8 8.6c0 5-8.8 11-8.8 11s-8.8-6-8.8-11a4.9 4.9 0 0 1 8.8-3 4.9 4.9 0 0 1 8.8 3z"/></svg>Engagements</div>'
-    + '<div class="grad-value">' + (hasMetrics ? fmtNum(totalEng) : '&mdash;') + '</div>'
-    + '</div>'
-    + '<div class="grad-card grad-deliverables">'
-    + '<div class="grad-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>Deliverables</div>'
-    + '<div class="grad-value">' + completed + '</div>'
-    + '</div>'
-    + '</div>';
-
-  var chartSvg = buildRptChartSvg(deliverables, _rptChartMetric);
-  var chartSection = '<div class="chart-grid">'
-    + '<div class="chart-card">'
-    + '<div class="card-title-row">'
-    + '<div class="card-title" id="rpt-chart-title">' + (_rptChartMetric === 'eng' ? 'Engagements' : 'Views') + ' Over Time</div>'
-    + '<div class="metric-toggle">'
-    + '<button class="' + (_rptChartMetric === 'views' ? 'active' : '') + '" onclick="toggleChartMetric(\'views\')">Views</button>'
-    + '<button class="' + (_rptChartMetric === 'eng'   ? 'active' : '') + '" onclick="toggleChartMetric(\'eng\')">Engagements</button>'
-    + '</div></div>'
-    + '<div class="chart-wrap" id="rpt-chart-wrap">' + chartSvg + '</div>'
-    + '</div>'
-    + '<div class="top-card">'
-    + '<div class="card-title-row"><div class="card-title">Top Posts</div></div>'
-    + '<div id="rpt-top-posts">' + buildTopPostsHtml(deliverables) + '</div>'
-    + '</div>'
-    + '</div>';
-
-  function rptSortLabel(key, label) {
-    if (_reportSort !== key) return label;
-    return label + ' ' + (_reportSortDir === 'asc' ? '↑' : '↓');
-  }
   // Build dynamic month options from deliverable air dates.
   var _monthSet = {}, _months = [];
   deliverables.forEach(function(d) {
@@ -3508,14 +3510,8 @@ function renderReporting(campaign, deliverables) {
         return '<option value="' + ym + '"' + (_reportMonth === ym ? ' selected' : '') + '>' + rptMonthLabel(ym) + '</option>';
       }).join('');
 
-  var sortBar = '<div class="rpt-sort-bar">'
-    + '<span class="rpt-sort-label">Sort by</span>'
-    + '<button class="rpt-sort-btn ' + (_reportSort === 'date'    ? 'active' : '') + '" data-sort="date"    onclick="sortReporting(\'date\')">'    + rptSortLabel('date',    'Date')    + '</button>'
-    + '<button class="rpt-sort-btn ' + (_reportSort === 'views'   ? 'active' : '') + '" data-sort="views"   onclick="sortReporting(\'views\')">'   + rptSortLabel('views',   'Views')   + '</button>'
-    + '<button class="rpt-sort-btn ' + (_reportSort === 'creator' ? 'active' : '') + '" data-sort="creator" onclick="sortReporting(\'creator\')">' + rptSortLabel('creator', 'Creator') + '</button>'
-    + '<div class="rpt-pages-right" id="rpt-pag-inline"></div>'
-    + '</div>'
-    + '<div class="rpt-filter-row">'
+  // Filter row — lives at the top, above the stat cards.
+  var filterRow = '<div class="rpt-filter-row rpt-filter-row--top">'
     + '<select class="rpt-month-select" onchange="filterReporting(this.value)">'
     + monthOpts
     + '</select>'
@@ -3526,11 +3522,45 @@ function renderReporting(campaign, deliverables) {
     + '<option value="youtube"'   + (_rptPlatform === 'youtube'   ? ' selected' : '') + '>YouTube</option>'
     + '<option value="snap"'      + (_rptPlatform === 'snap'      ? ' selected' : '') + '>Snapchat</option>'
     + '</select>'
+    + '</div>';
+
+  // Stat row skeleton — filled immediately by renderRptMetrics() below.
+  var statRow = '<div class="rpt-stat-row" id="rpt-stat-row"></div>';
+
+  var chartSection = '<div class="chart-grid">'
+    + '<div class="chart-card">'
+    + '<div class="card-title-row">'
+    + '<div class="card-title" id="rpt-chart-title">' + (_rptChartMetric === 'eng' ? 'Engagements' : 'Views') + ' Over Time</div>'
+    + '<div class="metric-toggle">'
+    + '<button class="' + (_rptChartMetric === 'views' ? 'active' : '') + '" onclick="toggleChartMetric(\'views\')">Views</button>'
+    + '<button class="' + (_rptChartMetric === 'eng'   ? 'active' : '') + '" onclick="toggleChartMetric(\'eng\')">Engagements</button>'
+    + '</div></div>'
+    + '<div class="chart-wrap" id="rpt-chart-wrap"></div>'
+    + '</div>'
+    + '<div class="top-card">'
+    + '<div class="card-title-row"><div class="card-title">Top Posts</div></div>'
+    + '<div id="rpt-top-posts"></div>'
+    + '</div>'
+    + '</div>';
+
+  function rptSortLabel(key, label) {
+    if (_reportSort !== key) return label;
+    return label + ' ' + (_reportSortDir === 'asc' ? '↑' : '↓');
+  }
+  var sortBar = '<div class="rpt-sort-bar">'
+    + '<span class="rpt-sort-label">Sort by</span>'
+    + '<button class="rpt-sort-btn ' + (_reportSort === 'date'    ? 'active' : '') + '" data-sort="date"    onclick="sortReporting(\'date\')">'    + rptSortLabel('date',    'Date')    + '</button>'
+    + '<button class="rpt-sort-btn ' + (_reportSort === 'views'   ? 'active' : '') + '" data-sort="views"   onclick="sortReporting(\'views\')">'   + rptSortLabel('views',   'Views')   + '</button>'
+    + '<button class="rpt-sort-btn ' + (_reportSort === 'creator' ? 'active' : '') + '" data-sort="creator" onclick="sortReporting(\'creator\')">' + rptSortLabel('creator', 'Creator') + '</button>'
+    + '<div class="rpt-pages-right" id="rpt-pag-inline"></div>'
+    + '</div>'
+    + '<div class="rpt-filter-row">'
     + '<input class="rpt-search" type="text" placeholder="🔍 Search by creator…" value="' + _reportSearch + '" oninput="searchReporting(this.value)">'
     + '</div>';
 
   document.getElementById('reporting-main').innerHTML =
-    header + statRow + chartSection + sortBar + '<div id="rpt-cards"></div>';
+    header + filterRow + statRow + chartSection + sortBar + '<div id="rpt-cards"></div>';
+  renderRptMetrics(filteredForStats());
   renderRptPage(rptSorted());
 }
 
@@ -3566,6 +3596,7 @@ function goToRptPage(page) {
 function filterRptPlatform(val) {
   _rptPlatform = val;
   _reportPage  = 1;
+  renderRptMetrics(filteredForStats());
   renderRptPage(rptSorted());
 }
 
@@ -3695,7 +3726,7 @@ function toggleChartMetric(metric) {
   var title = document.getElementById('rpt-chart-title');
   if (title) title.textContent = (metric === 'eng' ? 'Engagements' : 'Views') + ' Over Time';
   var wrap = document.getElementById('rpt-chart-wrap');
-  if (wrap) wrap.innerHTML = buildRptChartSvg(_rptDelivs, metric);
+  if (wrap) wrap.innerHTML = buildRptChartSvg(filteredForStats(), metric);
   document.querySelectorAll('.metric-toggle button').forEach(function(btn) {
     btn.classList.toggle('active', btn.textContent.trim() === (metric === 'views' ? 'Views' : 'Engagements'));
   });
