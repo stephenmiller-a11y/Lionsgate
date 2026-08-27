@@ -1257,7 +1257,8 @@ var _deliverables  = []; // cached for updateStats()
 var _offers        = []; // cached for roster updates after approval actions
 var _headshotMap   = {}; // talent name → headshotUrl, built from offers
 var _campaignId    = new URLSearchParams(window.location.search).get('campaign') || '';
-var _reportingOnly = new URLSearchParams(window.location.search).get('view') === 'reporting';
+var _reportingOnly = new URLSearchParams(window.location.search).get('view') === 'reporting'
+                  || window.location.hostname === 'reporting.zatv.com';
 if (_reportingOnly) document.body.classList.add('reporting-only');
 
 // ── RENDER ALL ────────────────────────────────────────────────────────────────
