@@ -274,7 +274,14 @@ async function fetchTikTokStatsApify(deliverables, apiToken) {
 // Output has viewCount and shareCount; no likes or comments.
 
 function isSnapchatSpotlight(url) {
-  return /snapchat\.com\/spotlight\//.test(url || '');
+  // Matches both snapchat.com/spotlight/TOKEN and snapchat.com/@user/spotlight/TOKEN
+  return /snapchat\.com.*\/spotlight\//.test(url || '');
+}
+
+function extractSpotlightToken(url) {
+  if (!url) return null;
+  const m = url.match(/\/spotlight\/([^/?#]+)/);
+  return m ? m[1] : null;
 }
 
 function isSnapchatShortUrl(url) {
@@ -324,18 +331,19 @@ async function fetchSnapchatStatsApify(deliverables, apiToken) {
 
   const items = await res.json();
 
-  // Build map: normalised URL path → stats
-  const byUrl = {};
+  // Build map: spotlight token → stats
+  // Apify strips @username from the output URL, so match by token not full URL
+  const byToken = {};
   for (const item of (Array.isArray(items) ? items : [])) {
-    const key = canonicalizeSnapchatUrl(item.url || '');
-    if (key) byUrl[key] = {
+    const token = extractSpotlightToken(item.url || '');
+    if (token) byToken[token] = {
       views:       item.viewCount  ?? null,
       shares:      item.shareCount ?? null,
       publishedAt: item.dateUploaded || null,
       coverUrl:    item.thumbnailUrl || null,
     };
   }
-  return byUrl;
+  return byToken;
 }
 
 // ── Airtable PATCH ────────────────────────────────────────────────────────────
@@ -573,11 +581,11 @@ module.exports = async function handler(req, res) {
             const CHUNK = 25;
             for (let i = 0; i < spotlights.length; i += CHUNK) {
               const chunk  = spotlights.slice(i, i + CHUNK);
-              const byUrl  = await fetchSnapchatStatsApify(chunk, apifyToken);
-              console.log(`[stats] Snapchat chunk ${Math.floor(i/CHUNK)+1} — returned: ${Object.keys(byUrl).length}`);
+              const byToken = await fetchSnapchatStatsApify(chunk, apifyToken);
+              console.log(`[stats] Snapchat chunk ${Math.floor(i/CHUNK)+1} — returned: ${Object.keys(byToken).length}`);
               for (const d of chunk) {
-                const key   = canonicalizeSnapchatUrl(d.postLink);
-                const stats = byUrl[key];
+                const token = extractSpotlightToken(d.postLink);
+                const stats = token ? byToken[token] : null;
                 if (!stats) {
                   warnDeliv(d, `Snapchat: no data returned — video may be unavailable`);
                   results.push({ id: d.id, platform: 'snapchat', status: 'not_found' });
