@@ -758,13 +758,13 @@
     .rpt-sort-btn.active { background: #7b2d8b; border-color: #7b2d8b; color: #fff; }
     .rpt-pages-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
     .rpt-filter-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
-    .rpt-platform-select {
+    .rpt-platform-select, .rpt-month-select {
       height: 32px; padding: 0 28px 0 12px; border-radius: 20px; border: 1.5px solid #ddd;
       font-size: 13px; font-weight: 600; color: #555; background: #fff; cursor: pointer; outline: none; appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23aaa'/%3E%3C/svg%3E");
       background-repeat: no-repeat; background-position: right 10px center;
     }
-    .rpt-platform-select:hover { border-color: #bbb; color: #333; }
+    .rpt-platform-select:hover, .rpt-month-select:hover { border-color: #bbb; color: #333; }
     .rpt-search { flex: 1; min-width: 160px; height: 32px; padding: 0 12px; border-radius: 20px; border: 1.5px solid #ddd; font-size: 13px; color: #555; outline: none; background: #fff; }
     .rpt-search:focus { border-color: #7b2d8b; }
     .rpt-search::placeholder { color: #bbb; }
@@ -3371,9 +3371,12 @@ function buildPaginationHtml(cur, total, count, start, end) {
 
 function renderRptPage(sorted) {
   var scrollY = window.scrollY;
-  // Blur the focused element before replacing innerHTML — otherwise the browser
-  // scrolls to recover focus when the clicked button is destroyed by the update.
-  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  // Preserve search focus: detect if the search bar is active before any DOM changes.
+  var activeEl = document.activeElement;
+  var isSearchFocused = activeEl && activeEl.classList && activeEl.classList.contains('rpt-search');
+  var searchCaret = isSearchFocused ? activeEl.selectionStart : -1;
+  // Only blur non-search elements (prevents browser scroll-to-focus when a clicked button is removed).
+  if (!isSearchFocused && activeEl && activeEl.blur) activeEl.blur();
   var totalPages = Math.max(1, Math.ceil(sorted.length / _reportPageSz));
   _reportPage = Math.max(1, Math.min(_reportPage, totalPages));
   var start = (_reportPage - 1) * _reportPageSz;
@@ -3383,8 +3386,14 @@ function renderRptPage(sorted) {
   if (container) container.innerHTML = cards || '<p style="padding:40px 0;text-align:center;color:#ccc;font-size:13px">No posts match your filters.</p>';
   var pagEl = document.getElementById('rpt-pag-inline');
   if (pagEl) pagEl.innerHTML = buildRptPagBtns(_reportPage, totalPages, sorted.length, start, end);
-  // Restore after the browser's layout pass to prevent any reflow-triggered scroll
-  requestAnimationFrame(function() { window.scrollTo(0, scrollY); });
+  // Restore scroll and re-focus search bar if it was active.
+  requestAnimationFrame(function() {
+    window.scrollTo(0, scrollY);
+    if (isSearchFocused) {
+      var el = document.querySelector('.rpt-search');
+      if (el) { el.focus(); if (searchCaret >= 0) el.setSelectionRange(searchCaret, searchCaret); }
+    }
+  });
 }
 
 function rptMonthLabel(ym) {
@@ -3485,6 +3494,20 @@ function renderReporting(campaign, deliverables) {
     if (_reportSort !== key) return label;
     return label + ' ' + (_reportSortDir === 'asc' ? '↑' : '↓');
   }
+  // Build dynamic month options from deliverable air dates.
+  var _monthSet = {}, _months = [];
+  deliverables.forEach(function(d) {
+    if (d.airDate && d.airDate.length >= 7) {
+      var ym = d.airDate.substring(0, 7);
+      if (!_monthSet[ym]) { _monthSet[ym] = true; _months.push(ym); }
+    }
+  });
+  _months.sort();
+  var monthOpts = '<option value="">All Months</option>'
+    + _months.map(function(ym) {
+        return '<option value="' + ym + '"' + (_reportMonth === ym ? ' selected' : '') + '>' + rptMonthLabel(ym) + '</option>';
+      }).join('');
+
   var sortBar = '<div class="rpt-sort-bar">'
     + '<span class="rpt-sort-label">Sort by</span>'
     + '<button class="rpt-sort-btn ' + (_reportSort === 'date'    ? 'active' : '') + '" data-sort="date"    onclick="sortReporting(\'date\')">'    + rptSortLabel('date',    'Date')    + '</button>'
@@ -3493,6 +3516,9 @@ function renderReporting(campaign, deliverables) {
     + '<div class="rpt-pages-right" id="rpt-pag-inline"></div>'
     + '</div>'
     + '<div class="rpt-filter-row">'
+    + '<select class="rpt-month-select" onchange="filterReporting(this.value)">'
+    + monthOpts
+    + '</select>'
     + '<select class="rpt-platform-select" onchange="filterRptPlatform(this.value)">'
     + '<option value="">All Platforms</option>'
     + '<option value="instagram"' + (_rptPlatform === 'instagram' ? ' selected' : '') + '>Instagram</option>'
