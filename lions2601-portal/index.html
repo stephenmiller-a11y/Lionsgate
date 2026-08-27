@@ -759,6 +759,12 @@
     .rpt-pages-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
     .rpt-filter-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
     .rpt-filter-row--top { margin-top: 4px; margin-bottom: 20px; }
+    .rpt-donut-wrap { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
+    .rpt-donut-legend { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .rpt-donut-legend-row { display: flex; align-items: center; gap: 7px; font-size: 12.5px; }
+    .rpt-donut-legend-row .type-name-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #444; }
+    .rpt-donut-legend-row .type-count-num { font-weight: 700; color: #1a1a1a; }
+    .rpt-donut-legend-row .type-pct-text { color: #aaa; font-weight: 600; width: 34px; text-align: right; }
     .rpt-platform-select, .rpt-month-select {
       height: 32px; padding: 0 28px 0 12px; border-radius: 20px; border: 1.5px solid #ddd;
       font-size: 13px; font-weight: 600; color: #555; background: #fff; cursor: pointer; outline: none; appearance: none;
@@ -3668,12 +3674,24 @@ function buildRptDonutHtml(deliverables) {
       + ' stroke-dashoffset="' + (-s.offset).toFixed(2) + '"/>';
   }).join('');
 
-  return '<div class="donut-block">'
+  var legendHtml = donutSegs.map(function(s) {
+    return '<div class="rpt-donut-legend-row">'
+      + '<span class="type-dot" style="background:' + s.color + '"></span>'
+      + '<span class="type-name-text">' + s.name + '</span>'
+      + '<span class="type-count-num">' + s.count + '</span>'
+      + '<span class="type-pct-text">' + s.pct + '%</span>'
+      + '</div>';
+  }).join('');
+
+  return '<div class="rpt-donut-wrap">'
+    + '<div class="rpt-donut-legend">' + legendHtml + '</div>'
+    + '<div class="donut-block">'
     + '<div class="donut-inner" id="rpt-donut-inner">'
     + '<svg width="176" height="176" viewBox="0 0 160 160">'
     + '<g transform="rotate(-90 80 80)">' + segsHtml + '</g>'
     + '</svg>'
     + '<div class="donut-center"><span class="dc-num">' + total + '</span><span class="dc-label">Total</span></div>'
+    + '</div>'
     + '</div>'
     + '</div>';
 }
