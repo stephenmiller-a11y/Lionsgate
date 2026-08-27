@@ -55,6 +55,8 @@ const DELIVERABLE_FIELDS = [
   'fldAJ64smous4Sum4', // Fourth Draft (url)
   'fldKXUXRkHwkATQmc', // Fifth Draft (url)
   'fldUdrMJAhL1Zey7q', // Duration (number in seconds)
+  'fldbxbzPhXG4LKjVV', // Saves
+  'fldrqHaeKmZqVPFfa', // Engagement Rate (percentage)
 ];
 
 // Offers table — accessed by field ID (returnFieldsByFieldId=true)
