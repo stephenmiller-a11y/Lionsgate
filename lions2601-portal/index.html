@@ -3287,13 +3287,12 @@ function calChipEnter(evt, chip) {
     '</div>' +
     eventRow + codeHtml + statsHtml + viewPostHtml;
 
-  // Position tooltip — prefer above the chip, keep on screen
-  var rect = chip.getBoundingClientRect();
+  // Position tooltip near the cursor (not the chip edge) so the mouse barely has to move.
   var ttW = 270, ttH = tt.offsetHeight || 180;
-  var left = Math.min(rect.left, window.innerWidth - ttW - 12);
+  var left = Math.min(evt.clientX - ttW / 2, window.innerWidth - ttW - 12);
   left = Math.max(left, 8);
-  var top = rect.top - ttH - 8;
-  if (top < 8) top = rect.bottom + 8;
+  var top = evt.clientY - ttH - 4; // 4px gap above cursor
+  if (top < 8) top = evt.clientY + 14; // flip below if no room above
   tt.style.left = left + 'px';
   tt.style.top  = top + 'px';
   tt.classList.add('visible');
