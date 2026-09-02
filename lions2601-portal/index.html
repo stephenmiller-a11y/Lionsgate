@@ -1285,7 +1285,7 @@ function renderAll(data) {
   renderHero(campaign);
   const activeDeliverables = deliverables.filter(d => !(d.status || '').toLowerCase().includes('voided'));
   renderOverviewStats(campaign, activeDeliverables, offers);
-  renderProgressBar(activeDeliverables);
+  if (!campaign.hideProgress) renderProgressBar(activeDeliverables);
   renderDeliverablesTable(activeDeliverables);
   renderOverviewTalentGrid(offers);
   renderCreative(campaign);
