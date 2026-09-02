@@ -187,14 +187,16 @@ module.exports = async function handler(req, res) {
     // 2. Fetch related records in parallel (fields keyed by field ID)
     // Brand table primary field: fldzffs5mAHRcIadt
     const BRAND_TABLE = 'tblzolzC9inRloCvo';
-    const [delivsData, offersData, timelinesData, brandData] = await Promise.all([
+    const [delivsData, offersData, timelinesData, brandData, campFieldsData] = await Promise.all([
       atGetByIds(TABLES.deliverables, deliverableIds, DELIVERABLE_FIELDS, token),
       atGetByIds(TABLES.offers,       offerIds,       OFFER_FIELDS,       token),
       atGetByIds(TABLES.timelines,    timelineIds,    [],                 token),
       brandId ? atGetByIds(BRAND_TABLE, [brandId], ['fldzffs5mAHRcIadt'], token) : Promise.resolve({ records: [] }),
+      atGetByIds(TABLES.campaigns, [campaignId], ['fldQkRs7pObXothE4'], token),
     ]);
 
-    const brandName = brandData.records?.[0]?.fields?.['fldzffs5mAHRcIadt'] || null;
+    const brandName     = brandData.records?.[0]?.fields?.['fldzffs5mAHRcIadt'] || null;
+    const hideProgress  = campFieldsData.records?.[0]?.fields?.['fldQkRs7pObXothE4'] === true;
 
     // 2b. Collect unique Talent IDs from offers and fetch follower counts
     const talentIds = [...new Set(
@@ -223,6 +225,7 @@ module.exports = async function handler(req, res) {
       endDate:         cf['End Date']                  || null,
       status:          cf['Status']                    || null,
       campaignOverview: cf['Campaign Overview']         || null,
+      hideProgress:    hideProgress,
       briefBackground: cf['Brief Background']          || null,
       briefGuidelines: cf['Brief Creative Guidelines'] || null,
       briefCTA:        cf['Brief CTA']                 || null,
