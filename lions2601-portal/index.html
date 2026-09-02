@@ -855,7 +855,7 @@
     .cal-row-expanded .cal-cell { overflow: visible; }
     .cal-cell { border-right: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; padding: 6px 5px 6px 6px; position: relative; overflow-y: auto; }
     .cal-cell:nth-child(7n) { border-right: none; }
-    .cal-show-less { grid-column: 1 / -1; text-align: center; font-size: 10.5px; font-weight: 600; color: #aaa; cursor: pointer; padding: 4px 0 7px; border-top: 1px dashed #f0f0f0; }
+    .cal-show-less { text-align: center; font-size: 10.5px; font-weight: 600; color: #aaa; cursor: pointer; padding: 4px 0 3px; margin-top: 2px; border-top: 1px dashed #f0f0f0; }
     .cal-show-less:hover { color: #7b2d8b; text-decoration: underline; }
     .cal-cell.out-of-month { background: #fafafa; }
     .cal-cell.cal-today-cell { background: #fdf8ff; }
@@ -3017,8 +3017,11 @@ function buildCalChipHtml(ev, ct) {
     '</div>';
 }
 
-// Expand an entire week row to show all hidden events across every cell in it
-function calExpandRow(rowEl) {
+// Expand an entire week row to show all hidden events across every cell in it.
+// triggerEl is the "+X more" div that was clicked.
+function calExpandRow(triggerEl) {
+  var rowEl = triggerEl.closest('.cal-week-row');
+  var triggerCell = triggerEl.closest('.cal-cell');
   if (!rowEl || rowEl.classList.contains('cal-row-expanded')) return;
   rowEl.classList.add('cal-row-expanded');
   var byDate = {};
@@ -3030,11 +3033,13 @@ function calExpandRow(rowEl) {
     var dateNum = cell.querySelector('.cal-date-num').outerHTML;
     cell.innerHTML = dateNum + evts.map(function(ev) { return buildCalChipHtml(ev, CAL_TYPES[ev.eventType]); }).join('');
   });
+  // Place "Show less" inside the cell that was clicked
   var lessBtn = document.createElement('div');
   lessBtn.className = 'cal-show-less';
   lessBtn.textContent = 'Show less';
   lessBtn.onclick = function() { calCollapseRow(rowEl); };
-  rowEl.appendChild(lessBtn);
+  if (triggerCell) triggerCell.appendChild(lessBtn);
+  else rowEl.appendChild(lessBtn);
 }
 
 // Collapse a row back to the default chip count
@@ -3052,7 +3057,7 @@ function calCollapseRow(rowEl) {
     var dateNum = cell.querySelector('.cal-date-num').outerHTML;
     var chips = evts.slice(0, MAX_CHIPS).map(function(ev) { return buildCalChipHtml(ev, CAL_TYPES[ev.eventType]); }).join('');
     var more = evts.length > MAX_CHIPS
-      ? '<div class="cal-more" onclick="calExpandRow(this.closest(\'.cal-week-row\'))">+' + (evts.length - MAX_CHIPS) + ' more</div>'
+      ? '<div class="cal-more" onclick="calExpandRow(this)">+' + (evts.length - MAX_CHIPS) + ' more</div>'
       : '';
     cell.innerHTML = dateNum + chips + more;
   });
@@ -3090,7 +3095,7 @@ function renderCalendarView() {
     var evts = byDate[ds] || [];
     var chips = evts.slice(0, MAX_CHIPS).map(function(ev) { return buildCalChipHtml(ev, CAL_TYPES[ev.eventType]); }).join('');
     var more = evts.length > MAX_CHIPS
-      ? '<div class="cal-more" onclick="calExpandRow(this.closest(\'.cal-week-row\'))">+' + (evts.length - MAX_CHIPS) + ' more</div>'
+      ? '<div class="cal-more" onclick="calExpandRow(this)">+' + (evts.length - MAX_CHIPS) + ' more</div>'
       : '';
     cells += '<div class="cal-cell' + (isToday ? ' cal-today-cell' : '') + '" data-cell-date="' + ds + '">' +
       '<span class="cal-date-num' + (isToday ? ' cal-today-num' : '') + '">' + cd.getDate() + '</span>' +
@@ -3156,7 +3161,7 @@ function renderCalendarMonth() {
     var MAX_CHIPS = 3;
     var chips = evts.slice(0, MAX_CHIPS).map(function(ev) { return buildCalChipHtml(ev, CAL_TYPES[ev.eventType]); }).join('');
     var more = evts.length > MAX_CHIPS
-      ? '<div class="cal-more" onclick="calExpandRow(this.closest(\'.cal-week-row\'))">+' + (evts.length - MAX_CHIPS) + ' more</div>'
+      ? '<div class="cal-more" onclick="calExpandRow(this)">+' + (evts.length - MAX_CHIPS) + ' more</div>'
       : '';
     allCells.push('<div class="cal-cell' + (isToday ? ' cal-today-cell' : '') + '" data-cell-date="' + ds + '">' +
       '<span class="cal-date-num' + (isToday ? ' cal-today-num' : '') + '">' + d + '</span>' +
