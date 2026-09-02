@@ -226,10 +226,10 @@ module.exports = async function handler(req, res) {
       status:          cf['Status']                    || null,
       campaignOverview: cf['Campaign Overview']         || null,
       hideProgress:    hideProgress,
-      briefBackground: cf['Brief Background']          || null,
-      briefGuidelines: cf['Brief Creative Guidelines'] || null,
-      briefCTA:        cf['Brief CTA']                 || null,
-      kpis:            cf['KPIs']                      || null,
+      briefBackground: cf['Brief Background']?.trim()          || null,
+      briefGuidelines: cf['Brief Creative Guidelines']?.trim() || null,
+      briefCTA:        cf['Brief CTA']?.trim()                 || null,
+      kpis:            cf['KPIs']?.trim()                      || null,
     };
 
     // 4. Shape deliverables — fields keyed by field ID
