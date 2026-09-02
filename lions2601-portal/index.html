@@ -850,9 +850,13 @@
     .cal-dow-row { display: grid; grid-template-columns: repeat(7, 1fr); background: #fafafa; border-bottom: 1px solid #f0f0f0; }
     .cal-dow { text-align: center; font-size: 11px; font-weight: 700; letter-spacing: 0.07em; color: #aaa; padding: 7px 0; }
     /* Grid */
-    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); height: 576px; grid-auto-rows: 1fr; }
+    .cal-grid { display: flex; flex-direction: column; min-height: 576px; }
+    .cal-week-row { display: grid; grid-template-columns: repeat(7, 1fr); min-height: 96px; }
+    .cal-row-expanded .cal-cell { overflow: visible; }
     .cal-cell { border-right: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; padding: 6px 5px 6px 6px; position: relative; overflow-y: auto; }
     .cal-cell:nth-child(7n) { border-right: none; }
+    .cal-show-less { grid-column: 1 / -1; text-align: center; font-size: 10.5px; font-weight: 600; color: #aaa; cursor: pointer; padding: 4px 0 7px; border-top: 1px dashed #f0f0f0; }
+    .cal-show-less:hover { color: #7b2d8b; text-decoration: underline; }
     .cal-cell.out-of-month { background: #fafafa; }
     .cal-cell.cal-today-cell { background: #fdf8ff; }
     .cal-date-num { font-size: 12px; font-weight: 600; color: #444; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; margin-bottom: 3px; }
@@ -932,7 +936,8 @@
       .cal-outer { padding: 20px 20px 48px; }
       .cal-header { flex-wrap: wrap; gap: 8px; }
       .cal-legend { margin-left: 0; }
-      .cal-grid { height: 420px; }
+      .cal-grid { min-height: 420px; }
+      .cal-week-row { min-height: 70px; }
     }
   </style>
 </head>
@@ -3012,18 +3017,47 @@ function buildCalChipHtml(ev, ct) {
     '</div>';
 }
 
-// Expand a cell to show all hidden events
-function calExpandCell(ds) {
-  var cell = document.querySelector('.cal-cell[data-cell-date="' + ds + '"]');
-  if (!cell) return;
+// Expand an entire week row to show all hidden events across every cell in it
+function calExpandRow(rowEl) {
+  if (!rowEl || rowEl.classList.contains('cal-row-expanded')) return;
+  rowEl.classList.add('cal-row-expanded');
   var byDate = {};
   _calEvents.forEach(function(e) { if (!byDate[e.date]) byDate[e.date] = []; byDate[e.date].push(e); });
   var typeOrder = ['shoot','script','draft','post'];
-  var evts = (byDate[ds] || []).slice().sort(function(a,b) { return typeOrder.indexOf(a.eventType) - typeOrder.indexOf(b.eventType); });
-  var chips = evts.map(function(ev) { return buildCalChipHtml(ev, CAL_TYPES[ev.eventType]); }).join('');
-  // Replace content below the date number
-  var dateNum = cell.querySelector('.cal-date-num').outerHTML;
-  cell.innerHTML = dateNum + chips;
+  rowEl.querySelectorAll('.cal-cell[data-cell-date]').forEach(function(cell) {
+    var ds = cell.dataset.cellDate;
+    var evts = (byDate[ds] || []).slice().sort(function(a,b) { return typeOrder.indexOf(a.eventType) - typeOrder.indexOf(b.eventType); });
+    var dateNum = cell.querySelector('.cal-date-num').outerHTML;
+    cell.innerHTML = dateNum + evts.map(function(ev) { return buildCalChipHtml(ev, CAL_TYPES[ev.eventType]); }).join('');
+  });
+  var lessBtn = document.createElement('div');
+  lessBtn.className = 'cal-show-less';
+  lessBtn.textContent = 'Show less';
+  lessBtn.onclick = function() { calCollapseRow(rowEl); };
+  rowEl.appendChild(lessBtn);
+}
+
+// Collapse a row back to the default chip count
+function calCollapseRow(rowEl) {
+  if (!rowEl) return;
+  rowEl.classList.remove('cal-row-expanded');
+  var isWeekView = rowEl.classList.contains('week-view-row');
+  var MAX_CHIPS  = isWeekView ? 8 : 3;
+  var byDate = {};
+  _calEvents.forEach(function(e) { if (!byDate[e.date]) byDate[e.date] = []; byDate[e.date].push(e); });
+  var typeOrder = ['shoot','script','draft','post'];
+  rowEl.querySelectorAll('.cal-cell[data-cell-date]').forEach(function(cell) {
+    var ds = cell.dataset.cellDate;
+    var evts = (byDate[ds] || []).slice().sort(function(a,b) { return typeOrder.indexOf(a.eventType) - typeOrder.indexOf(b.eventType); });
+    var dateNum = cell.querySelector('.cal-date-num').outerHTML;
+    var chips = evts.slice(0, MAX_CHIPS).map(function(ev) { return buildCalChipHtml(ev, CAL_TYPES[ev.eventType]); }).join('');
+    var more = evts.length > MAX_CHIPS
+      ? '<div class="cal-more" onclick="calExpandRow(this.closest(\'.cal-week-row\'))">+' + (evts.length - MAX_CHIPS) + ' more</div>'
+      : '';
+    cell.innerHTML = dateNum + chips + more;
+  });
+  var lessBtn = rowEl.querySelector('.cal-show-less');
+  if (lessBtn) lessBtn.remove();
 }
 
 function renderCalendarView() {
@@ -3056,13 +3090,13 @@ function renderCalendarView() {
     var evts = byDate[ds] || [];
     var chips = evts.slice(0, MAX_CHIPS).map(function(ev) { return buildCalChipHtml(ev, CAL_TYPES[ev.eventType]); }).join('');
     var more = evts.length > MAX_CHIPS
-      ? '<div class="cal-more" onclick="calExpandCell(\'' + ds + '\')" data-date="' + ds + '">+' + (evts.length - MAX_CHIPS) + ' more</div>'
+      ? '<div class="cal-more" onclick="calExpandRow(this.closest(\'.cal-week-row\'))">+' + (evts.length - MAX_CHIPS) + ' more</div>'
       : '';
     cells += '<div class="cal-cell' + (isToday ? ' cal-today-cell' : '') + '" data-cell-date="' + ds + '">' +
       '<span class="cal-date-num' + (isToday ? ' cal-today-num' : '') + '">' + cd.getDate() + '</span>' +
       chips + more + '</div>';
   }
-  grid.innerHTML = cells;
+  grid.innerHTML = '<div class="cal-week-row week-view-row">' + cells + '</div>';
 
   // Coming up (same as month view)
   var upcoming = _calEvents.filter(function(ev) { return ev.date >= today; });
@@ -3107,11 +3141,11 @@ function renderCalendarMonth() {
     byDate[dt].sort(function(a,b) { return typeOrder.indexOf(a.eventType) - typeOrder.indexOf(b.eventType); });
   });
 
-  var cells = '';
+  var allCells = [];
 
   // Prev-month fill
   for (var pd = firstDow - 1; pd >= 0; pd--) {
-    cells += '<div class="cal-cell out-of-month"><span class="cal-date-num">' + (prevLast - pd) + '</span></div>';
+    allCells.push('<div class="cal-cell out-of-month"><span class="cal-date-num">' + (prevLast - pd) + '</span></div>');
   }
 
   // Current month
@@ -3122,20 +3156,25 @@ function renderCalendarMonth() {
     var MAX_CHIPS = 3;
     var chips = evts.slice(0, MAX_CHIPS).map(function(ev) { return buildCalChipHtml(ev, CAL_TYPES[ev.eventType]); }).join('');
     var more = evts.length > MAX_CHIPS
-      ? '<div class="cal-more" onclick="calExpandCell(\'' + ds + '\')" data-date="' + ds + '">+' + (evts.length - MAX_CHIPS) + ' more</div>'
+      ? '<div class="cal-more" onclick="calExpandRow(this.closest(\'.cal-week-row\'))">+' + (evts.length - MAX_CHIPS) + ' more</div>'
       : '';
-    cells += '<div class="cal-cell' + (isToday ? ' cal-today-cell' : '') + '" data-cell-date="' + ds + '">' +
+    allCells.push('<div class="cal-cell' + (isToday ? ' cal-today-cell' : '') + '" data-cell-date="' + ds + '">' +
       '<span class="cal-date-num' + (isToday ? ' cal-today-num' : '') + '">' + d + '</span>' +
-      chips + more + '</div>';
+      chips + more + '</div>');
   }
 
   // Next-month fill
   var totalCells = Math.ceil((firstDow + daysInMo) / 7) * 7;
   for (var nd = 1; nd <= totalCells - firstDow - daysInMo; nd++) {
-    cells += '<div class="cal-cell out-of-month"><span class="cal-date-num">' + nd + '</span></div>';
+    allCells.push('<div class="cal-cell out-of-month"><span class="cal-date-num">' + nd + '</span></div>');
   }
 
-  grid.innerHTML = cells;
+  // Group into week rows of 7
+  var weekRows = '';
+  for (var ri = 0; ri < allCells.length; ri += 7) {
+    weekRows += '<div class="cal-week-row" data-row="' + Math.floor(ri / 7) + '">' + allCells.slice(ri, ri + 7).join('') + '</div>';
+  }
+  grid.innerHTML = weekRows;
 
   // Coming Up list — upcoming events from today, sorted, capped at 20
   var upcoming = _calEvents.filter(function(e) { return e.date >= today; });
