@@ -3357,17 +3357,20 @@ function buildRptCardHtml(d) {
   var svgSave  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
   var svgEng   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>';
 
-  var mv  = d.views          != null ? fmtNum(d.views)                          : '—';
-  var ml  = d.likes          != null ? fmtNum(d.likes)                          : '—';
-  var mc  = d.comments       != null ? fmtNum(d.comments)                       : '—';
-  var ms  = d.shares         != null ? fmtNum(d.shares)                         : '—';
-  var msa = d.saves          != null ? fmtNum(d.saves)                          : '—';
+  var mv  = d.views          != null ? fmtNum(d.views)                           : '—';
+  var ml  = d.likes          != null ? fmtNum(d.likes)                           : '—';
+  var mc  = d.comments       != null ? fmtNum(d.comments)                        : '—';
+  var ms  = d.shares         != null ? fmtNum(d.shares)                          : '—';
   var mer = d.engagementRate != null ? (d.engagementRate * 100).toFixed(2) + '%' : '—';
+  var isIgStories = /stor/i.test(t) && (/\big\b/i.test(t) || /insta/i.test(t));
+  var msa     = isIgStories ? (d.stickerTaps != null ? fmtNum(d.stickerTaps) : '—') : (d.saves != null ? fmtNum(d.saves) : '—');
+  var saLabel = isIgStories ? 'Sticker Taps' : 'Saves';
+  var saNull  = isIgStories ? d.stickerTaps  : d.saves;
   var emV  = d.views          == null ? ' empty' : '';
   var emL  = d.likes          == null ? ' empty' : '';
   var emC  = d.comments       == null ? ' empty' : '';
   var emS  = d.shares         == null ? ' empty' : '';
-  var emSa = d.saves          == null ? ' empty' : '';
+  var emSa = saNull           == null ? ' empty' : '';
   var emEr = d.engagementRate == null ? ' empty' : '';
 
   return '<div class="post-card">'
@@ -3400,7 +3403,7 @@ function buildRptCardHtml(d) {
     + '<div class="rpt-metric"><div class="rpt-metric-value' + emL  + '">' + ml  + '</div><div class="rpt-metric-label">' + svgHeart + ' Likes</div></div>'
     + '<div class="rpt-metric"><div class="rpt-metric-value' + emC  + '">' + mc  + '</div><div class="rpt-metric-label">' + svgMsg   + ' Comments</div></div>'
     + '<div class="rpt-metric"><div class="rpt-metric-value' + emS  + '">' + ms  + '</div><div class="rpt-metric-label">' + svgShare + ' Shares</div></div>'
-    + '<div class="rpt-metric"><div class="rpt-metric-value' + emSa + '">' + msa + '</div><div class="rpt-metric-label">' + svgSave  + ' Saves</div></div>'
+    + '<div class="rpt-metric"><div class="rpt-metric-value' + emSa + '">' + msa + '</div><div class="rpt-metric-label">' + svgSave  + ' ' + saLabel + '</div></div>'
     + '<div class="rpt-metric"><div class="rpt-metric-value' + emEr + '">' + mer + '</div><div class="rpt-metric-label">' + svgEng   + ' Eng. Rate</div></div>'
     + '</div>'
     + '</div>'
