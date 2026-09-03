@@ -3404,7 +3404,9 @@ function buildRptCardHtml(d) {
     + '<div class="rpt-metric"><div class="rpt-metric-value' + emC  + '">' + mc  + '</div><div class="rpt-metric-label">' + svgMsg   + ' Comments</div></div>'
     + '<div class="rpt-metric"><div class="rpt-metric-value' + emS  + '">' + ms  + '</div><div class="rpt-metric-label">' + svgShare + ' Shares</div></div>'
     + '<div class="rpt-metric"><div class="rpt-metric-value' + emSa + '">' + msa + '</div><div class="rpt-metric-label">' + svgSave  + ' ' + saLabel + '</div></div>'
-    + '<div class="rpt-metric"><div class="rpt-metric-value' + emEr + '">' + mer + '</div><div class="rpt-metric-label">' + svgEng   + ' Eng. Rate</div></div>'
+    + '<div class="rpt-metric"><div class="rpt-metric-value' + emEr + '">' + mer + '</div><div class="rpt-metric-label">' + svgEng   + ' Eng. Rate</div>'
+    + (d.avgEngRate != null ? '<div style="font-size:10px;color:#9b59b6;text-align:center;margin-top:3px">Avg Engagement: ' + (d.avgEngRate * 100).toFixed(2) + '%</div>' : '')
+    + '</div>'
     + '</div>'
     + '</div>'
     + '</div>';
