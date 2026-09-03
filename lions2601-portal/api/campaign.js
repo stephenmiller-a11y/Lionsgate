@@ -58,6 +58,7 @@ const DELIVERABLE_FIELDS = [
   'fldbxbzPhXG4LKjVV', // Saves
   'fld5in4laRsGr89HQ', // Sticker Taps (Instagram Stories only)
   'fldrqHaeKmZqVPFfa', // Engagement Rate (percentage)
+  'fldIdCgPgm0jduMfq', // Avg Engagement Rate
 ];
 
 // Offers table — accessed by field ID (returnFieldsByFieldId=true)
@@ -252,6 +253,7 @@ module.exports = async function handler(req, res) {
           saves:          f['fldbxbzPhXG4LKjVV']  != null ? Math.max(0, f['fldbxbzPhXG4LKjVV'])  : null,
           stickerTaps:    f['fld5in4laRsGr89HQ']  != null ? Math.max(0, f['fld5in4laRsGr89HQ'])  : null,
           engagementRate: f['fldrqHaeKmZqVPFfa']  != null ? Math.max(0, f['fldrqHaeKmZqVPFfa'])  : null,
+          avgEngRate:     f['fldIdCgPgm0jduMfq']  != null ? Math.max(0, f['fldIdCgPgm0jduMfq'])  : null,
           hasThumbnail:   !!(f['flds3ZtOYpN6eTur5'] && f['flds3ZtOYpN6eTur5'].length > 0),
           thumbnailUrl:   (f['flds3ZtOYpN6eTur5'] && f['flds3ZtOYpN6eTur5'][0] && f['flds3ZtOYpN6eTur5'][0].url) || null,
           statsUpdated:   f['fldHFyucfmau6iFLc'] || null,
