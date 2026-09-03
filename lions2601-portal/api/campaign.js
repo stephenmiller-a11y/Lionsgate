@@ -278,6 +278,7 @@ module.exports = async function handler(req, res) {
         };
       })
       .filter(d => {
+        if ((d.status || '').toLowerCase().includes('voided')) return false;
         const t = (d.type || '').toLowerCase();
         return !t.includes('paid media') && !t.includes('talent video creation');
       })
