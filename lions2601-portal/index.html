@@ -1352,7 +1352,6 @@ function renderHero(campaign) {
   document.getElementById('hero-title').textContent = campaign.name;
   const dates = [campaign.startDate, campaign.endDate].filter(Boolean).map(fmtDate).join(' – ');
   const items = [];
-  if (campaign.budget) items.push(`<div class="hero-stat-item"><div class="hero-stat-label">Budget</div><div class="hero-stat-value">${fmtCurrency(campaign.budget)}</div></div>`);
   if (dates)           items.push(`<div class="hero-stat-item"><div class="hero-stat-label">Flight Dates</div><div class="hero-stat-value">${dates}</div></div>`);
   document.getElementById('hero-meta').innerHTML = items.join('');
 
@@ -3405,7 +3404,7 @@ function buildRptCardHtml(d) {
     + '<div class="rpt-metric"><div class="rpt-metric-value' + emS  + '">' + ms  + '</div><div class="rpt-metric-label">' + svgShare + ' Shares</div></div>'
     + '<div class="rpt-metric"><div class="rpt-metric-value' + emSa + '">' + msa + '</div><div class="rpt-metric-label">' + svgSave  + ' ' + saLabel + '</div></div>'
     + '<div class="rpt-metric"><div class="rpt-metric-value' + emEr + '">' + mer + '</div><div class="rpt-metric-label">' + svgEng   + ' Eng. Rate</div>'
-    + (d.avgEngRate != null ? '<div style="font-size:12px;color:#9b59b6;text-align:center;margin-top:3px">Avg Rate: ' + (d.avgEngRate * 100).toFixed(2) + '%</div>' : '')
+    /* avg rate hidden for now: + (d.avgEngRate != null ? '<div style="font-size:12px;color:#9b59b6;text-align:center;margin-top:3px">Avg. Rate: ' + (d.avgEngRate * 100).toFixed(2) + '%</div>' : '') */
     + '</div>'
     + '</div>'
     + '</div>'
