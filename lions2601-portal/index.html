@@ -144,6 +144,7 @@
     .badge-instagram { background: radial-gradient(circle at 30% 110%, #ffd776 0%, #f24f5a 45%, #c62b90 70%, #8a3ab9 100%); }
     .badge-tiktok    { background: #0a0a0a; }
     .badge-youtube   { background: #ff0000; }
+    .badge-facebook  { background: #1877f2; }
     .badge-snap      { background: #fffc00; }
     .badge-snap svg  { color: #1a1a1a; }
     .plat-group { border-bottom: 1px solid #f0f0f0; }
@@ -1176,6 +1177,7 @@ const SVG = {
   tiktok: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:13px;height:13px;flex-shrink:0"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.16 8.16 0 004.77 1.52V6.75a4.85 4.85 0 01-1-.06z" fill="currentColor"/></svg>`,
   youtube: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:13px;height:13px;flex-shrink:0"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" fill="currentColor"/></svg>`,
   snap: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:13px;height:13px;flex-shrink:0"><path d="M12.166.5c.756 0 4.039.231 5.63 3.877.415.943.316 2.543.235 3.898l-.013.22c-.007.12.08.232.198.253.34.062.977-.149 1.348-.279.15-.053.332-.06.49-.008.176.062.323.189.396.382.076.198.069.405-.039.574-.181.284-.72.54-1.025.652-.16.057-.285.18-.34.337-.058.165-.019.342.1.462.127.128.278.302.38.535.065.147.136.432-.058.664-.218.25-.643.403-.936.403-.049 0-.097-.005-.142-.014-.154-.03-.37-.058-.627-.016-.168.026-.487.134-.746.371-.387.352-.742.919-.882 1.785-.014.085-.006.168.02.248.096.293.387.688.976 1.112 1.138.816 2.023 1.25 2.3 1.568.208.24.203.52.11.688-.156.283-.527.465-.93.584-.207.062-.425.116-.647.166-.358.08-.573.153-.62.313-.035.12-.084.271-.142.375-.043.08-.11.137-.196.165-.226.074-.474-.06-.739-.173-.367-.155-.834-.351-1.562-.351-.079 0-.158.002-.236.008-.438.029-.85.156-1.298.292-.565.173-1.148.352-1.918.352s-1.354-.18-1.918-.352c-.449-.137-.861-.263-1.299-.292-.078-.006-.157-.008-.236-.008-.728 0-1.195.196-1.562.35-.265.113-.513.247-.74.173-.085-.028-.152-.084-.195-.165-.058-.104-.107-.255-.142-.375-.048-.16-.262-.233-.62-.312-.222-.05-.44-.104-.648-.167-.403-.118-.773-.3-.929-.584-.093-.167-.099-.447.11-.688.277-.318 1.162-.752 2.3-1.568.589-.424.88-.819.976-1.112.026-.08.034-.163.02-.248-.14-.866-.495-1.433-.882-1.785-.259-.237-.578-.345-.746-.371-.257-.042-.473-.014-.627.016-.045.009-.093.014-.142.014-.293 0-.718-.153-.936-.403-.194-.232-.123-.517-.058-.664.102-.233.253-.407.38-.535.119-.12.158-.297.1-.462-.055-.157-.18-.28-.34-.337-.305-.112-.844-.368-1.025-.652-.108-.169-.115-.376-.039-.574.073-.193.22-.32.396-.382.158-.052.34-.045.49.008.37.13 1.008.341 1.348.279.118-.021.205-.133.198-.254l-.013-.219c-.081-1.355-.18-2.955.235-3.898C8.127.731 11.41.5 12.166.5z" fill="currentColor"/></svg>`,
+  facebook: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:13px;height:13px;flex-shrink:0"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" fill="currentColor"/></svg>`,
 };
 
 // ── UTILITY FUNCTIONS ─────────────────────────────────────────────────────────
@@ -1214,6 +1216,7 @@ function platformPill(type) {
   if (t.includes('tiktok') || t.includes('tik tok')) return `<span class="platform-pill">${SVG.tiktok} ${type}</span>`;
   if (t.includes('instagram') || t.includes('insta') || /\big\b/.test(t)) return `<span class="platform-pill">${SVG.insta} ${type}</span>`;
   if (t.includes('youtube')) return `<span class="platform-pill">${SVG.youtube} ${type}</span>`;
+  if (t.includes('facebook') || /\bfb\b/.test(t)) return `<span class="platform-pill">${SVG.facebook} ${type}</span>`;
   return `<span class="platform-pill">${type}</span>`;
 }
 
@@ -2930,6 +2933,7 @@ function calPlatformSvg(type) {
   if (t.includes('instagram') || t.includes('insta') || /\big\b/.test(t)) return SVG.insta;
   if (t.includes('youtube')) return SVG.youtube;
   if (t.includes('snap')) return SVG.snap;
+  if (t.includes('facebook') || /\bfb\b/.test(t)) return SVG.facebook;
   return '📱';
 }
 
@@ -3338,6 +3342,10 @@ function buildRptCardHtml(d) {
     thumbGrad = 'linear-gradient(160deg,#1a1a1a 0%,#fffc00 100%)';
     platLabel = 'Snapchat';
     platSvg   = SVG.snap || '';
+  } else if (t.includes('facebook') || /\bfb\b/.test(t)) {
+    thumbGrad = 'linear-gradient(160deg,#1877f2 0%,#0d65d9 100%)';
+    platLabel = 'Facebook';
+    platSvg   = SVG.facebook;
   } else {
     thumbGrad = 'linear-gradient(160deg,#2d1060 0%,#7b2d8b 100%)';
     platLabel = (d.type || 'Video').split(' ')[0];
